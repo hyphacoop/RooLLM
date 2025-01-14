@@ -23,16 +23,16 @@ HANDBOOK_BASE_URL = "https://handbook.hypha.coop/"
 
 
 # Helper Functions
-async def fetch_search_index() -> dict:
+async def fetch_search_index(status_messages: List[str]) -> dict:
     """Fetch the handbook search index as JSON."""
     async with aiohttp.ClientSession() as session:
         try:
             async with session.get(SEARCH_INDEX_URL) as response:
                 if response.status == 200:
                     return await response.json()
-                print(f"Failed to fetch search index: HTTP {response.status}")
+                status_messages.append(f"Failed to fetch search index: HTTP {response.status}")
         except aiohttp.ClientError as e:
-            print(f"Error fetching search index: {e}")
+            status_messages.append(f"Error fetching search index: {e}")
     return {}
 
 
@@ -41,7 +41,7 @@ def sanitize_content(content: str) -> str:
     return html.escape(content.strip())
 
 
-def load_lunr_index(index_data: dict) -> lunr:
+def load_lunr_index(index_data: dict, status_messages: List[str]) -> lunr:
     """Create a Lunr search index from the fetched index data."""
     try:
         fields = ["title", "keywords", "body"]
@@ -52,11 +52,11 @@ def load_lunr_index(index_data: dict) -> lunr:
         ]
         return lunr(ref="url", fields=fields, documents=documents)
     except Exception as e:
-        print(f"Error loading Lunr index: {e}")
+        status_messages.append(f"Error loading Lunr index: {e}")
         return None
 
 
-async def fetch_page_content(url: str) -> str:
+async def fetch_page_content(url: str, status_messages: List[str]) -> str:
     """Fetch and extract content from a handbook page."""
     full_url = HANDBOOK_BASE_URL + url
     async with aiohttp.ClientSession() as session:
@@ -68,10 +68,10 @@ async def fetch_page_content(url: str) -> str:
                     section = soup.find("section", class_="normal markdown-section")
                     if section:
                         return sanitize_content(section.get_text(separator="\n").strip())
-                print(f"No content found at {full_url}.")
+                status_messages.append(f"No content found at {full_url}.")
         except aiohttp.ClientError as e:
-            print(f"Error fetching page content: {e}")
-    return None
+            status_messages.append(f"Error fetching page content from {full_url}: {e}")
+        return None
 
 
 def prioritize_results(results: List[str], keywords: List[str]) -> List[str]:
