@@ -41,8 +41,6 @@ class RooLLM:
 
         tool_descriptions = tools.descriptions()
 
-        # print(tool_descriptions)
-
         response = await self.inference(messages, tool_descriptions)
 
         while 'tool_calls' in response:
@@ -86,7 +84,6 @@ def make_ollama_inference(
 
         response = await fetch(url, payload, username, password)
 
-        # print(response)
         return response.get("message", make_message(ROLE_ASSISTANT, "Error: Unable to generate response"))
 
     return inference
