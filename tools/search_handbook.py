@@ -90,24 +90,29 @@ async def tool(roo, arguments):
     parsed_steps = []  # For tracking steps and intermediate results
     final_response = None
 
-    print(f"Starting handbook search for query: '{query}'")
+    # We'll accumulate "status" or "debug" messages here.
+    status_messages: List[str] = []
+
+    status_messages.append(f"Starting handbook search for query: '{query}'")
 
     # Step 1: Fetch search index
-    search_index = await fetch_search_index()
+    search_index = await fetch_search_index(status_messages)    
     if not search_index:
-        return "The handbook search index is currently unavailable."
+        status_messages.append("The handbook search index is currently unavailable.")
+        return "\n".join(status_messages)
 
     # Step 2: Load Lunr index
-    lunr_index = load_lunr_index(search_index)
+    lunr_index = load_lunr_index(search_index, status_messages)
     if not lunr_index:
-        return "Failed to load the handbook search index."
+        status_messages.append("Failed to load the handbook search index.")
+        return "\n".join(status_messages)
 
     # Step 3: Perform search
     try:
         results = lunr_index.search(query)
         if not results:
-            print("No relevant results found in the handbook.")
-            return "No relevant content found in the handbook."
+            status_messages.append("No relevant results found in the handbook.")
+            return "\n".join(status_messages)
 
         # Extract and prioritize URLs
         urls = [result["ref"] for result in results]
@@ -119,7 +124,7 @@ async def tool(roo, arguments):
             if final_response:  # Exit the loop if a satisfactory response is found
                 break
 
-            page_content = await fetch_page_content(url)
+            page_content = await fetch_page_content(url, status_messages)
             if page_content:
                 extracted_page_count += 1
 
@@ -171,20 +176,27 @@ async def tool(roo, arguments):
                     final_answer_candidate = llm_response.get("done")
                     if final_answer_candidate:  # If not null, we consider it 'sufficient'
                         final_response = final_answer_candidate
-                        print(f"*Roobot* found a final answer after consulting {extracted_page_count} page(s):\n{final_response}")
+                        status_messages.append(
+                            f"Satisfactory final answer found after consulting {extracted_page_count} page(s)."
+                        )
                         break
 
                 except json.JSONDecodeError:
-                    print(f"Invalid JSON response from LLM: {llm_output}")
+                    status_messages.append(
+                        f"Invalid JSON response from LLM: {llm_output}"
+                    )
                     continue
             else:
-                print(f"Could not extract content from {url}")
+                status_messages.append(f"Could not extract content from {url}")
 
         # Step 5: Finalize response
         if final_response:
             # Return exactly the final text from the LLM
             return final_response
+        else:
+            status_messages.append(f"No satisfactory content was found in the handbook at {url}")
+            return "\n".join(status_messages)
 
     except Exception as e:
-        print(f"Error during handbook search: {e}")
-        return "An error occurred while searching the handbook. Please try again later."
+        status_messages.append(f"Error during handbook search: {e}")
+        return "\n".join(status_messages)
