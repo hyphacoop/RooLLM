@@ -4,7 +4,7 @@ import asyncio
 from roollm import (RooLLM, ROLE_USER, make_ollama_inference)
 
 inference = make_ollama_inference()
-user = 'vincent'
+user = os.getlogin()
 roo = RooLLM(inference)
 history = []
 
