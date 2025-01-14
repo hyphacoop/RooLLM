@@ -123,29 +123,32 @@ async def tool(roo, arguments):
             if page_content:
                 extracted_page_count += 1
 
-                # JSON formatted prompt for LLM
+                # JSON-formatted prompt for LLM
                 combined_prompt = json.dumps({
                     "retrieved_content": page_content,
                     "original_query": query,
                     "source_url": f"{HANDBOOK_BASE_URL}{url}",
                     "instruction": (
-                            "You are a JSON-producing assistant. Return only valid JSON following this schema:\n\n"
-                            "{\n"
-                            "  \"steps\": [\n"
-                            "    {\n"
-                            "      \"function\": \"string\",\n"
-                            "      \"parameters\": {\"key1\": \"value1\", ...},\n"
-                            "      \"human_readable_justification\": \"string\"\n"
-                            "    },\n"
-                            "    ...\n"
-                            "  ],\n"
-                            "  \"done\": \"string or null (if insufficient)\"\n"
-                            "}\n\n"
-                            "Do not include any markdown code fences or additional text. Output must be valid JSON.\n"
-                            "Based on the retrieved content, answer the original query. "
-                            f"Your response must include the source URL in the 'done' field. "
-                            f"Explicitly state that this information was found after consulting {extracted_page_count} pages from the handbook."
-                        )
+                        "You are a JSON-producing assistant. Return only valid JSON following this schema:\n\n"
+                        "{\n"
+                        "  \"steps\": [\n"
+                        "    {\n"
+                        "      \"function\": \"string\",\n"
+                        "      \"parameters\": {\"key1\": \"value1\", ...},\n"
+                        "      \"human_readable_justification\": \"string\"\n"
+                        "    },\n"
+                        "    ...\n"
+                        "  ],\n"
+                        "  \"done\": \"string or null\"\n"
+                        "}\n\n"
+                        "Do not include any markdown code fences or extra text. Output must be valid JSON.\n"
+                        "If you do NOT have a sufficient answer, keep 'done' as null.\n"
+                        "If you DO have a sufficient answer, place it in 'done' and explicitly include:\n"
+                        " - The source URL\n"
+                        " - The number of pages consulted so far\n"
+                        "Make sure that 'done' contains the final answer, the source URL, "
+                        f"and the string 'Pages consulted: {extracted_page_count}'."
+                    )
                 })
 
                 # Multi-turn interaction with the LLM
@@ -163,14 +166,13 @@ async def tool(roo, arguments):
                     steps = llm_response.get("steps", [])
                     if steps:
                         parsed_steps.extend(steps)
-
-                    # Update `final_response` if `done` is not null
-                    final_response = llm_response.get("done")
-                    if final_response:
-                        if "Source:" not in final_response:
-                            final_response += f"\n\nSource: {HANDBOOK_BASE_URL}{url}"
-                            print(f"*Roobot*: {final_response}")
-
+                
+                    # Check if the LLM indicates a final answer
+                    final_answer_candidate = llm_response.get("done")
+                    if final_answer_candidate:  # If not null, we consider it 'sufficient'
+                        final_response = final_answer_candidate
+                        print(f"*Roobot* found a final answer after consulting {extracted_page_count} page(s):\n{final_response}")
+                        break
 
                 except json.JSONDecodeError:
                     print(f"Invalid JSON response from LLM: {llm_output}")
@@ -180,16 +182,8 @@ async def tool(roo, arguments):
 
         # Step 5: Finalize response
         if final_response:
-            return (
-                f"After consulting {extracted_page_count} page(s) from the handbook, "
-                f"here is the information I found:\n\n{final_response}\n\n"
-                f"Steps processed:\n{json.dumps(parsed_steps, indent=2)}"
-            )
-        else:
-            return (
-                "No satisfactory content was found in the handbook.\n\n"
-                f"Steps processed:\n{json.dumps(parsed_steps, indent=2)}"
-            )
+            # Return exactly the final text from the LLM
+            return final_response
 
     except Exception as e:
         print(f"Error during handbook search: {e}")
