@@ -84,7 +84,7 @@ def prioritize_results(results: List[str], keywords: List[str]) -> List[str]:
 
 
 # Main Tool Logic
-async def tool(roo, arguments):
+async def tool(roo, arguments, username):
     query = arguments["query"]
     extracted_page_count = 0
     parsed_steps = []  # For tracking steps and intermediate results
@@ -121,6 +121,9 @@ async def tool(roo, arguments):
         # Step 4: Iteratively search and refine results
         for url in prioritized_urls:
 
+            # Construct URL
+            source_url = f"{HANDBOOK_BASE_URL}{url}"
+
             if final_response:  # Exit the loop if a satisfactory response is found
                 break
 
@@ -132,9 +135,9 @@ async def tool(roo, arguments):
                 combined_prompt = json.dumps({
                     "retrieved_content": page_content,
                     "original_query": query,
-                    "source_url": f"{HANDBOOK_BASE_URL}{url}",
+                    "source_url": f"{source_url}",
                     "instruction": (
-                        "You are a JSON-producing assistant. Return only valid JSON following this schema:\n\n"
+                        "You are a JSON-producing assistant who always cite your source. Return only valid JSON following this schema:\n\n"
                         "{\n"
                         "  \"steps\": [\n"
                         "    {\n"
@@ -151,14 +154,17 @@ async def tool(roo, arguments):
                         "If you DO have a sufficient answer, place it in 'done' and explicitly include:\n"
                         " - The source URL\n"
                         " - The number of pages consulted so far\n"
-                        "Make sure that 'done' contains the final answer, the source URL, "
+                        f"Make sure that 'done' always contains the final answer, the source URL {source_url}, "
                         f"and the string 'Pages consulted: {extracted_page_count}'."
                     )
                 })
 
                 # Multi-turn interaction with the LLM
+
+                # Generate system prompt
+                system_prompt = roo.make_system(user=username)
                 response = await roo.inference(
-                    [{"role": "system", "content": "You are a helpful assistant."},
+                    [{"role": "system", "content": system_prompt},
                     {"role": "user", "content": combined_prompt}]
                 )
 

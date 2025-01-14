@@ -26,10 +26,10 @@ class Tools:
             }
         }
 
-    def call(self, roo, name, args):
+    def call(self, roo, name, args, user):
         module = self.tools[name]
         func = module.tool
-        return func(roo, args)
+        return func(roo, args, user)
 
     def subset(self, list):
         tools = {}

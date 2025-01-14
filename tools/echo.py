@@ -11,6 +11,5 @@ parameters = {
 }
 
 
-def tool(roo, arguments):
-    print("ECHO TOOL: " + arguments["message"])
-    return "Message sent successfully"
+def tool(roo, arguments, user):
+    return f"ECHO TOOL: " + arguments["message"]
