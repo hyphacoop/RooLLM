@@ -49,7 +49,7 @@ class RooLLM:
                 if not 'function' in call:
                     continue
                 func = call['function']
-                result = await tools.call(self, func['name'], func['arguments'])
+                result = await tools.call(self, func['name'], func['arguments'], user)
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
 
@@ -63,7 +63,7 @@ You sometimes use emoji to add flavor to your text.
 Hypha works with distributed systems, blockchains, and the intersection between art and technology.
 You are currently chatting with the member named {user}.
 You give short and concise responses.
-Use tools when needed.
+Use tools when needed. If you require more information, search the handbook.
 The current date and time is {current_date_time}
 """
 
