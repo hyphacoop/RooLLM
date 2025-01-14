@@ -12,7 +12,7 @@ parameters = {
     "properties": {
         "query": {
             "type": "string",
-            "description": "The search term to look for in the handbook."
+            "description": "Search keywords to look in the handbook. e.g. holiday, board"
         }
     },
     "required": ["query"]
