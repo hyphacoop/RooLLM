@@ -74,7 +74,7 @@ def make_ollama_inference(
         model=DEFAULT_MODEL,
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD):
-    async def inference(messages, tools=None):
+    async def inference(messages, tools=None, extra_options=None):
         payload = {
             "model": model,
             "stream": False,
@@ -82,6 +82,9 @@ def make_ollama_inference(
         }
         if tools:
             payload["tools"] = tools
+
+        if extra_options:
+            payload.update(extra_options)
 
         response = await fetch(url, payload, username, password)
 

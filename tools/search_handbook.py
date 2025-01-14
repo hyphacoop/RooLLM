@@ -164,8 +164,13 @@ async def tool(roo, arguments, username):
                 # Generate system prompt
                 system_prompt = roo.make_system(user=username)
                 response = await roo.inference(
-                    [{"role": "system", "content": system_prompt},
-                    {"role": "user", "content": combined_prompt}]
+                    [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": combined_prompt}
+                    ],
+                    extra_options={
+                        "format": "json"  # Enforce JSON response
+                    }
                 )
 
                 # Parse LLM response
