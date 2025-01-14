@@ -6,7 +6,7 @@ import html
 import json
 
 name = "search_handbook"
-description = "Search the Hypha handbook for a given query."
+description = "Search the Hypha handbook for a given query. Use this for questions about how the company operates and information about members."
 parameters = {
     "type": "object",
     "properties": {
