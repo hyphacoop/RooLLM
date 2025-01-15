@@ -2,7 +2,7 @@ import operator as op
 import ast
 
 name = 'calc'
-description = 'Execute some simple math. E.g. 4 * (20 / 6^9)'
+description = 'Execute some simple math. E.g. 4 * (20 / 6^9) ** 0.5'
 parameters = {
     'type': 'object',
     'properties': {
