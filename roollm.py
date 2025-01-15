@@ -5,10 +5,7 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 
-try:
-    from .tools import Tools  # Relative import for Maubot and module context
-except ImportError:
-    from tools import Tools  # Absolute import for direct script execution
+from .tools import Tools
 
 # Load environment variables from .env
 load_dotenv()
