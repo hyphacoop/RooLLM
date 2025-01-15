@@ -35,7 +35,8 @@ async def main():
         query = input(">")
         response = await roo.chat(user, query, history)
 
-        print(response['content'])
+        # Print the response content when working locally
+        #print(response['content'])
         
         history.append({
             'role': ROLE_USER,
