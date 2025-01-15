@@ -169,7 +169,7 @@ async def tool(roo, arguments, username):
                 # Multi-turn interaction with the LLM
 
                 # Generate system prompt
-                system_prompt = roo.make_system(user=username)
+                system_prompt = roo.make_system()
                 response = await roo.inference(
                     [
                         {"role": "system", "content": system_prompt},

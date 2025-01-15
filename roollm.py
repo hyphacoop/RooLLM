@@ -30,7 +30,7 @@ class RooLLM:
             self.tools.load_tool(name)
 
     async def chat(self, user, content, history=[], limit_tools=None):
-        system_message = make_message(ROLE_SYSTEM, self.make_system(user))
+        system_message = make_message(ROLE_SYSTEM, self.make_system())
         user_message = make_message(ROLE_USER, user + ': ' + content)
         messages = [system_message, *history, user_message]
 
