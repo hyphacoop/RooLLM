@@ -26,15 +26,14 @@ def eval_expr(expr):
 
 
 def eval_(node):
-    match node:
-        case ast.Constant(value) if isinstance(value, int):
-            return value  # integer
-        case ast.BinOp(left, op, right):
-            return operators[type(op)](eval_(left), eval_(right))
-        case ast.UnaryOp(op, operand):  # e.g., -1
-            return operators[type(op)](eval_(operand))
-        case _:
-            raise TypeError(node)
+    if isinstance(node, ast.Constant) and isinstance(node.value, int):
+        return node.value  # integer
+    elif isinstance(node, ast.BinOp):
+        return operators[type(node.op)](eval_(node.left), eval_(node.right))
+    elif isinstance(node, ast.UnaryOp):  # e.g., -1
+        return operators[type(node.op)](eval_(node.operand))
+    else:
+        raise TypeError(node)
 
 
 async def tool(roo, arguments, user):
