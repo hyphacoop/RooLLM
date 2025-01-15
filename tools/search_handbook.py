@@ -6,13 +6,14 @@ import html
 import json
 
 name = "search_handbook"
-description = "Search the Hypha handbook for a given query. Use this for questions about how the company operates and information about members."
+description = "Search the Hypha handbook to answer specific questions about company operations, policies, and processes, including member roles, payment procedures, holidays, and governance. Use this for detailed, handbook-specific queries."
+
 parameters = {
     "type": "object",
     "properties": {
         "query": {
             "type": "string",
-            "description": "Search keywords to look in the handbook. e.g. holiday, board"
+            "description": "Keywords to search in the handbook, such as 'vacation', 'peer feedback' or 'board'."
         }
     },
     "required": ["query"]
@@ -135,9 +136,10 @@ async def tool(roo, arguments, username):
                 combined_prompt = json.dumps({
                     "retrieved_content": page_content,
                     "original_query": query,
-                    "source_url": f"{source_url}",
+                    "source_url": source_url,
+                    "pages_consulted": extracted_page_count,
                     "instruction": (
-                        "You are a JSON-producing assistant who always cite your source. Return only valid JSON following this schema:\n\n"
+                        "You are a JSON-producing assistant who always cites your source. Return only valid JSON following this schema:\n\n"
                         "{\n"
                         "  \"steps\": [\n"
                         "    {\n"
@@ -147,15 +149,17 @@ async def tool(roo, arguments, username):
                         "    },\n"
                         "    ...\n"
                         "  ],\n"
-                        "  \"done\": \"string or null\"\n"
+                        "  \"done\": {\n"
+                        "    \"answer\": \"string or null\",\n"
+                        "    \"source_url\": \"string\",\n"
+                        "    \"pages_consulted\": \"integer\"\n"
+                        "  }\n"
                         "}\n\n"
                         "Do not include any markdown code fences or extra text. Output must be valid JSON.\n"
-                        "If you do NOT have a sufficient answer, keep 'done' as null.\n"
-                        "If you DO have a sufficient answer, place it in 'done' and explicitly include:\n"
-                        " - The source URL\n"
-                        " - The number of pages consulted so far\n"
-                        f"Make sure that 'done' always contains the final answer, the source URL {source_url}, "
-                        f"and the string 'Pages consulted: {extracted_page_count}'."
+                        "If you do NOT have a sufficient answer, set 'done.answer' to null.\n"
+                        "If you DO have a sufficient answer, include the answer in 'done.answer', along with:\n"
+                        " - The source URL as 'done.source_url'\n"
+                        " - The number of pages consulted as 'done.pages_consulted'."
                     )
                 })
 
@@ -169,7 +173,7 @@ async def tool(roo, arguments, username):
                         {"role": "user", "content": combined_prompt}
                     ],
                     extra_options={
-                        "format": "json"  # Enforce JSON response
+                        "format": "json"  
                     }
                 )
 
@@ -178,25 +182,29 @@ async def tool(roo, arguments, username):
                 try:
                     llm_response = json.loads(llm_output)
 
-                       # Extract `done` and steps
+                    # Extract `steps`
                     steps = llm_response.get("steps", [])
                     if steps:
                         parsed_steps.extend(steps)
-                
-                    # Check if the LLM indicates a final answer
-                    final_answer_candidate = llm_response.get("done")
+
+                    # Check the `done` field for a final answer
+                    done = llm_response.get("done", {})
+                    final_answer_candidate = done.get("answer")
                     if final_answer_candidate:  # If not null, we consider it 'sufficient'
-                        final_response = final_answer_candidate
+                        final_response = {
+                            "answer": final_answer_candidate,
+                            "source_url": done.get("source_url"),
+                            "pages_consulted": done.get("pages_consulted")
+                        }
                         status_messages.append(
-                            f"Satisfactory final answer found after consulting {extracted_page_count} page(s)."
+                            f"Satisfactory final answer found after consulting {done.get('pages_consulted', 0)} page(s)."
                         )
                         break
 
                 except json.JSONDecodeError:
-                    status_messages.append(
-                        f"Invalid JSON response from LLM: {llm_output}"
-                    )
+                    status_messages.append(f"Invalid JSON response from LLM: {llm_output}")
                     continue
+
             else:
                 status_messages.append(f"Could not extract content from {url}")
 
