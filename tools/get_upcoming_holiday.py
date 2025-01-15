@@ -4,7 +4,8 @@ import datetime
 name = "get_upcoming_holiday"
 description = (
     "Fetch the next statutory holiday between a given start date and end date. "
-    "Use this for questions like 'What is the next holiday?' or 'Are there any holidays this month?'."
+    "Use this for direct queries about holidays, such as 'What is the next holiday?' or 'Are there holidays next month?'. "
+    "If the user asks for multiple holidays, use the 'limit' parameter to specify the desired number of holidays."
 )
 parameters = {
     "type": "object",
@@ -18,10 +19,16 @@ parameters = {
             "type": "string",
             "format": "date",
             "description": "The end date to search for holidays in YYYY-MM-DD format."
+        },
+        "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The maximum number of holidays to return. Defaults to 1 if not provided."
         }
     },
     "required": ["start_date"]
 }
+
 
 # Define statutory holidays
 STATUTORY_HOLIDAYS = [
