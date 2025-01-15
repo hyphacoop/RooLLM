@@ -6,14 +6,17 @@ import html
 import json
 
 name = "search_handbook"
-description = "Search the Hypha handbook to answer specific questions about company operations, policies, and processes, including member roles, payment procedures, holidays, and governance. Use this for detailed, handbook-specific queries."
-
+description = (
+    "Search the Hypha handbook to provide answers about company operations, policies, and processes. "
+    "This includes topics such as member roles, payment procedures, bylaws, governance, and more. "
+    "Use this tool for queries that require detailed or handbook-specific information."
+)
 parameters = {
     "type": "object",
     "properties": {
         "query": {
             "type": "string",
-            "description": "Keywords to search in the handbook, such as 'vacation', 'peer feedback' or 'board'."
+            "description": "Keywords to search in the handbook, such as 'vacation', 'peer feedback', or 'board'."
         }
     },
     "required": ["query"]
