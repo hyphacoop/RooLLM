@@ -1,17 +1,19 @@
+
 import importlib
+
 
 class Tools:
     def __init__(self, tools=None):
         self.tools = {}
-        
+
     def load_tool(self, name):
         try:
             # Import the tool module using the package system
-            module = importlib.import_module(f".tools.{name}", package=self.__module__.rsplit('.', 1)[0])
+            module = importlib.import_module(f".{name}", package=__package__)
             self.tools[name] = module
         except ImportError as e:
             raise ImportError(f"Failed to import tool '{name}': {str(e)}")
-    
+
     def descriptions(self):
         return [self.description_of(key) for key in self.tools.keys()]
 
