@@ -14,7 +14,7 @@ DEFAULT_OLLAMA_URL = os.getenv("ROO_LLM_URL", "https://ai.hypha.coop/api/chat")
 DEFAULT_MODEL = os.getenv("ROO_LLM_MODEL", "hermes3")
 DEFAULT_USERNAME = os.getenv("ROO_LLM_AUTH_USERNAME", "")
 DEFAULT_PASSWORD = os.getenv("ROO_LLM_AUTH_PASSWORD", "")
-DEFAULT_TOOL_LIST = ["calc", "search_handbook"]
+DEFAULT_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday"]
 
 ROLE_USER = "user"
 ROLE_ASSISTANT = "assistant"
