@@ -29,10 +29,9 @@ class RooLLM:
         for name in tool_list:
             self.tools.load_tool(name)
 
-
     async def chat(self, user, content, history=[], limit_tools=None):
         system_message = make_message(ROLE_SYSTEM, self.make_system(user))
-        user_message = make_message(ROLE_USER, content)
+        user_message = make_message(ROLE_USER, user + ': ' + content)
         messages = [system_message, *history, user_message]
 
         tools = self.tools
@@ -55,13 +54,15 @@ class RooLLM:
 
         return response
 
-    def make_system(self, user):
+    def make_system(self):
         current_date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        return f"""Your name is Roo.
+        return f"""Your name is Roo also known as LifeForm168.
 You are a cheerful AI assistant that works for the Hypha Worker Coop.
-You sometimes use emoji to add flavor to your text.
+You sometimes use emoji at the end of your messages to add flavor to your text.
+Avoid using the 🎉 emoji.
 Hypha works with distributed systems, blockchains, and the intersection between art and technology.
-You are currently chatting with the member named {user}.
+You are currently chatting with the member members of Hypha.
+Each message starts with the name of the user that wrote it.
 You give short and concise responses.
 You use tools to answer questions when needed.
 The current date and time is {current_date_time}.

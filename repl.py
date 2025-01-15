@@ -30,17 +30,18 @@ except OSError:
     # Fallback if no controlling terminal (e.g., in Docker or a service)
     user = getpass.getuser() or "localTester"
 
+
 async def main():
     while True:
         query = input(">")
         response = await roo.chat(user, query, history)
 
         # Print the response content when working locally
-        #print(response['content'])
-        
+        # print(response['content'])
+
         history.append({
             'role': ROLE_USER,
-            'content': query
+            'content': user + ': ' + query
         })
         history.append(response)
 
