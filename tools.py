@@ -8,7 +8,14 @@ class Tools:
         self.tools = {}
 
     def load_tool(self, name):
-        tool_path = f"tools/{name}.py"
+        root = os.path.dirname(os.path.abspath(__file__))  # Absolute path to the directory of tools.py
+        tool_path = os.path.join(root, "tools", f"{name}.py")  # Append the tool file
+
+        # Check if the tool file exists
+        if not os.path.isfile(tool_path):
+            raise FileNotFoundError(f"Tool file not found at: {tool_path}")
+
+        # Load the module
         module = load_module_from_file(tool_path)
         self.tools[name] = module
 
@@ -39,19 +46,16 @@ class Tools:
 
 
 def load_module_from_file(file_path):
-    root = os.path.dirname(__file__)
-    # Construct the module name based on the file path
+    full_path = os.path.abspath(file_path) 
+
+    if not os.path.isfile(full_path):
+        raise FileNotFoundError(f"Cannot load module, file does not exist: {full_path}")
+
     module_name = os.path.basename(file_path).replace('.py', '')
 
-    full_path = os.path.join(root, file_path)
-
-    # Create a spec for the module
-    spec = importlib.util.spec_from_file_location(module_name, full_path)
-
     # Load the module
+    spec = importlib.util.spec_from_file_location(module_name, full_path)
     module = importlib.util.module_from_spec(spec)
 
-    # Execute the module's code in its own namespace
     spec.loader.exec_module(module)
-
     return module
