@@ -5,7 +5,10 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 
-from .tools import Tools
+try:
+    from .tools import Tools
+except ImportError:
+    from tools import Tools
 
 # Load environment variables from .env
 load_dotenv()
