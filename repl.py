@@ -31,13 +31,20 @@ except OSError:
     user = getpass.getuser() or "localTester"
 
 
+# Define the callback to print emoji reactions
+async def print_emoji_reaction(emoji):
+    print(f"Tool reaction: {emoji}")
+
+
 async def main():
     while True:
         query = input(">")
-        response, emojis = await roo.chat(user, query, history)
-
-        for emoji in emojis:
-            print(f"Tool called: {emoji}")
+        response = await roo.chat(
+            user,
+            query, 
+            history,
+            react_callback=print_emoji_reaction
+        )
             
         # Print the response content when working locally
         print(response['content'])
