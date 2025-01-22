@@ -25,7 +25,6 @@ class Tools:
                 'name': name,
                 'description': module.description,
                 'parameters': module.parameters,
-                'emoji': module.emoji
             }
         }
 
