@@ -39,3 +39,17 @@ class Tools:
         for name in list:
             tools[name] = self.tools[name]
         return Tools(tools)
+    
+
+    def get_tool_emoji(self, tool_name):
+        """
+        Fetches the emoji associated with a tool by looking up its metadata.
+        :param tool_name: The name of the tool whose emoji is being retrieved.
+        :param tools: The Tools instance to fetch metadata from.
+        :return: The emoji associated with the tool (if any).
+        """
+        try:
+            tool_description = self.description_of(tool_name)
+            return tool_description.get("function", {}).get("emoji")
+        except KeyError:
+            return "❓"
