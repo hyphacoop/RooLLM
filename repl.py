@@ -33,7 +33,7 @@ except OSError:
 
 # Define the callback to print emoji reactions
 async def print_emoji_reaction(emoji):
-    print(f"Tool reaction: {emoji}")
+    print(f"> tool call: {emoji}")
 
 
 async def main():
