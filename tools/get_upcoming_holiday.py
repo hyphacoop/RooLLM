@@ -2,6 +2,7 @@ import datetime
 
 # Tool configuration
 name = "get_upcoming_holiday"
+emoji = "📅"
 description = (
     "Fetch the next statutory holiday between a given start date and end date. "
     "Use this for direct queries about holidays, such as 'What is the next holiday?' or 'Are there holidays next month?'. "

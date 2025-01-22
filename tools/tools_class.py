@@ -24,7 +24,8 @@ class Tools:
             'function': {
                 'name': name,
                 'description': module.description,
-                'parameters': module.parameters
+                'parameters': module.parameters,
+                'emoji': module.emoji
             }
         }
 

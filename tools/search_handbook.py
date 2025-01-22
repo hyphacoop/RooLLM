@@ -6,6 +6,7 @@ import html
 import json
 
 name = "search_handbook"
+emoji = "📖"
 description = (
     "Search the Hypha handbook to provide answers about company operations, policies, and processes. "
     "This includes topics such as member roles, payment procedures, bylaws, governance, and more. "
