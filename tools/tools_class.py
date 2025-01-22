@@ -43,7 +43,6 @@ class Tools:
         """
         Fetches the emoji associated with a tool and triggers the callback if provided.
         :param tool_name: The name of the tool.
-        :param react_callback: A callback to handle the emoji reaction.
         """
         try:
             emoji = self.tools[tool_name].emoji 
