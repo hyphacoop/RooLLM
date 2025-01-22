@@ -45,17 +45,26 @@ class RooLLM:
 
         response = await self.inference(messages, tool_descriptions)
 
+        emojis = []  # Collect emojis here
+
         while 'tool_calls' in response:
             messages.append(response)
             for call in response["tool_calls"]:
                 if not 'function' in call:
                     continue
                 func = call['function']
+                tool_name = func['name']
+
+                # Get emoji for the tool used
+                emoji = tools.get_tool_emoji(tool_name)
+                if emoji:
+                    emojis.append(emoji)
+
                 result = await tools.call(self, func['name'], func['arguments'], user)
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
 
-        return response
+        return response, emojis
 
     def make_system(self):
         current_date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
