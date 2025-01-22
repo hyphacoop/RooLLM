@@ -39,17 +39,14 @@ class Tools:
             tools[name] = self.tools[name]
         return Tools(tools)
 
-    async def get_tool_emoji(self, tool_name, react_callback=None):
+    def get_tool_emoji(self, tool_name):
         """
         Fetches the emoji associated with a tool and triggers the callback if provided.
         :param tool_name: The name of the tool.
         :param react_callback: A callback to handle the emoji reaction.
         """
         try:
-            tool_description = self.description_of(tool_name)
-            emoji = tool_description.get("function", {}).get("emoji")
-            if emoji and react_callback:
-                await react_callback(emoji)  
+            emoji = self.tools[tool_name].emoji 
             return emoji
         except KeyError:
             return "❓"
