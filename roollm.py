@@ -32,7 +32,7 @@ class RooLLM:
         for name in tool_list:
             self.tools.load_tool(name)
 
-    async def chat(self, user, content, history=[], limit_tools=None):
+    async def chat(self, user, content, history=[], limit_tools=None, react_callback=None):
         system_message = make_message(ROLE_SYSTEM, self.make_system())
         user_message = make_message(ROLE_USER, user + ': ' + content)
         messages = [system_message, *history, user_message]
@@ -45,8 +45,6 @@ class RooLLM:
 
         response = await self.inference(messages, tool_descriptions)
 
-        emojis = []  # Collect emojis here
-
         while 'tool_calls' in response:
             messages.append(response)
             for call in response["tool_calls"]:
@@ -55,16 +53,14 @@ class RooLLM:
                 func = call['function']
                 tool_name = func['name']
 
-                # Get emoji for the tool used
-                emoji = tools.get_tool_emoji(tool_name)
-                if emoji:
-                    emojis.append(emoji)
+                # Fetch the emoji and trigger the callback
+                await tools.get_tool_emoji(tool_name=tool_name, react_callback=react_callback)
 
                 result = await tools.call(self, func['name'], func['arguments'], user)
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
 
-        return response, emojis
+        return response
 
     def make_system(self):
         current_date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
