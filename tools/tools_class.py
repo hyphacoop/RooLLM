@@ -39,7 +39,6 @@ class Tools:
         for name in list:
             tools[name] = self.tools[name]
         return Tools(tools)
-    
 
     def get_tool_emoji(self, tool_name):
         """
