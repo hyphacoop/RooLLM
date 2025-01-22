@@ -34,10 +34,13 @@ except OSError:
 async def main():
     while True:
         query = input(">")
-        response = await roo.chat(user, query, history)
+        response, emojis = await roo.chat(user, query, history)
 
+        for emoji in emojis:
+            print(f"Tool called: {emoji}")
+            
         # Print the response content when working locally
-        # print(response['content'])
+        print(response['content'])
 
         history.append({
             'role': ROLE_USER,
