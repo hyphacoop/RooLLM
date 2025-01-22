@@ -54,7 +54,9 @@ class RooLLM:
                 tool_name = func['name']
 
                 # Fetch the emoji and trigger the callback
-                await tools.get_tool_emoji(tool_name=tool_name, react_callback=react_callback)
+                emoji = tools.get_tool_emoji(tool_name=tool_name)
+                if emoji and react_callback:
+                    await react_callback(emoji)
 
                 result = await tools.call(self, func['name'], func['arguments'], user)
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
