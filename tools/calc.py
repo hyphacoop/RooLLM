@@ -8,7 +8,9 @@ parameters = {
     'type': 'object',
     'properties': {
         'message': {
-            'expression': 'string'
+            'expression': {
+                'type': 'string'
+            }
         }
     },
     'required': ['expression']
