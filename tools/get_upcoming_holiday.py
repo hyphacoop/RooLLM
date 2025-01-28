@@ -68,7 +68,7 @@ def get_upcoming_holidays(start_date, end_date, limit=1):
     return upcoming_holidays[:limit]
 
 
-async def tool(roo, arguments, user):
+async def tool(roo, arguments, user, extra_context=None):
     try:
         # Parse input arguments
         start_date = datetime.datetime.strptime(arguments["start_date"], "%Y-%m-%d")

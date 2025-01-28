@@ -39,7 +39,7 @@ def eval_(node):
         raise TypeError(node)
 
 
-async def tool(roo, arguments, user):
+async def tool(roo, arguments, user, extra_context=None):
     expression = arguments["expression"]
     result = eval_expr(expression)
     return f"Tell {user}, {expression} = {result}"

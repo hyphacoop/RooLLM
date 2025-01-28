@@ -58,7 +58,7 @@ class RooLLM:
                 if emoji and react_callback:
                     await react_callback(emoji)
 
-                result = await tools.call(self, func['name'], func['arguments'], user)
+                result = await tools.call(self, func['name'], func['arguments'], user, extra_context=self.inference.tokens)
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
 
