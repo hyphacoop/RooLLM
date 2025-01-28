@@ -34,13 +34,8 @@ parameters = {
             'type': 'string',
             'description': 'Assignee to filter by. Use "none" for unassigned issues.',
             'default': None
-        },
-        'github_token': {
-            'type': 'string',
-            'description': 'GitHub personal access token with repo scope.'
         }
-    },
-    'required': ['github_token']
+    }
 }
 
 GITHUB_API_BASE_URL = "https://api.github.com"
