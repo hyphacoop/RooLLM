@@ -87,7 +87,6 @@ def make_ollama_inference(
         password=DEFAULT_PASSWORD,
         gh_token=GITHUB_TOKEN):
     tokens = {"github_token": gh_token}
-    inference.tokens = tokens
 
     async def inference(messages, tools=None, extra_options=None):
         payload = {
@@ -105,6 +104,7 @@ def make_ollama_inference(
 
         return response.get("message", make_message(ROLE_ASSISTANT, "Error: Unable to generate response"))
 
+    inference.tokens = tokens
     return inference
 
 
