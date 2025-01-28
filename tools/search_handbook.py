@@ -89,7 +89,7 @@ def prioritize_results(results: List[str], keywords: List[str]) -> List[str]:
 
 
 # Main Tool Logic
-async def tool(roo, arguments, user, extra_context=None):
+async def tool(roo, arguments, user):
     query = arguments["query"]
     extracted_page_count = 0
     parsed_steps = []  # For tracking steps and intermediate results

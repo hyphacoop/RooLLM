@@ -28,10 +28,10 @@ class Tools:
             }
         }
 
-    def call(self, roo, name, args, user, extra_context=None):
+    def call(self, roo, name, args, user):
         module = self.tools[name]
         func = module.tool
-        return func(roo, args, user, extra_context)
+        return func(roo, args, user)
 
     def subset(self, list):
         tools = {}

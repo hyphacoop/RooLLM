@@ -61,8 +61,8 @@ def get_repo_labels(org, repo, token):
         raise Exception(f"Unable to fetch labels: {response.status_code} - {response.text}")
 
 
-async def tool(roo, arguments, user, extra_context=None):
-    token = extra_context.get("github_token") if extra_context else None
+async def tool(roo, arguments, user):
+    token = roo.config.get("gh_token") if roo.config else None
 
     if not token:
         return "GitHub token is missing."
