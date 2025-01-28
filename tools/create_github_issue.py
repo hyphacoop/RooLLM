@@ -50,6 +50,17 @@ parameters = {
 }
 
 GITHUB_API_BASE_URL = "https://api.github.com"
+
+def get_repo_labels(org, repo, token):
+    url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/labels"
+    headers = {"Authorization": f"token {token}"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return [label['name'] for label in response.json()]
+    else:
+        raise Exception(f"Unable to fetch labels: {response.status_code} - {response.text}")
+
+
 async def tool(roo, arguments, user, extra_context=None):
     token = extra_context.get("github_token") if extra_context else None
 
@@ -64,6 +75,14 @@ async def tool(roo, arguments, user, extra_context=None):
     assignee = arguments.get("assignee")  # Optional
 
     try:
+        # Fetch labels from the repo
+        repo_labels = get_repo_labels(org, repo, token)
+
+        # Validate provided labels
+        invalid_labels = [label for label in labels if label not in repo_labels]
+        if invalid_labels:
+            return f"Invalid labels provided: {', '.join(invalid_labels)}. Available labels are: {', '.join(repo_labels)}"
+
         # Preprocess the assignee to remove '@' if present
         if assignee and assignee.startswith("@"):
             assignee = assignee[1:]
