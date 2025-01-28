@@ -13,6 +13,7 @@ Usage:
     
     ROO_LLM_AUTH_USERNAME=
     ROO_LLM_AUTH_PASSWORD=
+    GITHUB_TOKEN=
 
     Ask the RooLLM team for the credentials.
 

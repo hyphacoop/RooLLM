@@ -17,7 +17,8 @@ DEFAULT_OLLAMA_URL = os.getenv("ROO_LLM_URL", "https://ai.hypha.coop/api/chat")
 DEFAULT_MODEL = os.getenv("ROO_LLM_MODEL", "hermes3")
 DEFAULT_USERNAME = os.getenv("ROO_LLM_AUTH_USERNAME", "")
 DEFAULT_PASSWORD = os.getenv("ROO_LLM_AUTH_PASSWORD", "")
-DEFAULT_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday"]
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
+DEFAULT_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday", "search_github_issues", "create_github_issue"]
 
 ROLE_USER = "user"
 ROLE_ASSISTANT = "assistant"
@@ -83,7 +84,11 @@ def make_ollama_inference(
         url=DEFAULT_OLLAMA_URL,
         model=DEFAULT_MODEL,
         username=DEFAULT_USERNAME,
-        password=DEFAULT_PASSWORD):
+        password=DEFAULT_PASSWORD,
+        gh_token=GITHUB_TOKEN):
+    tokens = {"github_token": gh_token}
+    inference.tokens = tokens
+
     async def inference(messages, tools=None, extra_options=None):
         payload = {
             "model": model,
