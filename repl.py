@@ -5,10 +5,9 @@ from dotenv import load_dotenv
 
 from roollm import (RooLLM, ROLE_USER, make_ollama_inference)
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
-
 # Load gh token from .env
 load_dotenv()
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
 
 """
 This script allows local testing of the RooLLM class.
