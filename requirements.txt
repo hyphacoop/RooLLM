@@ -1,0 +1,5 @@
+aiohttp
+python-dotenv
+beautifulsoup4
+lunr
+requests
