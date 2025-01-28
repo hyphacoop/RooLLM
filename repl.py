@@ -1,8 +1,14 @@
 import os
 import getpass
 import asyncio
+from dotenv import load_dotenv
 
 from roollm import (RooLLM, ROLE_USER, make_ollama_inference)
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
+
+# Load gh token from .env
+load_dotenv()
 
 """
 This script allows local testing of the RooLLM class.
@@ -20,8 +26,9 @@ Usage:
 2. Run this script to start the REPL.
 """
 
+config = {"gh_token": GITHUB_TOKEN}
 inference = make_ollama_inference()
-roo = RooLLM(inference)
+roo = RooLLM(inference, config=config)
 history = []
 
 # Try to get the current login, otherwise fall back

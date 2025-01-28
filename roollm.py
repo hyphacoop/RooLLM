@@ -17,7 +17,6 @@ DEFAULT_OLLAMA_URL = os.getenv("ROO_LLM_URL", "https://ai.hypha.coop/api/chat")
 DEFAULT_MODEL = os.getenv("ROO_LLM_MODEL", "hermes3")
 DEFAULT_USERNAME = os.getenv("ROO_LLM_AUTH_USERNAME", "")
 DEFAULT_PASSWORD = os.getenv("ROO_LLM_AUTH_PASSWORD", "")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
 DEFAULT_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday", "search_github_issues", "create_github_issue"]
 
 ROLE_USER = "user"
@@ -27,8 +26,9 @@ ROLE_TOOL = "tool"
 
 
 class RooLLM:
-    def __init__(self, inference, tool_list=DEFAULT_TOOL_LIST):
+    def __init__(self, inference, tool_list=DEFAULT_TOOL_LIST, config=None):
         self.inference = inference
+        self.config = config or {}
         self.tools = Tools()
         for name in tool_list:
             self.tools.load_tool(name)
@@ -59,7 +59,7 @@ class RooLLM:
                 if emoji and react_callback:
                     await react_callback(emoji)
 
-                result = await tools.call(self, func['name'], func['arguments'], user, extra_context=self.inference.tokens)
+                result = await tools.call(self, func['name'], func['arguments'], user, extra_context={"github_token": self.config.get("gh_token")})
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
 
@@ -84,9 +84,7 @@ def make_ollama_inference(
         url=DEFAULT_OLLAMA_URL,
         model=DEFAULT_MODEL,
         username=DEFAULT_USERNAME,
-        password=DEFAULT_PASSWORD,
-        gh_token=GITHUB_TOKEN):
-    tokens = {"github_token": gh_token}
+        password=DEFAULT_PASSWORD):
 
     async def inference(messages, tools=None, extra_options=None):
         payload = {
@@ -104,7 +102,6 @@ def make_ollama_inference(
 
         return response.get("message", make_message(ROLE_ASSISTANT, "Error: Unable to generate response"))
 
-    inference.tokens = tokens
     return inference
 
 
