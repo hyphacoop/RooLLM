@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import json
 import os
+import importlib
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -54,12 +55,34 @@ class RooLLM:
                 func = call['function']
                 tool_name = func['name']
 
-                # Fetch the emoji and trigger the callback
-                emoji = tools.get_tool_emoji(tool_name=tool_name)
-                if emoji and react_callback:
-                    await react_callback(emoji)
+                # Fetch the primary tool's emoji and react
+                top_level_emoji = tools.get_tool_emoji(tool_name=tool_name)
+                if top_level_emoji and react_callback:
+                    await react_callback(top_level_emoji)  # First emoji reaction
 
-                result = await tools.call(self, func['name'], func['arguments'], user)
+                # Call the tool and store the result
+                result = await tools.call(self, tool_name, func['arguments'], user)
+
+                # If a GitHub dispatcher tool is used, react to the sub-tool as well
+                if tool_name in ["github_issues_operations", "github_pull_requests_operations"]:
+                    # Dynamically import ACTION_TO_TOOL from the corresponding module
+                    try:
+                        module_name = f"tools.{tool_name}"
+                        module = importlib.import_module(module_name)
+                        action_to_tool_map = getattr(module, "ACTION_TO_TOOL", {})
+                    except ImportError:
+                        action_to_tool_map = {}
+
+                    action = func["arguments"].get("action")
+                    if action:
+                        sub_tool_name = action_to_tool_map.get(action)  # Map to sub-tool
+                        if sub_tool_name:
+                            sub_tool_emoji = tools.get_tool_emoji(tool_name=sub_tool_name)
+                            if sub_tool_emoji and react_callback:
+                                await react_callback(sub_tool_emoji)  # Second emoji reaction
+
+
+                # Append response from tool execution
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
 
