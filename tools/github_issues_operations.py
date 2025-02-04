@@ -41,7 +41,7 @@ ACTION_TO_TOOL = {
     "reopen": "reopen_github_issue",
     "search": "search_github_issues",
     "update": "update_github_issue",
-    "label": "add_label_to_github_issue"
+    "label": "add_labels_to_github_item"
 }
 
 async def tool(roo, arguments, user):

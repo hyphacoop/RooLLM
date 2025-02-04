@@ -35,7 +35,7 @@ ACTION_TO_TOOL = {
     "merge": "merge_pull_request",
     "search": "search_pull_requests",
     "update": "update_pull_request",
-    "label": "add_label_to_pull_request"
+    "label": "add_labels_to_github_item"
 }
 
 async def tool(roo, arguments, user):
