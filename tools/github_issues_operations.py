@@ -19,7 +19,7 @@ parameters = {
         },
         "org": {"type": "string", "description": "GitHub organization name.", "default": "hyphacoop"},
         "repo": {"type": "string", "description": "Repository name.", "default": "organizing-private"},
-        "issue_number": {"type": "integer", "description": "Issue number (required for some actions)."},
+        "number": {"type": "integer", "description": "Issue number (required for some actions)."},
         "title": {"type": "string", "description": "Title for issue creation/update."},
         "body": {"type": "string", "description": "Body content for issue creation, updates, or comments."},
         "assignee": {"type": "string", "description": "GitHub username to assign an issue."},
@@ -45,6 +45,10 @@ ACTION_TO_TOOL = {
 }
 
 async def tool(roo, arguments, user):
+    # Ensure "action" key exists
+    if "action" not in arguments:
+        return f"🚨 Error: Missing 'action' field. Received arguments: {arguments}"
+    
     action = arguments["action"]
 
     # Ensure the requested action is valid
