@@ -17,7 +17,6 @@ parameters = {
 GITHUB_API_BASE_URL = "https://api.github.com"
 
 async def tool(roo, arguments, user):
-    print(arguments)
     token = roo.config.get("gh_token")
     if not token:
         return "GitHub token is missing."
