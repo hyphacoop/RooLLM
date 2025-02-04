@@ -20,12 +20,12 @@ parameters = {
             'description': 'Repository name. Defaults to "organizing-private".',
             'default': 'organizing-private'
         },
-        'issue_number': {
+        'number': {
             'type': 'integer',
             'description': 'The number of the issue to close.'
         }
     },
-    'required': ['issue_number']
+    'required': ['number']
 }
 
 GITHUB_API_BASE_URL = "https://api.github.com"
@@ -38,10 +38,10 @@ async def tool(roo, arguments, user):
 
     org = arguments.get("org", "hyphacoop")
     repo = arguments.get("repo", "organizing-private")
-    issue_number = arguments["issue_number"]
+    number = arguments["number"]
 
     try:
-        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{issue_number}"
+        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{number}"
         headers = {"Authorization": f"token {token}"}
         payload = {"state": "closed"}
 
@@ -49,9 +49,9 @@ async def tool(roo, arguments, user):
 
         if response.status_code == 200:
             issue = response.json()
-            return f"Issue #{issue_number} closed successfully: {issue['html_url']}"
+            return f"Issue #{number} closed successfully: {issue['html_url']}"
         elif response.status_code == 404:
-            return f"Issue #{issue_number} not found in '{org}/{repo}'."
+            return f"Issue #{number} not found in '{org}/{repo}'."
         else:
             return f"GitHub API Error: {response.status_code} - {response.text}"
 

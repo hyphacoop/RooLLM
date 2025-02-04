@@ -56,8 +56,7 @@ async def tool(roo, arguments, user):
     org = arguments.get("org", "hyphacoop")
     repo = arguments.get("repo", "organizing-private")
     
-    # Handle both 'pr_number' and 'issue_number' by normalizing to 'number'
-    number = arguments.get("number") or arguments.get("pr_number") or arguments.get("issue_number")
+    number = arguments.get("number")
     if not number:
         return f"❌ Error: Missing issue or PR number. Received arguments: {arguments}"
 

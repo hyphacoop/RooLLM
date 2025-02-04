@@ -12,9 +12,9 @@ parameters = {
     'properties': {
         'org': {'type': 'string', 'description': 'GitHub organization name.', 'default': 'hyphacoop'},
         'repo': {'type': 'string', 'description': 'Repository name.', 'default': 'organizing-private'},
-        'issue_number': {'type': 'integer', 'description': 'The number of the issue to reopen.'}
+        'number': {'type': 'integer', 'description': 'The number of the issue to reopen.'}
     },
-    'required': ['issue_number']
+    'required': ['number']
 }
 
 GITHUB_API_BASE_URL = "https://api.github.com"
@@ -26,10 +26,10 @@ async def tool(roo, arguments, user):
 
     org = arguments.get("org", "hyphacoop")
     repo = arguments.get("repo", "organizing-private")
-    issue_number = arguments["issue_number"]
+    number = arguments["number"]
 
     try:
-        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{issue_number}"
+        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{number}"
         headers = {"Authorization": f"token {token}"}
         payload = {"state": "open"}
 
@@ -37,7 +37,7 @@ async def tool(roo, arguments, user):
 
         if response.status_code == 200:
             issue = response.json()
-            return f"✅ Issue #{issue_number} reopened successfully: [View Issue]({issue['html_url']})"
+            return f"Issue #{number} reopened successfully: [View Issue]({issue['html_url']})"
         else:
             return f"GitHub API Error: {response.status_code} - {response.text}"
 

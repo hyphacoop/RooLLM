@@ -17,7 +17,7 @@ parameters = {
         },
         "org": {"type": "string", "default": "hyphacoop"},
         "repo": {"type": "string", "default": "organizing-private"},
-        "pr_number": {"type": "integer", "description": "Pull request number (required for some actions)."},
+        "number": {"type": "integer", "description": "Pull request number (required for some actions)."},
         "title": {"type": "string", "description": "Title for PR creation/update."},
         "body": {"type": "string", "description": "Body content for PR creation, updates, or comments."},
         "assignee": {"type": "string", "description": "GitHub username to assign a PR."}

@@ -12,11 +12,11 @@ parameters = {
     'properties': {
         'org': {'type': 'string', 'description': 'GitHub organization name.', 'default': 'hyphacoop'},
         'repo': {'type': 'string', 'description': 'Repository name.', 'default': 'organizing-private'},
-        'issue_number': {'type': 'integer', 'description': 'The number of the issue to update.'},
+        'number': {'type': 'integer', 'description': 'The number of the issue to update.'},
         'title': {'type': 'string', 'description': 'New title of the issue.', 'default': None},
         'body': {'type': 'string', 'description': 'New body description of the issue.', 'default': None}
     },
-    'required': ['issue_number']
+    'required': ['number']
 }
 
 GITHUB_API_BASE_URL = "https://api.github.com"
@@ -28,7 +28,7 @@ async def tool(roo, arguments, user):
 
     org = arguments.get("org", "hyphacoop")
     repo = arguments.get("repo", "organizing-private")
-    issue_number = arguments["issue_number"]
+    number = arguments["number"]
     title = arguments.get("title")
     body = arguments.get("body")
 
@@ -36,7 +36,7 @@ async def tool(roo, arguments, user):
         return "❌ Error: Provide at least a new title or body to update."
 
     try:
-        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{issue_number}"
+        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{number}"
         headers = {"Authorization": f"token {token}"}
         payload = {}
 

@@ -9,7 +9,7 @@ parameters = {
     'properties': {
         'org': {'type': 'string', 'default': 'hyphacoop'},
         'repo': {'type': 'string', 'default': 'organizing-private'},
-        'pr_number': {'type': 'integer', 'description': 'Specific PR number to retrieve.', 'default': None},
+        'number': {'type': 'integer', 'description': 'Specific PR number to retrieve.', 'default': None},
         'state': {'type': 'string', 'description': 'State of PRs (open, closed, all).', 'default': 'open', 'enum': ['open', 'closed', 'all']},
         'assignee': {'type': 'string', 'description': 'Filter by assignee.', 'default': None}
     }
@@ -24,22 +24,22 @@ async def tool(roo, arguments, user):
     
     org = arguments.get("org", "hyphacoop")
     repo = arguments.get("repo", "organizing-private")
-    pr_number = arguments.get("pr_number")  # Optional: Directly search for PR number
+    number = arguments.get("number")  # Optional: Directly search for PR number
     state = arguments.get("state", "open")  # Default to open PRs
     assignee = arguments.get("assignee")  # Optional assignee filter
 
     headers = {"Authorization": f"token {token}"}
 
     # If a PR number is provided, fetch that specific PR
-    if pr_number:
-        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/pulls/{pr_number}"
+    if number:
+        url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/pulls/{number}"
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
             pr = response.json()
-            return f"🔍 Found PR #{pr_number}: **{pr['title']}**\n{pr['body']}\n[View on GitHub]({pr['html_url']})"
+            return f"🔍 Found PR #{number}: **{pr['title']}**\n{pr['body']}\n[View on GitHub]({pr['html_url']})"
         elif response.status_code == 404:
-            return f"⚠️ PR #{pr_number} not found in '{org}/{repo}'."
+            return f"PR #{number} not found in '{org}/{repo}'."
         else:
             return f"GitHub API Error: {response.status_code} - {response.text}"
 
