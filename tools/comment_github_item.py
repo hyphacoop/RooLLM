@@ -34,8 +34,6 @@ def get_github_item_details(org, repo, number, token):
         return None, None  # Fallback if request fails
 
 async def tool(roo, arguments, user):
-    print(arguments)
-
     token = roo.config.get("gh_token") if roo.config else None
     if not token:
         return "GitHub token is missing."
