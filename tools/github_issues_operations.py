@@ -36,7 +36,7 @@ parameters = {
 ACTION_TO_TOOL = {
     "create": "create_github_issue",
     "comment": "comment_github_issue",
-    "assign": "assign_github_issue",
+    "assign": "assign_github_item",
     "close": "close_github_issue",
     "reopen": "reopen_github_issue",
     "search": "search_github_issues",

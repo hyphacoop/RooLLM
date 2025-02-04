@@ -29,7 +29,7 @@ parameters = {
 ACTION_TO_TOOL = {
     "create": "create_pull_request",
     "comment": "comment_pull_request",
-    "assign": "assign_pull_request",
+    "assign": "assign_github_item",
     "close": "close_pull_request",
     "reopen": "reopen_pull_request",
     "merge": "merge_pull_request",
