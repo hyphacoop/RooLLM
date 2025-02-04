@@ -21,6 +21,10 @@ parameters = {
             'description': 'Repository name. Defaults to "organizing-private".',
             'default': 'organizing-private'
         },
+        'number': {
+            'type': 'integer',
+            'description': 'Issue number to fetch details for. If provided, other filters are ignored.'
+        },
         'label': {
             'type': 'string',
             'description': 'Label to filter issues by.'
@@ -47,24 +51,49 @@ async def tool(roo, arguments, user):
 
     org = arguments.get("org", "hyphacoop")
     repo = arguments.get("repo", "organizing-private")
+    number = arguments.get("number")  # Optional
     label = arguments.get("label")  # Optional
     state = arguments.get("state", "open")
     assignee = arguments.get("assignee")  # Optional
 
-    try:
-        # Preprocess the assignee to remove '@' if present
-        if assignee and assignee.startswith("@"):
-            assignee = assignee[1:]
+    headers = {"Authorization": f"token {token}"}
 
+    try:
+        if number:
+            # Fetch details of a specific issue
+            issue_url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues/{number}"
+            response = requests.get(issue_url, headers=headers)
+
+            if response.status_code == 200:
+                issue = response.json()
+                assignee_name = issue["assignee"]["login"] if issue.get("assignee") else "Unassigned"
+                labels = ", ".join([l["name"] for l in issue.get("labels", [])]) if issue.get("labels") else "No labels"
+                issue_state = issue.get("state", "Unknown state")
+
+                return (
+                    f"**Issue #{number} - {issue['title']}**\n"
+                    f"🔗 {issue['html_url']}\n"
+                    f"State: {issue_state}\n"
+                    f"Labels: {labels}\n"
+                    f"Assignee: {assignee_name}\n\n"
+                    f"{issue.get('body', 'No description')}"
+                )
+
+            elif response.status_code == 404:
+                return f"❌ Issue #{number} not found in '{org}/{repo}'."
+            else:
+                return f"GitHub API Error: {response.status_code} - {response.text}"
+
+        # Otherwise, perform a standard issue search
         url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/issues"
-        headers = {"Authorization": f"token {token}"}
+      
         params = {"state": state}
 
         # Add label and assignee only if they're provided
         if label:
             params["labels"] = label
         if assignee:
-            params["assignee"] = assignee
+            params["assignee"] = assignee.strip("@") 
 
         response = requests.get(url, headers=headers, params=params)
 
