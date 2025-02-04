@@ -71,13 +71,14 @@ async def tool(roo, arguments, user):
     assignee = arguments.get("assignee")  # Optional
 
     try:
-        # Fetch labels from the repo
-        repo_labels = get_repo_labels(org, repo, token)
+        # Fetch labels from the repo **only if labels were provided**
+        if labels:
+            repo_labels = get_repo_labels(org, repo, token)
 
-        # Validate provided labels
-        invalid_labels = [label for label in labels if label not in repo_labels]
-        if invalid_labels:
-            return f"Invalid labels provided: {', '.join(invalid_labels)}. Available labels are: {', '.join(repo_labels)}"
+            # Validate provided labels
+            invalid_labels = [label for label in labels if label not in repo_labels]
+            if invalid_labels:
+                return f"Invalid labels provided: {', '.join(invalid_labels)}. Available labels are: {', '.join(repo_labels)}"
 
         # Preprocess the assignee to remove '@' if present
         if assignee and assignee.startswith("@"):
@@ -88,7 +89,7 @@ async def tool(roo, arguments, user):
         payload = {
             "title": title,
             "body": body,
-            "labels": labels,
+            "labels": labels if labels else [],
             "assignee": assignee if assignee != "none" else None
         }
 
