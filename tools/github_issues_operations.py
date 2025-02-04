@@ -35,7 +35,7 @@ parameters = {
 # **Mapping actions to tool names**
 ACTION_TO_TOOL = {
     "create": "create_github_issue",
-    "comment": "comment_github_issue",
+    "comment": "comment_github_item",
     "assign": "assign_github_item",
     "close": "close_github_issue",
     "reopen": "reopen_github_issue",

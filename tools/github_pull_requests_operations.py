@@ -28,7 +28,7 @@ parameters = {
 # **Mapping actions to tool names**
 ACTION_TO_TOOL = {
     "create": "create_pull_request",
-    "comment": "comment_pull_request",
+    "comment": "comment_github_item",
     "assign": "assign_github_item",
     "close": "close_pull_request",
     "reopen": "reopen_pull_request",
