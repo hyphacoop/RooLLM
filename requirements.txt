@@ -3,3 +3,5 @@ python-dotenv
 beautifulsoup4
 lunr
 requests
+gspread
+oauth2client
