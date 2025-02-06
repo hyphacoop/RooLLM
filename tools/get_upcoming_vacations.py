@@ -2,7 +2,7 @@ import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-name = 'fetch_upcoming_vacations'
+name = 'get_upcoming_vacations'
 emoji = '🌴'
 description = 'Retrieve upcoming vacations from the company vacation sheet for the next week.'
 parameters = {
