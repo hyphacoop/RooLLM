@@ -3,9 +3,9 @@ import requests
 name = 'search_github_issues'
 emoji = '🔍'
 description = (
-    "Search GitHub issues by organization, repository, and optional filters like label, state, or assignee. "
+    "Search GitHub issues by number, organization, repository, and optional filters like label, state, or assignee. "
     "Defaults to searching the 'hyphacoop/organizing-private' repository for open issues. "
-    "For example: 'List all open issues' or 'Find issues assigned to @username'."
+    "For example: 'List all open issues', 'Search for issue #42' or 'Find issues assigned to @username'."
 )
 
 parameters = {
