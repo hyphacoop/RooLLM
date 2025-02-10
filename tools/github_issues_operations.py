@@ -4,7 +4,7 @@ name = 'github_issues_operations'
 emoji = '🔧'
 description = (
     "Perform actions on GitHub issues within a repository. "
-    "Supported actions: search, create, comment, update, close, reopen, label and assign. "
+    "Supported actions: search, create, comment, update, close, reopen, label and assign and fetch labels."
     "For example: 'Assign @username to issue #5 in hyphacoop/organizing-private', "
     "'Comment on issue #7', or 'Search open issues in hyphacoop/hypha.coop'."
 )
@@ -15,7 +15,7 @@ parameters = {
         "action": {
             "type": "string",
             "description": "The action to perform on the issue.",
-            "enum": ["search", "create", "comment", "update", "close", "reopen", "assign", "label"]
+            "enum": ["search", "create", "comment", "update", "close", "reopen", "assign", "label", "fetch_labels"]
         },
         "org": {"type": "string", "description": "GitHub organization name.", "default": "hyphacoop"},
         "repo": {"type": "string", "description": "Repository name.", "default": "organizing-private"},
@@ -41,7 +41,8 @@ ACTION_TO_TOOL = {
     "reopen": "reopen_github_issue",
     "search": "search_github_issues",
     "update": "update_github_issue",
-    "label": "add_labels_to_github_item"
+    "label": "add_labels_to_github_item",
+    "fetch_labels": "search_repo_labels" 
 }
 
 async def tool(roo, arguments, user):

@@ -4,7 +4,7 @@ name = 'github_pull_requests_operations'
 emoji = '🛠️'
 description = (
     "Perform actions on GitHub pull requests (PR) within a repository. "
-    "Supported actions: search, create, comment, update, close, reopen, merge, label and assign. "
+    "Supported actions: search, create, comment, update, close, reopen, merge, label, assign and fetch labels. "
 )
 
 parameters = {
@@ -13,7 +13,7 @@ parameters = {
         "action": {
             "type": "string",
             "description": "The action to perform on the pull request.",
-            "enum": ["search", "create", "comment", "update", "close", "reopen", "merge", "assign", "label"]
+            "enum": ["search", "create", "comment", "update", "close", "reopen", "merge", "assign", "label", "fetch_labels"]
         },
         "org": {"type": "string", "default": "hyphacoop"},
         "repo": {"type": "string", "default": "organizing-private"},
@@ -35,7 +35,8 @@ ACTION_TO_TOOL = {
     "merge": "merge_pull_request",
     "search": "search_pull_requests",
     "update": "update_pull_request",
-    "label": "add_labels_to_github_item"
+    "label": "add_labels_to_github_item",
+    "fetch_labels": "search_repo_labels"
 }
 
 async def tool(roo, arguments, user):
