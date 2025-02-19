@@ -35,6 +35,6 @@ async def tool(roo, arguments, user):
         for emoji, description in TOPICS.items():
             archive_message += f"\n {emoji}: {description}\n"
 
-        return {"message": archive_message}
+        return archive_message
     except Exception as e:
         return {"error": f"Failed to retrieve archive categories: {str(e)}"}
