@@ -3,14 +3,16 @@ import asyncio
 import json
 import os
 import importlib
+import time
 from datetime import datetime
 from dotenv import load_dotenv
 
 try:
     from .tools import Tools
+    from .stats import log_llm_usage
 except ImportError:
     from tools import Tools
-
+    from stats import log_llm_usage
 # Load environment variables from .env
 load_dotenv()
 
@@ -45,6 +47,12 @@ class RooLLM:
 
         tool_descriptions = tools.descriptions()
 
+        # measuring response time
+        start_time = time.monotonic()
+
+        # **Log LLM invocation**
+        log_llm_usage(user=user)
+
         response = await self.inference(messages, tool_descriptions)
 
         while 'tool_calls' in response:
@@ -54,6 +62,7 @@ class RooLLM:
                     continue
                 func = call['function']
                 tool_name = func['name']
+                sub_tool_name = None 
 
                 # Fetch the primary tool's emoji and react
                 top_level_emoji = tools.get_tool_emoji(tool_name=tool_name)
@@ -85,6 +94,16 @@ class RooLLM:
                 # Append response from tool execution
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
             response = await self.inference(messages, tool_descriptions)
+
+        response_time = time.monotonic() - start_time  
+
+        # Log usage
+        log_llm_usage(
+            user=user,
+            tool_used=tool_name,
+            subtool_used=sub_tool_name,
+            response_time=response_time
+        )
 
         return response
 
