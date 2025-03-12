@@ -9,8 +9,7 @@ parameters = {
     'properties': {
         'org': {'type': 'string', 'default': 'hyphacoop'},
         'repo': {'type': 'string', 'default': 'organizing-private'}
-    },
-    'required': ['org', 'repo']
+    }
 }
 
 GITHUB_API_BASE_URL = "https://api.github.com"
