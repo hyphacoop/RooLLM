@@ -41,7 +41,7 @@ class Tools:
 
     def get_tool_emoji(self, tool_name):
         """
-        Fetches the emoji associated with a tool and triggers the callback if provided.
+        Fetches the emoji associated with a tool.
         :param tool_name: The name of the tool.
         """
         try:
