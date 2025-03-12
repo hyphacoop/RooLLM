@@ -50,8 +50,9 @@ class RooLLM:
         # measuring response time
         start_time = time.monotonic()
 
-        # **Log LLM invocation**
-        log_llm_usage(user=user)
+        # initialize logged variables
+        tool_name = None
+        sub_tool_name = None
 
         response = await self.inference(messages, tool_descriptions)
 
@@ -62,7 +63,6 @@ class RooLLM:
                     continue
                 func = call['function']
                 tool_name = func['name']
-                sub_tool_name = None 
 
                 # Fetch the primary tool's emoji and react
                 top_level_emoji = tools.get_tool_emoji(tool_name=tool_name)
