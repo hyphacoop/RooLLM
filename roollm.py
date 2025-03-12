@@ -68,6 +68,7 @@ class RooLLM:
                 top_level_emoji = tools.get_tool_emoji(tool_name=tool_name)
                 if top_level_emoji and react_callback:
                     await react_callback(top_level_emoji)  # First emoji reaction
+                    await asyncio.sleep(0.5)  # Delay before the next reaction
 
                 # Call the tool and store the result
                 result = await tools.call(self, tool_name, func['arguments'], user)
