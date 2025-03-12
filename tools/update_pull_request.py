@@ -23,8 +23,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
 
     if not arguments.get("title") and not arguments.get("body"):
         return "❌ Error: Provide at least a new title or body to update."

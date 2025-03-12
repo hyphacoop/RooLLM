@@ -1,7 +1,7 @@
 import requests
 
 name = 'search_repo_labels'
-emoji = '🏷️'
+emoji = '🔖'
 description = "Search and retrieve labels from a specified GitHub repository."
 
 parameters = {
@@ -30,8 +30,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
 
     try:
         labels = get_repo_labels(org, repo, token)

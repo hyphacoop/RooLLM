@@ -1,7 +1,7 @@
 import requests
 
 name = 'search_pull_requests'
-emoji = '🔍'
+emoji = '🔎'
 description = "Search pull requests with optional filters or retrieve a specific PR by number."
 
 parameters = {
@@ -22,8 +22,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
     
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
     number = arguments.get("number")  # Optional: Directly search for PR number
     state = arguments.get("state", "open")  # Default to open PRs
     assignee = arguments.get("assignee")  # Optional assignee filter

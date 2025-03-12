@@ -1,7 +1,7 @@
 import requests
 
 name = 'close_pull_request'
-emoji = '🔒'
+emoji = '🔐'
 description = "Close a pull request without merging."
 
 parameters = {
@@ -21,8 +21,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
     
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
 
     url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/pulls/{arguments['number']}"
     headers = {"Authorization": f"token {token}"}

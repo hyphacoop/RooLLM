@@ -1,7 +1,7 @@
 import requests
 
 name = 'reopen_github_issue'
-emoji = '🔄'
+emoji = '🔑'
 description = (
     "Reopen a closed GitHub issue in a specified repository. "
     "For example: 'Reopen issue #8 in hyphacoop/organizing-private.'"
@@ -24,8 +24,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
     number = arguments["number"]
 
     try:

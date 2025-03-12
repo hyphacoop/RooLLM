@@ -1,7 +1,7 @@
 import requests
 
 name = 'update_github_issue'
-emoji = '✏️'
+emoji = '📋'
 description = (
     "Update the title and/or body of an existing GitHub issue in a specified repository. "
     "For example: 'Update issue #10 in hyphacoop/organizing-private with a new title and description.'"
@@ -26,8 +26,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
     number = arguments["number"]
     title = arguments.get("title")
     body = arguments.get("body")
@@ -46,6 +46,8 @@ async def tool(roo, arguments, user):
             payload["body"] = body
 
         response = requests.patch(url, headers=headers, json=payload)
+
+        print(response)
 
         if response.status_code == 200:
             issue = response.json()

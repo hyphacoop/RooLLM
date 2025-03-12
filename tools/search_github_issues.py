@@ -49,8 +49,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org", "hyphacoop")
-    repo = arguments.get("repo", "organizing-private")
+    org = arguments.get("org") or "hyphacoop"
+    repo = arguments.get("repo") or "organizing-private"
     number = arguments.get("number")  # Optional
     label = arguments.get("label")  # Optional
     state = arguments.get("state", "open")
