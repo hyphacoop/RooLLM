@@ -75,22 +75,20 @@ class RooLLM:
 
                 # If a GitHub dispatcher tool is used, react to the sub-tool as well
                 if tool_name in ["github_issues_operations", "github_pull_requests_operations"]:
-                    # Dynamically import ACTION_TO_TOOL from the corresponding module
-                    try:
-                        module_name = f"tools.{tool_name}"
-                        module = importlib.import_module(module_name)
-                        action_to_tool_map = getattr(module, "ACTION_TO_TOOL", {})
-                    except ImportError:
-                        action_to_tool_map = {}
-
+                    # Get the action from arguments
                     action = func["arguments"].get("action")
                     if action:
-                        sub_tool_name = action_to_tool_map.get(action)  # Map to sub-tool
-                        if sub_tool_name:
-                            sub_tool_emoji = tools.get_tool_emoji(tool_name=sub_tool_name)
-                            if sub_tool_emoji and react_callback:
-                                await react_callback(sub_tool_emoji)  # Second emoji reaction
-
+                        # use the loaded tool module
+                        tool_module = tools.tools.get(tool_name)
+                        if tool_module and hasattr(tool_module, "ACTION_TO_TOOL"):
+                            action_to_tool_map = tool_module.ACTION_TO_TOOL
+                            # Check if the action has a corresponding sub-tool
+                            sub_tool_name = action_to_tool_map.get(action)
+                            if sub_tool_name:
+                                # Fetch the sub-tool's emoji and react
+                                sub_tool_emoji = tools.get_tool_emoji(tool_name=sub_tool_name)                                
+                                if sub_tool_emoji and react_callback:
+                                    await react_callback(sub_tool_emoji) 
 
                 # Append response from tool execution
                 messages.append(make_message(ROLE_TOOL, json.dumps(result)))
