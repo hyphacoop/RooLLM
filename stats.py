@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 from datetime import datetime
 
 try:
@@ -22,9 +23,12 @@ tools_instance = Tools()
 def log_llm_usage(user, emoji=None, tool_used=None, subtool_used=None, response_time=None):
     """Log LLM usage, user, tool calls, and response time."""
 
+    # Semi-anonymized username by hashing
+    hashed_username = hashlib.sha256(user.encode()).hexdigest()[:8]  # Use first 8 chars for brevity
+
     entry = {
         "timestamp": datetime.utcnow().isoformat(),
-        "user": user,
+        "user": hashed_username,
         "tool_used": tool_used,  # Main tool name
         "subtool_used": subtool_used,  # Subtool name (if applicable)
         "response_time": response_time  # Log response time in seconds
