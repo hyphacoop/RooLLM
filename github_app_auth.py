@@ -47,10 +47,13 @@ class GitHubAppAuth:
             payload = {
                 'iat': now - 60,  # Account for clock drift
                 'exp': now + 600,  # 10 minutes
-                'iss': self.app_id
+                'iss': str(self.app_id)
             }
             
             jwt_token = jwt.encode(payload, self.private_key, algorithm='RS256')
+
+            if isinstance(jwt_token, bytes):
+                jwt_token = jwt_token.decode('utf-8')
             
             # Get installation token
             url = f"https://api.github.com/app/installations/{self.installation_id}/access_tokens"
