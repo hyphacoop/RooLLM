@@ -1,0 +1,14 @@
+{
+  "name": "roollm-dev",
+  "version": "1.0.0",
+  "scripts": {
+    "python:backend": "cd backend && python main.py",
+    "static:frontend": "python -c \"import socket; s=socket.socket(); s.bind(('', 0)); port=s.getsockname()[1]; s.close(); print(port)\" > /tmp/frontend_port && PORT=$(cat /tmp/frontend_port) && echo \"Starting server on port $PORT\" && cd frontend && python -m http.server $PORT",
+    "open:browser": "sleep 1s && PORT=$(cat /tmp/frontend_port) && echo \"Opening browser at http://localhost:$PORT\" && npx open-cli http://localhost:$PORT",
+    "start": "npm run open:browser & concurrently --kill-others --handle-input -n python:backend,static:frontend -c green,cyan \"npm run python:backend\" \"npm run static:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1",
+    "open-cli": "^8.0.0"
+  }
+}
