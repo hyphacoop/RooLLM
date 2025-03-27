@@ -1,0 +1,285 @@
+let isThinking = false;
+
+const emojiToolMap = {
+    "💬": "`comment_github_item`:  \nAdd comments to issues or PRs",
+    "👤": "`assign_github_item`:  \nAssign users to issues or PRs",
+    "🏷️": "`add_labels_to_github_item`:  \nAdd labels to issues or PRs",
+    "🔖": "`search_repo_labels`:  \nGet available labels in a repository",
+    "🔧": "`github_issues_operations`:  \nDispatcher for issue operations",
+    "📝": "`create_github_issue`:  \nCreate new issues",
+    "🔒": "`close_github_issue`:  \nClose an issue",
+    "🔑": "`reopen_github_issue`:  \nReopen a closed issue",
+    "🔍": "`search_github_issues`:  \nSearch for issues by status, number, assignee, etc.",
+    "📋": "`update_github_issue`:  \nUpdate issue title/body",
+    "🛠️": "`github_pull_requests_operations`:  \nDispatcher for PR operations",
+    "🌿": "`create_pull_request`:  \nCreate new PRs",
+    "🔐": "`close_pull_request`:  \nClose a PR without merging",
+    "🔓": "`reopen_pull_request`:  \nReopen a closed PR",
+    "🔀": "`merge_pull_request`:  \nMerge an open PR",
+    "🔎": "`search_pull_requests`:  \nSearch for PRs by status, number, assisgnee, label, etc.",
+    "✏️": "`update_pull_request`:  \nUpdate PR title/body",
+    "📖": "`search_handbook`:  \nSearch Hypha's handbook ➜ handbook.hypha.coop",
+    "📅": "`get_upcoming_holiday`:  \nFetch upcoming statutory holidays",
+    "🌴": "`get_upcoming_vacations`:  \nGet information about our colleague's upcoming vacations",
+    "🏖️": "`fetch_remaining_vacation_days`:  \nCheck vacation day balances",
+    "🗄️": "`get_archive_categories`:  \nList archivable categories with links",
+    "🔢": "`calc`:  \nPerform calculations"
+};
+ 
+// Fetch backend PORT from file
+async function loadConfig() {
+    console.log("Loading config...");
+
+    let backendPort = 8000; // Default fallback port
+
+    try {
+        // Try to get port from port.json file created by backend
+        const portResponse = await fetch("port.json");
+        if (portResponse.ok) {
+            const portInfo = await portResponse.json();
+            backendPort = portInfo.port;
+            console.log("Backend port set to:", backendPort);
+        } else {
+            console.warn("Could not read port.json, status:", portResponse.status);
+        }
+    } catch (portError) {
+        console.warn("Could not get port from file:", portError);
+        
+        // Try alternate method - check the port-info endpoint
+        try {
+            // Try with default port first
+            const apiResponse = await fetch(`http://localhost:8000/port-info`);
+            if (apiResponse.ok) {
+                const portInfo = await apiResponse.json();
+                backendPort = portInfo.port;
+                console.log("Backend port set from API:", backendPort);
+            }
+        } catch (apiError) {
+            console.warn("Could not get port from API, using default:", backendPort);
+        }
+    }
+
+    // Make backendPort globally available
+    window.backendPort = backendPort;
+}
+
+// Initialize configuration
+loadConfig();
+
+let chatHistory = [];
+
+document.getElementById("submit-button").addEventListener("click", sendMessage);
+document.getElementById("text-input").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") sendMessage();
+});
+
+document.getElementById("text-input").addEventListener("input", function() {
+    this.style.height = "auto"; // Reset height
+    this.style.height = (this.scrollHeight) + "px"; // Expand to fit content
+});
+
+async function sendMessage() {
+    isThinking = true;
+
+    const inputField = document.getElementById("text-input");
+    const submitButton = document.getElementById("submit-button");
+    const message = inputField.value.trim();
+    if (!message) return;
+
+    inputField.classList.add("hidden");
+    submitButton.classList.add("hidden");
+
+    inputField.value = "";
+    addMessage(`${message}`, "user");
+
+    chatHistory.push({ role: "user", content: message });
+
+    const chat = document.getElementById("chat");
+
+    // Container for bot response
+    let botMessageDiv = document.createElement("div");
+    botMessageDiv.classList.add("bot-message");
+
+    let responseDiv = document.createElement("div");
+    botMessageDiv.appendChild(responseDiv);
+    chat.appendChild(botMessageDiv);
+
+    // Create emoji container first so it appears above the response
+    let emojiDiv = document.createElement("div");
+    emojiDiv.classList.add("tool-emojis");
+    responseDiv.appendChild(emojiDiv);
+
+    // Create a container for the response content
+    let responseContentDiv = document.createElement("div");
+    responseDiv.appendChild(responseContentDiv);
+
+    // Create loading indicator inside the response content div
+    let loadingDiv = document.createElement("div");
+    loadingDiv.classList.add("loading-indicator");
+    loadingDiv.textContent = ".";  // Initial dot
+    responseContentDiv.appendChild(loadingDiv);
+
+    // Start dot animation
+    let dotCount = 1;
+    const loadingInterval = setInterval(() => {
+        dotCount = (dotCount % 3) + 1; // cycle through 1, 2, 3
+        loadingDiv.textContent = ".".repeat(dotCount);
+    }, 500);
+
+    // Generate a session ID
+    if (!window.sessionId) {
+        window.sessionId = 'session_' + Date.now();
+    }
+
+    const headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+
+    try {
+        const response = await fetch(`http://localhost:${backendPort}/chat`, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify({
+                message: message,
+                session_id: window.sessionId
+            })
+        });
+
+        if (!response.body) {
+            responseContentDiv.textContent = "Error: No response stream";
+            return;
+        }
+
+        if (!response.ok) {
+            console.error(`Error: ${response.status} ${response.statusText}`);
+            responseContentDiv.textContent = `Error: ${response.status} ${response.statusText}`;
+            return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        let fullReply = "";
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n").filter(line => line.startsWith("data:"));
+            for (const line of lines) {
+                try {
+                    const jsonString = line.replace("data: ", "");
+                    const data = JSON.parse(jsonString);
+
+                    if (data.type === "emoji") {
+                        const emojiSpan = document.createElement("span");
+                        emojiSpan.textContent = data.emoji;
+                        emojiSpan.addEventListener("click", function(event) {
+                            showEmojiPopup(event, data.emoji);
+                        });
+                        emojiDiv.appendChild(emojiSpan);
+                    } else if (data.type === "reply") {
+                        fullReply = data.content;
+                    }
+                } catch (err) {
+                    console.error("Error parsing chunk:", err);
+                }
+            }
+        }
+
+        // Render final reply
+        if (fullReply) {
+            // Clear the loading indicator
+            loadingDiv.style.display = "none";
+            
+            addMessage(fullReply, "assistant");
+            
+            // Stop loading animation
+            clearInterval(loadingInterval);
+            
+            chatHistory.push({ role: "assistant", content: fullReply });
+        }
+
+    } catch (error) {
+        responseContentDiv.textContent = "Error: Unable to reach AI server";
+        console.error(error);
+    }
+
+    inputField.classList.remove("hidden");
+    submitButton.classList.remove("hidden");
+    isThinking = false;
+}
+
+
+// Function to show emoji popup with markdown rendering
+function showEmojiPopup(event, emoji) {
+    const clickedEmoji = event.target;
+    
+    // Check if there's already a popup for this emoji
+    const existingPopups = document.querySelectorAll('.emoji-popup');
+    existingPopups.forEach(popup => {
+        // If clicking the same emoji that has an active popup, remove it (toggle off)
+        popup.remove();
+    });
+    
+    // If we just removed a popup for this emoji, don't create a new one
+    if (clickedEmoji.dataset.hasPopup === "true") {
+        clickedEmoji.dataset.hasPopup = "false";
+        return;
+    }
+    
+    // Create popup element
+    const popup = document.createElement('div');
+    popup.classList.add('emoji-popup');
+    
+    // Get tool description from map and render as markdown
+    const toolDescription = emojiToolMap[emoji] || "Unknown tool";
+    popup.innerHTML = marked.parse(toolDescription);
+    
+    // Position popup near the emoji
+    document.body.appendChild(popup);
+    const rect = clickedEmoji.getBoundingClientRect();
+    popup.style.left = `${rect.left}px`;
+    popup.style.top = `${rect.bottom + 5}px`;
+    
+    // Mark this emoji as having a popup
+    clickedEmoji.dataset.hasPopup = "true";
+    
+    // Close popup when clicking elsewhere
+    document.addEventListener('click', function closePopup(e) {
+        if (e.target !== clickedEmoji) {
+            popup.remove();
+            clickedEmoji.dataset.hasPopup = "false";
+            document.removeEventListener('click', closePopup);
+        }
+    });
+}
+
+function addMessage(text, type) {
+    const chat = document.getElementById("chat");
+    const messageDiv = document.createElement("div");
+    
+    const userCharacter = document.createElement("span")
+    userCharacter.textContent = "> ";
+    userCharacter.classList.add("mr1");
+    messageDiv.appendChild(userCharacter);
+
+
+    const message = document.createElement("span");
+    message.innerHTML = marked.parse(text)
+    messageDiv.appendChild(message);
+
+    messageDiv.classList.add("message", type);
+
+    chat.appendChild(messageDiv);
+    chat.scrollTop = chat.scrollHeight;
+    return messageDiv;
+}
+
+function updateLastMessage(text) {
+    const chat = document.getElementById("chat");
+    const lastMessage = chat.lastElementChild;
+    if (lastMessage) {
+        lastMessage.innerHTML = text;
+    }
+}
