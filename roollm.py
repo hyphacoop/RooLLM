@@ -16,7 +16,7 @@ except ImportError:
 # Load environment variables from .env
 load_dotenv()
 
-DEFAULT_OLLAMA_URL = os.getenv("ROO_LLM_URL", "https://ai.hypha.coop/api/chat")
+DEFAULT_OLLAMA_URL = os.getenv("ROO_LLM_URL", "https://ai.hypha.coop")
 DEFAULT_MODEL = os.getenv("ROO_LLM_MODEL", "hermes3")
 DEFAULT_USERNAME = os.getenv("ROO_LLM_AUTH_USERNAME", "")
 DEFAULT_PASSWORD = os.getenv("ROO_LLM_AUTH_PASSWORD", "")
@@ -122,7 +122,7 @@ The current date and time is {current_date_time}.
 
 
 def make_ollama_inference(
-        url=DEFAULT_OLLAMA_URL,
+        url=DEFAULT_OLLAMA_URL + "/api/chat",
         model=DEFAULT_MODEL,
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD):
