@@ -110,7 +110,7 @@ def prepare_github_token(config):
     
     # Early return if no credentials are available
     if not (app_id or pat):
-        return None, None
+        return None, None, None
     
     # If we have GitHub App credentials, try to get a token
     auth = GitHubAppAuth(
