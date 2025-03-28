@@ -1,4 +1,5 @@
 let isThinking = false;
+let sessionId = null;
 
 const emojiToolMap = {
     "💬": "`comment_github_item`:  \nAdd comments to issues or PRs",
@@ -64,9 +65,69 @@ async function loadConfig() {
 }
 
 // Initialize configuration
-loadConfig();
+(async function initializeApp() {
+    await loadConfig(); // Ensure backendPort is set before proceeding
+
+    // Generate or retrieve a session ID
+    if (!window.sessionId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const existingSessionId = urlParams.get('session_id');
+
+        if (existingSessionId) {
+            window.sessionId = existingSessionId;
+            sessionId = window.sessionId;
+
+            // Load chat history for the session
+            loadChatHistory(sessionId);
+        } else {
+            window.sessionId = generateUUID();
+            sessionId = window.sessionId;
+
+            // Update the URL with the session ID
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('session_id', window.sessionId);
+            window.history.replaceState(null, '', newUrl);
+        }
+    }
+})();
 
 let chatHistory = [];
+
+// Function to generate a UUID
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+async function loadChatHistory(sessionId) {
+    console.log("Loading chat history for session:", sessionId);
+    console.log("Backend port:", backendPort);
+    try {
+        const response = await fetch(`http://localhost:${backendPort}/chat-history?session_id=${sessionId}`);
+        if (response.ok) {
+            
+            const result = await response.json();
+            
+            console.log("Chat history response:", result);
+            if (result.status === "ok" && Array.isArray(result.history)) {
+                chatHistory = result.history; // Update the global chatHistory variable
+
+                // Render the chat history
+                chatHistory.forEach(entry => {
+                    addMessage(entry.content, entry.role === "user" ? "user" : "assistant");
+                });
+            } else {
+                console.warn("Unexpected response format or empty history:", result);
+            }
+        } else {
+            console.warn("Failed to load chat history:", response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error("Error loading chat history:", error);
+    }
+}
 
 document.getElementById("submit-button").addEventListener("click", sendMessage);
 document.getElementById("text-input").addEventListener("keypress", function(event) {
@@ -125,11 +186,6 @@ async function sendMessage() {
         dotCount = (dotCount % 3) + 1; // cycle through 1, 2, 3
         loadingDiv.textContent = ".".repeat(dotCount);
     }, 500);
-
-    // Generate a session ID
-    if (!window.sessionId) {
-        window.sessionId = 'session_' + Date.now();
-    }
 
     const headers = new Headers();
     headers.append('Content-Type', 'application/json');
@@ -232,54 +288,47 @@ function showEmojiPopup(event, emoji) {
     const popup = document.createElement('div');
     popup.classList.add('emoji-popup');
     
-    // Get tool description from map and render as markdown
-    const toolDescription = emojiToolMap[emoji] || "Unknown tool";
-    popup.innerHTML = marked.parse(toolDescription);
-    
-    // Position popup near the emoji
-    document.body.appendChild(popup);
-    const rect = clickedEmoji.getBoundingClientRect();
-    popup.style.left = `${rect.left}px`;
-    popup.style.top = `${rect.bottom + 5}px`;
-    
-    // Mark this emoji as having a popup
-    clickedEmoji.dataset.hasPopup = "true";
-    
-    // Close popup when clicking elsewhere
-    document.addEventListener('click', function closePopup(e) {
-        if (e.target !== clickedEmoji) {
-            popup.remove();
-            clickedEmoji.dataset.hasPopup = "false";
-            document.removeEventListener('click', closePopup);
-        }
-    });
-}
+     // Get tool description from map and render as markdown
+     const toolDescription = emojiToolMap[emoji] || "Unknown tool";
+     popup.innerHTML = marked.parse(toolDescription);
+     
+     // Position popup near the emoji
+     document.body.appendChild(popup);
+     const rect = clickedEmoji.getBoundingClientRect();
+     popup.style.left = `${rect.left}px`;
+     popup.style.top = `${rect.bottom + 5}px`;
+     
+     // Mark this emoji as having a popup
+     clickedEmoji.dataset.hasPopup = "true";
+     
+     // Close popup when clicking elsewhere
+     document.addEventListener('click', function closePopup(e) {
+         if (e.target !== clickedEmoji) {
+             popup.remove();
+             clickedEmoji.dataset.hasPopup = "false";
+             document.removeEventListener('click', closePopup);
+         }
+     });
+ }
+ 
+ function addMessage(text, type) {
+     const chat = document.getElementById("chat");
+     const messageDiv = document.createElement("div");
+     
+     const userCharacter = document.createElement("span")
+     userCharacter.textContent = "> ";
+     userCharacter.classList.add("mr1");
+     messageDiv.appendChild(userCharacter);
+ 
+ 
+     const message = document.createElement("span");
+     message.innerHTML = marked.parse(text)
+     messageDiv.appendChild(message);
+ 
+     messageDiv.classList.add("message", type);
+ 
+     chat.appendChild(messageDiv);
+     chat.scrollTop = chat.scrollHeight;
+     return messageDiv;
+ }
 
-function addMessage(text, type) {
-    const chat = document.getElementById("chat");
-    const messageDiv = document.createElement("div");
-    
-    const userCharacter = document.createElement("span")
-    userCharacter.textContent = "> ";
-    userCharacter.classList.add("mr1");
-    messageDiv.appendChild(userCharacter);
-
-
-    const message = document.createElement("span");
-    message.innerHTML = marked.parse(text)
-    messageDiv.appendChild(message);
-
-    messageDiv.classList.add("message", type);
-
-    chat.appendChild(messageDiv);
-    chat.scrollTop = chat.scrollHeight;
-    return messageDiv;
-}
-
-function updateLastMessage(text) {
-    const chat = document.getElementById("chat");
-    const lastMessage = chat.lastElementChild;
-    if (lastMessage) {
-        lastMessage.innerHTML = text;
-    }
-}
