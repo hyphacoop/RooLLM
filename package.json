@@ -2,10 +2,13 @@
   "name": "roollm-dev",
   "version": "1.0.0",
   "scripts": {
-    "python:backend": "cd backend && python main.py",
-    "static:frontend": "python -c \"import socket; s=socket.socket(); s.bind(('', 0)); port=s.getsockname()[1]; s.close(); print(port)\" > /tmp/frontend_port && PORT=$(cat /tmp/frontend_port) && echo \"Starting server on port $PORT\" && cd frontend && python -m http.server $PORT",
-    "open:browser": "sleep 1s && PORT=$(cat /tmp/frontend_port) && echo \"Opening browser at http://localhost:$PORT\" && npx open-cli http://localhost:$PORT",
-    "start": "npm run open:browser & concurrently --kill-others --handle-input -n python:backend,static:frontend -c green,cyan \"npm run python:backend\" \"npm run static:frontend\""
+    "RooLLM": "cd backend && python main.py",
+    "interface": "cd frontend && python -m http.server 8080",
+    "open:browser": "sleep 1 && echo \"Opening browser at http://localhost:8080\" && npx open-cli http://localhost:8080",
+    "start": "npm run open:browser & concurrently --kill-others --handle-input -n RooLLM,interface -c green,cyan \"npm run RooLLM\" \"npm run interface\"",
+    "RooLLM3": "cd backend && python3 main.py",
+    "interfac3": "cd frontend && python3 -m http.server 8080",
+    "start3": "npm run open:browser & concurrently --kill-others --handle-input -n RooLLM,interface -c green,cyan \"npm run RooLLM3\" \"npm run interfac3\""
   },
   "devDependencies": {
     "concurrently": "^8.0.1",
