@@ -20,7 +20,18 @@ DEFAULT_OLLAMA_URL = os.getenv("ROO_LLM_URL", "https://ai.hypha.coop")
 DEFAULT_MODEL = os.getenv("ROO_LLM_MODEL", "hermes3")
 DEFAULT_USERNAME = os.getenv("ROO_LLM_AUTH_USERNAME", "")
 DEFAULT_PASSWORD = os.getenv("ROO_LLM_AUTH_PASSWORD", "")
-DEFAULT_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday", "github_issues_operations", "github_pull_requests_operations", "get_upcoming_vacations", "fetch_remaining_vacation_days", "get_archive_categories"]
+
+# Core tools that don't need special configs
+BASE_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday", "get_archive_categories"]
+
+# GitHub tools
+GITHUB_TOOL_LIST = ["github_issues_operations", "github_pull_requests_operations"]
+
+# Google tools
+GOOGLE_TOOL_LIST = ["get_upcoming_vacations", "fetch_remaining_vacation_days"]
+
+# For backward compatibility
+DEFAULT_TOOL_LIST = BASE_TOOL_LIST + GITHUB_TOOL_LIST + GOOGLE_TOOL_LIST
 
 ROLE_USER = "user"
 ROLE_ASSISTANT = "assistant"
@@ -29,12 +40,31 @@ ROLE_TOOL = "tool"
 
 
 class RooLLM:
-    def __init__(self, inference, tool_list=DEFAULT_TOOL_LIST, config=None):
+    def __init__(self, inference, tool_list=None, config=None):
         self.inference = inference
         self.config = config or {}
+
+        # If no specific tool list is provided, build it based on configs
+        if tool_list is None:
+            tool_list = self._build_tool_list()
+
         self.tools = Tools()
         for name in tool_list:
             self.tools.load_tool(name)
+
+    def _build_tool_list(self):
+        """Build tool list based on available configurations"""
+        tools = BASE_TOOL_LIST.copy()
+        
+        # Add GitHub tools if GitHub token is available
+        if self.config.get("gh_token"):
+            tools.extend(GITHUB_TOOL_LIST)
+        
+        # Add Google tools if Google credentials are available
+        if self.config.get("google_creds"):
+            tools.extend(GOOGLE_TOOL_LIST)
+        
+        return tools
 
     async def chat(self, user, content, history=[], limit_tools=None, react_callback=None):
         system_message = make_message(ROLE_SYSTEM, self.make_system())
