@@ -55,7 +55,7 @@ If you are running ollama locally, the default URL is `http://localhost:11434`.
 
 Our endpoint is running on basic auth. To access it, you will need to set the `ROO_LLM_AUTH_USERNAME` and `ROO_LLM_AUTH_PASSWORD` environment variables.
 
-Contact vincent to get the required credentials.
+Access to Hypha's API endpoint is currently limited to friends and collaborators. Please reach out to the Hypha team for more information if you're interested in accessing our hosted endpoint.
 
 #### Optional credentials
 ##### Github
@@ -85,7 +85,7 @@ npm run start
 ```
 ### Folder and File Structure
 
-Here’s an overview of the main folders and files in the project:
+Here's an overview of the main folders and files in the project:
 
 - **`frontend/`**: Contains the web interface for interacting with RooLLM. This folder includes all the client-side code for the user-facing application.
   
@@ -122,6 +122,48 @@ As an alternative to the web interface, you can have interactions with RooLLM in
 ```bash
 python repl.py
 ```
-````
+
+## Contributing
+
+We welcome contributions! Here are some guidelines to help you get started:
+
+### How to Contribute
+
+1. **Fork the repository**: Create your own copy of the project to work on.
+
+2. **Create a branch**: Make your changes in a new branch.
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make your changes**: Implement your feature or bug fix.
+
+4. **Test your changes**: Ensure your changes don't break existing functionality.
+
+5. **Submit a pull request**: Open a PR with a clear description of your changes.
+
+### Development Guidelines
+
+- Follow the existing code style and conventions
+- Write clear, descriptive commit messages
+- Document new features or changes to existing functionality
+- Add tests for new features when possible
+
+### Reporting Issues
+
+If you encounter any bugs or have feature requests, please open an issue on the repository with:
+- A clear description of the problem or suggestion
+- Steps to reproduce (for bugs)
+- Any relevant screenshots or error messages
+
+### Code of Conduct
+
+We expect all contributors to be respectful and considerate of others. Harassment or offensive behavior will not be tolerated.
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see the [LICENSE](LICENSE) file for details.
+
+The AGPL-3.0 is a copyleft license that requires anyone who distributes your code or a derivative work to make the source available under the same terms, and also requires the source to be provided to users who interact with the software over a network.
 
 
