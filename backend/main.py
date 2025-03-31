@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import roollm
-from roollm import RooLLM, ROLE_USER, make_ollama_inference
+from roollm import RooLLM, ROLE_USER, ROLE_ASSISTANT, make_ollama_inference
 from github_app_auth import prepare_github_token
 
 load_dotenv()
@@ -33,6 +33,7 @@ gh_config = {
     "GITHUB_INSTALLATION_ID": os.getenv("GITHUB_INSTALLATION_ID"),
     "GITHUB_TOKEN": os.getenv("GITHUB_TOKEN"),
 }
+
 
 github_token, auth_method, auth_object = prepare_github_token(gh_config)
 
@@ -63,7 +64,7 @@ app.add_middleware(
 )
 
 user = os.getenv("ROO_LLM_AUTH_USERNAME", "frontendUser")
-histories = {}  # Optional: store per-user history
+histories = {}  # store per-session history
 
 # Schema
 class ChatRequest(BaseModel):
@@ -92,8 +93,8 @@ async def chat(request: ChatRequest):
             )
 
             # Add to history
-            history.append({'role': ROLE_USER, 'content': f"{user}: {request.message}"})
-            history.append(response)
+            history.append({'role': ROLE_USER, 'content': request.message})
+            history.append({'role': ROLE_ASSISTANT, 'content': response["content"]})
             histories[request.session_id] = history
 
             await queue.put({"type": "reply", "content": response["content"]})
@@ -109,6 +110,23 @@ async def chat(request: ChatRequest):
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
+@app.get("/clear-history")
+async def clear_history(session_id: str):
+    if session_id in histories:
+        histories[session_id].clear()
+        return {"status": "ok"}
+    else:
+        return {"status": "error", "message": "Session ID not found"}
+
+@app.get("/chat-history")
+async def get_chat_history(session_id: str):
+    """
+    Retrieve the chat history for a given session ID.
+    """
+    if session_id in histories:
+        return {"status": "ok", "history": histories[session_id]}
+    else:
+        return {"status": "error", "message": "Session ID not found"}
 
 @app.get("/health")
 async def health_check():
