@@ -1,7 +1,10 @@
 aiohttp
-python-dotenv
 beautifulsoup4
-lunr
-requests
+fastapi
 gspread
+jwt
+lunr
 oauth2client
+python-dotenv
+requests
+uvicorn
