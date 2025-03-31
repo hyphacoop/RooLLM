@@ -19,7 +19,7 @@ const emojiToolMap = {
     "🔀": "`merge_pull_request`:  \nMerge an open PR",
     "🔎": "`search_pull_requests`:  \nSearch for PRs by status, number, assisgnee, label, etc.",
     "✏️": "`update_pull_request`:  \nUpdate PR title/body",
-    "📖": "`search_handbook`:  \nSearch Hypha's handbook ➜ handbook.hypha.coop",
+    "📖": "`search_handbook`:  \nSearch Hypha's handbook",
     "📅": "`get_upcoming_holiday`:  \nFetch upcoming statutory holidays",
     "🌴": "`get_upcoming_vacations`:  \nGet information about our colleague's upcoming vacations",
     "🏖️": "`fetch_remaining_vacation_days`:  \nCheck vacation day balances",
@@ -29,8 +29,6 @@ const emojiToolMap = {
  
 // Fetch backend PORT from file
 async function loadConfig() {
-    console.log("Loading config...");
-
     let backendPort = 8000; // Default fallback port
 
     try {
@@ -39,7 +37,6 @@ async function loadConfig() {
         if (portResponse.ok) {
             const portInfo = await portResponse.json();
             backendPort = portInfo.port;
-            console.log("Backend port set to:", backendPort);
         } else {
             console.warn("Could not read port.json, status:", portResponse.status);
         }
