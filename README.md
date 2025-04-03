@@ -94,6 +94,61 @@ Additionnally, RooLLM can be configured for your specific organization by settin
 These are used to set the default organization and repository for the github tools. Your personal access token (or Github App) will need to have access to this organization and repository.
 
 These default values are used when users don't provide an organization or repository in their prompt.
+
+### Google Integration Setup
+
+RooLLM supports integration with Google Sheets for organizational data like vacation tracking. To set this up, you will need to create a service account and share the Google Sheets with the service account email address.
+
+
+1. **Create a Service Account**:
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Google Sheets API
+   - Create a Service Account
+   - Generate a JSON key for the Service Account
+
+2. **Base64 Encode the Credentials**:
+   ```bash
+   cat your-credentials.json | base64 -w 0
+   ```
+
+3. **Add to Environment Variables**:
+   - Add the base64-encoded string to your `.env` file:
+   ```
+   GOOGLE_CREDENTIALS=your_base64_encoded_credentials
+   ```
+
+4. **Share Google Sheets**:
+   - Share any Google Sheets you want to access with the Service Account email address
+   - Set appropriate permissions (usually Editor)
+
+5. **Configure Sheet IDs**:
+   - Set the following environment variables:
+   ```
+   VACATION_SHEET_ID=your_vacation_sheet_id
+   VACATION_TAB_NAME=Vacation
+   REMAINING_VACATION_TAB_NAME=Remaining
+   ```
+
+6. **Expected Sheet Formats**:
+   - For the **upcoming vacations** sheet (`VACATION_SHEET_ID`) referenced in `get_upcoming_vacations.py`, these columns are expected:
+     ```
+     Employee Name | Start of Vacation | End of Vacation
+     ------------- | ----------------- | ---------------
+     John Doe      | 05/15/2023        | 05/20/2023
+     Jane Smith    | 06/01/2023        | 06/10/2023
+     ```
+     
+   - For the **remaining vacation days** sheet (referenced in `fetch_remaining_vacation_days.py`), use these columns:
+     ```
+     Name        | Day entitlement | Days used | Days left
+     ----------- | --------------- | --------- | ---------
+     John Doe    | 20              | 5         | 15
+     Jane Smith  | 25              | 12        | 13
+     ```
+     
+   Note: Dates should be in MM/DD/YYYY format.
+
 ---
 
 ### Run the project
