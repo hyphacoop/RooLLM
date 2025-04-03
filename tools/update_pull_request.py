@@ -8,7 +8,7 @@ description = "Update the title and/or body of an existing pull request."
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
         'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'The number of the pull request to update.'},
         'title': {'type': 'string', 'description': 'New title of the pull request.', 'default': None},

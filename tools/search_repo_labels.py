@@ -8,7 +8,7 @@ description = "Search and retrieve labels from a specified GitHub repository."
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
         'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")}
     }
 }

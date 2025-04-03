@@ -8,7 +8,7 @@ description = "Create a pull request in a specified GitHub repository."
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
         'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'title': {'type': 'string', 'description': 'Title of the pull request.', 'minLength': 1},
         'body': {'type': 'string', 'description': 'PR description.', 'default': ''},

@@ -12,7 +12,7 @@ description = (
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string', 'description': 'GitHub organization name.',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'org': {'type': 'string', 'description': 'GitHub organization name.', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
         'repo': {'type': 'string', 'description': 'Repository name.', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'The issue or pull request number to comment on.'},
         'body': {'type': 'string', 'description': 'The content of the comment.', 'minLength': 1}

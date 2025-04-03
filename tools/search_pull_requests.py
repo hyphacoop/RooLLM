@@ -8,7 +8,7 @@ description = "Search pull requests with optional filters or retrieve a specific
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
         'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'Specific PR number to retrieve.', 'default': None},
         'state': {'type': 'string', 'description': 'State of PRs (open, closed, all).', 'default': 'open', 'enum': ['open', 'closed', 'all']},

@@ -11,7 +11,7 @@ description = (
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string', 'description': 'GitHub organization name.',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'org': {'type': 'string', 'description': 'GitHub organization name.', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
         'repo': {'type': 'string', 'description': 'Repository name.', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'The number of the issue to reopen.'}
     },
