@@ -158,21 +158,23 @@ To start the project, run:
 ```bash
 npm run start
 ```
+
+This will start the project and open a new browser window with the RooLLM client.
+If your browser doesn't open automatically, you can access the web interface at http://localhost:8080/ once it is running.
+
 ### Folder and File Structure
 
 Here's an overview of the main folders and files in the project:
 
 - **`frontend/`**: Contains the web interface for interacting with RooLLM. This folder includes all the client-side code for the user-facing application.
   
-- **`backend/`**: Exposes the RooLLM API to the frontend. This folder contains server-side code that handles requests and communicates with the core logic.
+- **`api/`**: Exposes the RooLLM API to the frontend. This folder contains server-side code that handles requests and communicates with the core logic.
 
-- **`tools/`**: Includes tool calls
+- **`tools/`**: Includes all the tool calls that RooLLM can use.
 
 - **`roollm.py`**: The core logic of the project. This file handles LLM instantiation and the main functionality of RooLLM.
 
-
-This will start the project and open a new browser window with the RooLLM client.
-If your browser doesn't open automatically, you can access the web interface at http://localhost:8080/ once it is running.
+- **`repl.py`**: A CLI interface for interacting with RooLLM.
 
 ### Run the project locally
 
