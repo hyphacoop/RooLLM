@@ -91,6 +91,9 @@ Additionnally, RooLLM can be configured for your specific organization by settin
 - `DEFAULT_GITHUB_ORG`: Your GitHub organization name
 - `DEFAULT_GITHUB_REPO`: Your default GitHub repository
 
+These are used to set the default organization and repository for the github tools. Your personal access token (or Github App) will need to have access to this organization and repository.
+
+These default values are used when users don't provide an organization or repository in their prompt.
 ---
 
 ### Run the project
