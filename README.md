@@ -85,6 +85,70 @@ Creating a github app allows to control permissions more granularly. Hypha runs 
 2. `GITHUB_PRIVATE_KEY_BASE64`: the private key of the github app in base64 encoded format.
 3. `GITHUB_INSTALLATION_ID`: the installation id of the github app.
 
+
+Additionnally, RooLLM can be configured for your specific organization by setting the following environment variables:
+
+- `DEFAULT_GITHUB_ORG`: Your GitHub organization name
+- `DEFAULT_GITHUB_REPO`: Your default GitHub repository
+
+These are used to set the default organization and repository for the github tools. Your personal access token (or Github App) will need to have access to this organization and repository.
+
+These default values are used when users don't provide an organization or repository in their prompt.
+
+### Google Integration Setup
+
+RooLLM supports integration with Google Sheets for organizational data like vacation tracking. To set this up, you will need to create a service account and share the Google Sheets with the service account email address.
+
+
+1. **Create a Service Account**:
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Google Sheets API
+   - Create a Service Account
+   - Generate a JSON key for the Service Account
+
+2. **Base64 Encode the Credentials**:
+   ```bash
+   cat your-credentials.json | base64 -w 0
+   ```
+
+3. **Add to Environment Variables**:
+   - Add the base64-encoded string to your `.env` file:
+   ```
+   GOOGLE_CREDENTIALS=your_base64_encoded_credentials
+   ```
+
+4. **Share Google Sheets**:
+   - Share any Google Sheets you want to access with the Service Account email address
+   - Set appropriate permissions (usually Editor)
+
+5. **Configure Sheet IDs**:
+   - Set the following environment variables:
+   ```
+   VACATION_SHEET_ID=your_vacation_sheet_id
+   VACATION_TAB_NAME=Vacation
+   REMAINING_VACATION_TAB_NAME=Remaining
+   ```
+
+6. **Expected Sheet Formats**:
+   - For the **upcoming vacations** sheet (`VACATION_SHEET_ID`) referenced in `get_upcoming_vacations.py`, these columns are expected:
+     ```
+     Employee Name | Start of Vacation | End of Vacation
+     ------------- | ----------------- | ---------------
+     John Doe      | 05/15/2023        | 05/20/2023
+     Jane Smith    | 06/01/2023        | 06/10/2023
+     ```
+     
+   - For the **remaining vacation days** sheet (referenced in `fetch_remaining_vacation_days.py`), use these columns:
+     ```
+     Name        | Day entitlement | Days used | Days left
+     ----------- | --------------- | --------- | ---------
+     John Doe    | 20              | 5         | 15
+     Jane Smith  | 25              | 12        | 13
+     ```
+     
+   Note: Dates should be in MM/DD/YYYY format.
+
 ---
 
 ### Run the project
@@ -94,21 +158,23 @@ To start the project, run:
 ```bash
 npm run start
 ```
+
+This will start the project and open a new browser window with the RooLLM client.
+If your browser doesn't open automatically, you can access the web interface at http://localhost:8080/ once it is running.
+
 ### Folder and File Structure
 
 Here's an overview of the main folders and files in the project:
 
 - **`frontend/`**: Contains the web interface for interacting with RooLLM. This folder includes all the client-side code for the user-facing application.
   
-- **`backend/`**: Exposes the RooLLM API to the frontend. This folder contains server-side code that handles requests and communicates with the core logic.
+- **`api/`**: Exposes the RooLLM API to the frontend. This folder contains server-side code that handles requests and communicates with the core logic.
 
-- **`tools/`**: Includes tool calls
+- **`tools/`**: Includes all the tool calls that RooLLM can use.
 
 - **`roollm.py`**: The core logic of the project. This file handles LLM instantiation and the main functionality of RooLLM.
 
-
-This will start the project and open a new browser window with the RooLLM client.
-If your browser doesn't open automatically, you can access the web interface at http://localhost:8080/ once it is running.
+- **`repl.py`**: A CLI interface for interacting with RooLLM.
 
 ### Run the project locally
 
