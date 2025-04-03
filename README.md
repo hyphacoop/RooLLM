@@ -22,7 +22,7 @@ Roo is built to be extensible, with a modular tool system that makes it easy to 
 To run RooLLM, ensure you have the following installed:
 
 - **Python**: Version 3.8 or higher
-- **Node.js**: Version 16 or higher
+- **Node.js**: Version 16 or higher (for serving the web interface)
 - **Pip**: Python package manager (use `pip3` if necessary)
 
 Additionally, if you plan to run the project locally with Ollama, ensure you have installed [Ollama](https://ollama.com/download).
