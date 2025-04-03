@@ -1,5 +1,5 @@
 import requests
-
+import os
 name = 'assign_github_item'
 emoji = '👤'
 description = (
@@ -11,8 +11,8 @@ description = (
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string', 'description': 'GitHub organization name.', 'default': 'hyphacoop'},
-        'repo': {'type': 'string', 'description': 'Repository name.', 'default': 'organizing-private'},
+        'org': {'type': 'string', 'description': 'GitHub organization name.',  'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'repo': {'type': 'string', 'description': 'Repository name.', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'The issue or pull request number to assign a user to.'},
         'assignee': {'type': 'string', 'description': 'GitHub username of the assignee.'}
     },
@@ -38,9 +38,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org") or "hyphacoop"
-    repo = arguments.get("repo") or "organizing-private"
-
+    org = arguments.get("org") or os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")
+    repo = arguments.get("repo") or os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")
     number = arguments.get("number")
     if not number:
         return f"❌ Error: Missing issue or PR number. Received arguments: {arguments}"
