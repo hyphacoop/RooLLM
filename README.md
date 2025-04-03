@@ -85,6 +85,12 @@ Creating a github app allows to control permissions more granularly. Hypha runs 
 2. `GITHUB_PRIVATE_KEY_BASE64`: the private key of the github app in base64 encoded format.
 3. `GITHUB_INSTALLATION_ID`: the installation id of the github app.
 
+
+Additionnally, RooLLM can be configured for your specific organization by setting the following environment variables:
+
+- `DEFAULT_GITHUB_ORG`: Your GitHub organization name
+- `DEFAULT_GITHUB_REPO`: Your default GitHub repository
+
 ---
 
 ### Run the project
