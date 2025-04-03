@@ -1,4 +1,5 @@
 import requests
+import os
 
 name = 'close_pull_request'
 emoji = '🔐'
@@ -7,8 +8,8 @@ description = "Close a pull request without merging."
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string', 'default': 'hyphacoop'},
-        'repo': {'type': 'string', 'default': 'organizing-private'},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'The number of the pull request to close.'}
     },
     'required': ['number']
@@ -21,9 +22,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
     
-    org = arguments.get("org") or "hyphacoop"
-    repo = arguments.get("repo") or "organizing-private"
-
+    org = arguments.get("org") or os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")
+    repo = arguments.get("repo") or os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")
     url = f"{GITHUB_API_BASE_URL}/repos/{org}/{repo}/pulls/{arguments['number']}"
     headers = {"Authorization": f"token {token}"}
     payload = {"state": "closed"}

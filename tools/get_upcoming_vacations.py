@@ -1,6 +1,7 @@
 import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import os
 
 name = 'get_upcoming_vacations'
 emoji = '🌴'
@@ -12,8 +13,8 @@ parameters = {
 }
 
 # Google Sheet configuration
-VACATION_SHEET_ID = "1QeJNjEn0aHbXahTcojF5YxfpJOwI-cLz0dlS7xPWgS0"
-VACATION_TAB_NAME = "Vacation"
+VACATION_SHEET_ID = os.getenv("VACATION_SHEET_ID", "1QeJNjEn0aHbXahTcojF5YxfpJOwI-cLz0dlS7xPWgS0")
+VACATION_TAB_NAME = os.getenv("VACATION_TAB_NAME", "Vacation")
 
 def get_google_sheet(sheet_id, tab_name, creds):
     """

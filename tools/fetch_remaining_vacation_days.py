@@ -1,5 +1,6 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import os
 
 name = 'fetch_remaining_vacation_days'
 emoji = '🏖️'
@@ -15,6 +16,10 @@ parameters = {
     'required': []
 }
 
+# Google Sheet configuration
+VACATION_SHEET_ID = os.getenv("VACATION_SHEET_ID", "1QeJNjEn0aHbXahTcojF5YxfpJOwI-cLz0dlS7xPWgS0")
+VACATION_TAB_NAME = os.getenv("REMAINING_VACATION_TAB_NAME", "Remaining")
+
 def get_google_sheet(sheet_id, tab_name, creds):
     """
     Fetch a Google Sheet by its ID and tab name using provided credentials.
@@ -27,9 +32,7 @@ def fetch_remaining_vacation_days(creds, employee_name):
     """
     Fetch remaining vacation days for a specific worker from the Google Sheet.
     """
-    sheet_id = "1QeJNjEn0aHbXahTcojF5YxfpJOwI-cLz0dlS7xPWgS0"
-    tab_name = "Remaining"
-    sheet = get_google_sheet(sheet_id, tab_name, creds)
+    sheet = get_google_sheet(VACATION_SHEET_ID, VACATION_TAB_NAME, creds)
     data = sheet.get_all_values()
     
     headers = data[0]

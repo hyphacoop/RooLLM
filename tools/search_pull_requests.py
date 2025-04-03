@@ -1,4 +1,5 @@
 import requests
+import os
 
 name = 'search_pull_requests'
 emoji = '🔎'
@@ -7,8 +8,8 @@ description = "Search pull requests with optional filters or retrieve a specific
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string', 'default': 'hyphacoop'},
-        'repo': {'type': 'string', 'default': 'organizing-private'},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'Specific PR number to retrieve.', 'default': None},
         'state': {'type': 'string', 'description': 'State of PRs (open, closed, all).', 'default': 'open', 'enum': ['open', 'closed', 'all']},
         'assignee': {'type': 'string', 'description': 'Filter by assignee.', 'default': None}
@@ -22,8 +23,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
     
-    org = arguments.get("org") or "hyphacoop"
-    repo = arguments.get("repo") or "organizing-private"
+    org = arguments.get("org") or os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")
+    repo = arguments.get("repo") or os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")
     number = arguments.get("number")  # Optional: Directly search for PR number
     state = arguments.get("state", "open")  # Default to open PRs
     assignee = arguments.get("assignee")  # Optional assignee filter

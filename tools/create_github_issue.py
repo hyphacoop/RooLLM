@@ -1,4 +1,5 @@
 import requests
+import os
 
 name = 'create_github_issue'
 emoji = '📝'
@@ -14,12 +15,12 @@ parameters = {
         'org': {
             'type': 'string',
             'description': 'GitHub organization name. Defaults to "hyphacoop".',
-            'default': 'hyphacoop'
+            'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")
         },
         'repo': {
             'type': 'string',
             'description': 'Repository name. Defaults to "organizing-private".',
-            'default': 'organizing-private'
+            'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")
         },
         'title': {
             'type': 'string',
@@ -63,8 +64,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org") or "hyphacoop"
-    repo = arguments.get("repo") or "organizing-private"
+    org = arguments.get("org") or os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")
+    repo = arguments.get("repo") or os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")
     title = arguments["title"]
     body = arguments.get("body", "")
     labels = arguments.get("labels", [])

@@ -1,4 +1,5 @@
 import requests
+import os
 
 name = 'update_pull_request'
 emoji = '✏️'
@@ -7,8 +8,8 @@ description = "Update the title and/or body of an existing pull request."
 parameters = {
     'type': 'object',
     'properties': {
-        'org': {'type': 'string', 'default': 'hyphacoop'},
-        'repo': {'type': 'string', 'default': 'organizing-private'},
+        'org': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")},
+        'repo': {'type': 'string', 'default': os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")},
         'number': {'type': 'integer', 'description': 'The number of the pull request to update.'},
         'title': {'type': 'string', 'description': 'New title of the pull request.', 'default': None},
         'body': {'type': 'string', 'description': 'New body/description of the pull request.', 'default': None}
@@ -23,9 +24,8 @@ async def tool(roo, arguments, user):
     if not token:
         return "GitHub token is missing."
 
-    org = arguments.get("org") or "hyphacoop"
-    repo = arguments.get("repo") or "organizing-private"
-
+    org = arguments.get("org") or os.getenv("DEFAULT_GITHUB_ORG", "hyphacoop")
+    repo = arguments.get("repo") or os.getenv("DEFAULT_GITHUB_REPO", "organizing-private")
     if not arguments.get("title") and not arguments.get("body"):
         return "❌ Error: Provide at least a new title or body to update."
 
