@@ -2,11 +2,11 @@
   "name": "roollm-dev",
   "version": "1.0.0",
   "scripts": {
-    "RooLLM": "cd backend && python main.py",
+    "RooLLM": "cd api && python main.py",
     "interface": "cd frontend && python -m http.server 8080",
     "open:browser": "sleep 1 && echo \"Opening browser at http://localhost:8080\" && npx open-cli http://localhost:8080",
     "start": "npm run open:browser & concurrently --kill-others --handle-input -n RooLLM,interface -c green,cyan \"npm run RooLLM\" \"npm run interface\"",
-    "RooLLM3": "cd backend && python3 main.py",
+    "RooLLM3": "cd api && python3 main.py",
     "interfac3": "cd frontend && python3 -m http.server 8080",
     "start3": "npm run open:browser & concurrently --kill-others --handle-input -n RooLLM,interface -c green,cyan \"npm run RooLLM3\" \"npm run interfac3\""
   },
