@@ -43,7 +43,7 @@ registered_tools = {}
 
 # Tool timeouts in seconds
 TOOL_TIMEOUTS = {
-    "search_handbook": 45,  # Handbook search may take longer
+    "search_handbook": 60,  # Handbook search may take longer
     "calc": 5,
     "get_upcoming_holiday": 15,
     "get_archive_categories": 15,
