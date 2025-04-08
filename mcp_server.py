@@ -122,26 +122,78 @@ def register_tool(tool_name, tool_module):
         print(f"🛠️ [{request_id}] Tool {tool_name} called with kwargs: {kwargs}", file=sys.stderr)
         
         # Process kwargs if it's a string - direct mapping to main parameter
+        processed_kwargs = {}
+        
         if "kwargs" in kwargs and isinstance(kwargs["kwargs"], str):
-            value = kwargs["kwargs"].strip('"').strip("'")
+            value = kwargs["kwargs"]
+
+            # Try to clean up the string - remove extra quotes that might be present
+            clean_value = value.strip('"').strip("'")
             
             if main_param:
-                # Use the identified main parameter
-                processed_kwargs = {main_param: value}
-                print(f"📦 [{request_id}] Mapped kwargs to {main_param}: {processed_kwargs}", file=sys.stderr)
-            else:
-                # If we couldn't determine a main parameter, try parsing as JSON/dict
+                # Use the identified main parameter, but first try parsing as JSON
                 try:
-                    processed_kwargs = json.loads(value)
-                except:
+                    # See if it's valid JSON first
+                    processed_kwargs = json.loads(clean_value)
+                    print(f"✅ [{request_id}] Successfully parsed as JSON: {processed_kwargs}", file=sys.stderr)
+                except json.JSONDecodeError as e:
+                    print(f"⚠️ [{request_id}] Not valid JSON ({e}), using main_param mapping", file=sys.stderr)
+                    processed_kwargs = {main_param: clean_value}
+                    print(f"📦 [{request_id}] Mapped kwargs to {main_param}: {processed_kwargs}", file=sys.stderr)
+            else:
+                # If we couldn't determine a main parameter, try multiple parsing strategies
+                print(f"⚠️ [{request_id}] No main_param defined, trying parsing strategies", file=sys.stderr)
+                
+                # Strategy 1: Direct JSON parsing
+                try:
+                    processed_kwargs = json.loads(clean_value)
+                    print(f"✅ [{request_id}] JSON parsing succeeded: {processed_kwargs}", file=sys.stderr)
+                except json.JSONDecodeError as e:
+                    print(f"⚠️ [{request_id}] JSON parsing failed: {e}", file=sys.stderr)
+                    
+                    # Strategy 2: AST parsing
                     try:
-                        processed_kwargs = ast.literal_eval(value)
-                    except:
-                        # Keep as is
-                        processed_kwargs = {"kwargs": value}
+                        processed_kwargs = ast.literal_eval(clean_value)
+                        print(f"✅ [{request_id}] AST parsing succeeded: {processed_kwargs}", file=sys.stderr)
+                    except Exception as e:
+                        print(f"⚠️ [{request_id}] AST parsing failed: {e}", file=sys.stderr)
+                        
+                        # Strategy 3: Direct assignment to best-guess parameter
+                        if tool_name == "search_handbook":
+                            processed_kwargs = {"query": clean_value}
+                            print(f"📦 [{request_id}] Defaulting to query param: {processed_kwargs}", file=sys.stderr)
+                        elif tool_name == "calc":
+                            processed_kwargs = {"expression": clean_value}
+                            print(f"📦 [{request_id}] Defaulting to expression param: {processed_kwargs}", file=sys.stderr)
+                        else:
+                            # Keep as is
+                            processed_kwargs = {"kwargs": clean_value}
+                            print(f"📦 [{request_id}] Keeping as kwargs: {processed_kwargs}", file=sys.stderr)
         else:
             # Use kwargs as is
             processed_kwargs = kwargs
+            print(f"📦 [{request_id}] Using kwargs directly: {processed_kwargs}", file=sys.stderr)
+        
+        # Extra safety checks for specific tools
+        if tool_name == "search_handbook" and "query" not in processed_kwargs:
+            print(f"⚠️ [{request_id}] Missing required 'query' parameter for search_handbook", file=sys.stderr)
+            # Try to find any string to use as query
+            for k, v in processed_kwargs.items():
+                if isinstance(v, str) and k != "kwargs":
+                    processed_kwargs = {"query": v}
+                    print(f"🔧 [{request_id}] Found alternative query value: {processed_kwargs}", file=sys.stderr)
+                    break
+        
+        elif tool_name == "calc" and "expression" not in processed_kwargs and "expr" not in processed_kwargs:
+            print(f"⚠️ [{request_id}] Missing required expression parameter for calc", file=sys.stderr)
+            # Try to find any string that looks like an expression
+            for k, v in processed_kwargs.items():
+                if isinstance(v, str) and any(c in v for c in "+-*/()") and k != "kwargs":
+                    processed_kwargs = {"expression": v}
+                    print(f"🔧 [{request_id}] Found alternative expression value: {processed_kwargs}", file=sys.stderr)
+                    break
+        
+        print(f"🔧 [{request_id}] Final processed_kwargs: {processed_kwargs}", file=sys.stderr)
         
         try:
             # Call the tool with processed kwargs
