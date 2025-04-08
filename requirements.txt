@@ -4,6 +4,7 @@ fastapi
 gspread
 jwt
 lunr
+mcp[cli]
 oauth2client
 python-dotenv
 requests
