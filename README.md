@@ -192,6 +192,28 @@ Then, run the project with:
 npm run start
 ```
 
+### MCP Server
+
+As an alternative to the standard web interface, you can run RooLLM using the MCP (Model Control Protocol) server:
+
+```bash
+python mcp_server.py
+```
+
+The MCP server provides:
+- A standardized interface for tool registration and execution
+- Extended timeout handling (60 seconds global timeout)
+- Error handling and crash reporting
+- Support for development mode
+
+You can test the MCP server using the MCP Inspector:
+
+```bash
+mcp dev server.py
+```
+
+This will launch the inspector interface, allowing you to debug tool calls, test functionality, and monitor server behavior during development.
+
 ### CLI interface
 
 As an alternative to the web interface, you can have interactions with RooLLM in the terminal by running:
