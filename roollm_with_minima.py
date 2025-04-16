@@ -123,6 +123,15 @@ class RooLLMWithMinima(RooLLM):
         if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
             combined_tools = tool_descriptions + self.minima_tools
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
+            
+            # If the query seems to be asking about documents or knowledge, force use of Minima
+            if any(keyword in content.lower() for keyword in ['search', 'look', 'find', 'check', 'what is', 'how to', 'where is', 'when is', 'who is']):
+                # Add a system message to encourage using Minima
+                minima_reminder = make_message(ROLE_SYSTEM, 
+                    "This query appears to be asking for information that might be in the knowledge base. "
+                    "Please use the query tool to search through available documents before responding."
+                )
+                messages.append(minima_reminder)
         else:
             combined_tools = tool_descriptions
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not connected)")
@@ -206,7 +215,7 @@ class RooLLMWithMinima(RooLLM):
                         citation_prompt = (
                             "IMPORTANT: You MUST cite your sources for any information from the documents. "
                             "For EACH fact or piece of information you provide, include a citation to the source document. "
-                            "Use the format [Source: document_name] after each claim or statement. "
+                            "Use the format [Source: handbook.hypha.coop/path/to/document] after each claim or statement. "
                             "Failing to cite sources is a critical error - all information must be attributed."
                         )
                         messages.append(make_message(ROLE_SYSTEM, citation_prompt))
@@ -409,8 +418,8 @@ class RooLLMWithMinima(RooLLM):
                 "in the Minima knowledge base. When asked about documents or specific information "
                 "that might be in local files, use the query tool to retrieve relevant information. "
                 "\n\nCRITICAL INSTRUCTION: When you provide information from documents, you MUST cite your sources. "
-                "For each fact or piece of information, include a citation in the format [Source: full/path/to/document]. "
-                "Always include the COMPLETE file path in your citations, not just the filename. "
+                "For each fact or piece of information, include a citation in the format [Source: handbook.hypha.coop/path/to/document]. "
+                "Always include the COMPLETE path in your citations, not just the filename. "
                 "Failing to cite sources with their full paths is a serious error. "
                 "Users rely on proper attribution and need the full path to locate the document."
             )

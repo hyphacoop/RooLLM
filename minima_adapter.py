@@ -355,22 +355,23 @@ class MinimaRestAdapter:
         source_paths = []  # List of exact paths that can be cited
         
         for i, source in enumerate(sources):
-            # Get full path for local reference
-            full_path = source
-            source_paths.append(full_path)  # Add to allowed citation paths
+            # Transform the file path to use handbook.hypha.coop base URL
+            if source.startswith('file://'):
+                # Remove file:// prefix and .md extension
+                clean_path = source.replace('file://', '').replace('.md', '')
+                # Find the md_db/ part and everything after it
+                if 'md_db/' in clean_path:
+                    path_parts = clean_path.split('md_db/')
+                    if len(path_parts) > 1:
+                        # Create the new URL format
+                        new_path = f"handbook.hypha.coop/{path_parts[1]}"
+                        source_paths.append(new_path)  # Add to allowed citation paths
+                        formatted_sources.append(f"[{i+1}] {new_path}")
+                        continue
             
-            # Get just the filename from the path/URL if possible
-            if '/' in source:
-                source_name = source.split('/')[-1]
-                # For MD files, add the section name if available
-                if source_name.endswith('.md') and '#' in source:
-                    section = source.split('#')[-1].replace('-', ' ').title()
-                    source_name = f"{source_name} (Section: {section})"
-            else:
-                source_name = source
-                
-            # Create formatted source string for display
-            formatted_sources.append(f"[{i+1}] {source_name} - Full path: {full_path}")
+            # If we couldn't transform it, use the original path
+            source_paths.append(source)
+            formatted_sources.append(f"[{i+1}] {source}")
         
         # Format the output with detailed citation info
         citation_header = "\n\n-------- DOCUMENT SOURCES --------"
@@ -388,7 +389,7 @@ class MinimaRestAdapter:
             f"You are ONLY allowed to cite the following specific documents:\n"
             f"{allowed_sources_list}\n\n"
             f"When citing, you MUST use the EXACT path as shown above - do not modify, abbreviate, or create new paths.\n"
-            f"Format your citations as [Source: full/path/to/document] immediately after each claim or statement.\n"
+            f"Format your citations as [Source: handbook.hypha.coop/path/to/document] immediately after each claim or statement.\n"
             f"ANY citation not matching one of the exact sources above will be flagged as a hallucination.\n"
             f"If you cannot find relevant information in these sources, state clearly that you don't have information on that topic."
         )
