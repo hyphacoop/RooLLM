@@ -20,14 +20,24 @@ class MinimaRestAdapter:
     to search and retrieve information from local documents.
     """
     
-    def __init__(self, server_url=None):
+    def __init__(self, server_url=None, config=None):
         """
         Initialize the Minima REST adapter.
         
         Args:
             server_url: URL of the Minima indexer server
+            config: Configuration dictionary that may contain MINIMA_MCP_SERVER_URL and USE_MINIMA_MCP
         """
-        self.server_url = server_url or os.getenv("MINIMA_MCP_SERVER_URL", "http://localhost:8001")
+        # First try to get URL from config, then from env var, then default
+        self.server_url = (
+            config.get("MINIMA_MCP_SERVER_URL") if config else None
+        ) or server_url or os.getenv("MINIMA_MCP_SERVER_URL", "http://localhost:8001")
+        
+        # Check if Minima is enabled (from config or env var)
+        self.using_minima = (
+            config.get("USE_MINIMA_MCP") if config else None
+        ) or os.getenv("USE_MINIMA_MCP", "false").lower() == "true"
+        
         self.connected = False
         self.tools = {}
         self.last_connection_attempt = 0

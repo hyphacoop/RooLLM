@@ -36,9 +36,8 @@ class RooLLMWithMinima(RooLLM):
             tool_list: List of tools to load
             config: Configuration dictionary
         """
-        # Initialize REST adapter for Minima
-        self.minima_adapter = MinimaRestAdapter()
-        self.using_minima = os.getenv("USE_MINIMA_MCP", "false").lower() == "true"
+        # Initialize REST adapter for Minima with config
+        self.minima_adapter = MinimaRestAdapter(config=config)
         self.minima_tools = []
         
         # Store the requested tool list
@@ -48,7 +47,7 @@ class RooLLMWithMinima(RooLLM):
         super().__init__(inference, tool_list, config)
         
         # Check if Minima integration is enabled
-        if self.using_minima:
+        if self.minima_adapter.using_minima:
             logger.info("Minima integration is enabled")
         else:
             logger.info("Minima integration is disabled")
@@ -62,7 +61,7 @@ class RooLLMWithMinima(RooLLM):
             tools = super()._build_tool_list()
             
         # If Minima is enabled, remove search_handbook from the tool list
-        if self.using_minima and "search_handbook" in tools:
+        if self.minima_adapter.using_minima and "search_handbook" in tools:
             logger.info("Removing search_handbook tool as Minima is enabled")
             tools.remove("search_handbook")
             
@@ -70,7 +69,7 @@ class RooLLMWithMinima(RooLLM):
     
     async def connect_to_minima(self):
         """Connect to the Minima indexer and initialize tools."""
-        if not self.using_minima:
+        if not self.minima_adapter.using_minima:
             logger.info("Minima integration is disabled, skipping connection")
             return False
             
@@ -105,7 +104,7 @@ class RooLLMWithMinima(RooLLM):
         logger.info(f"User query: {content}")
         
         # Try to connect to Minima automatically if it's enabled and not connected
-        if self.using_minima and not self.minima_adapter.is_connected():
+        if self.minima_adapter.using_minima and not self.minima_adapter.is_connected():
             await self.connect_to_minima()
         
         # Prepare messages
@@ -121,7 +120,7 @@ class RooLLMWithMinima(RooLLM):
         tool_descriptions = tools.descriptions()
         
         # Add Minima tools if connected
-        if self.using_minima and self.minima_adapter.is_connected():
+        if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
             combined_tools = tool_descriptions + self.minima_tools
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
         else:
@@ -149,7 +148,7 @@ class RooLLMWithMinima(RooLLM):
                 tool_name = func['name']
                 
                 # Check if this is a Minima tool
-                is_minima_tool = self.using_minima and self.minima_adapter.is_connected() and tool_name in self.minima_adapter.tools
+                is_minima_tool = self.minima_adapter.using_minima and self.minima_adapter.is_connected() and tool_name in self.minima_adapter.tools
                 
                 # Track if Minima was used
                 if is_minima_tool:
@@ -404,7 +403,7 @@ class RooLLMWithMinima(RooLLM):
         """
         base_prompt = super().make_system()
         
-        if self.using_minima and self.minima_adapter.is_connected():
+        if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
             minima_addition = (
                 "\nYou have access to tools that allow you to search through local documents "
                 "in the Minima knowledge base. When asked about documents or specific information "
@@ -438,7 +437,7 @@ class RooLLMWithMinima(RooLLM):
     
     def is_minima_connected(self):
         """Check if Minima is connected."""
-        return self.using_minima and self.minima_adapter.is_connected()
+        return self.minima_adapter.using_minima and self.minima_adapter.is_connected()
     
     async def close(self):
         """Close connections and clean up resources."""
