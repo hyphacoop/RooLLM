@@ -91,53 +91,75 @@ class RooLLMWithMinima(RooLLM):
             logger.warning("Failed to connect to Minima indexer")
             return False
     
-    def _handle_minima_result(self, result, messages):
+    def _handle_minima_result(self, result, query):
         """
-        Handle the result from a Minima tool call and update messages accordingly.
+        Handle the result from Minima and format it for the model.
         
         Args:
             result: The result from Minima
-            messages: List of messages to update
+            query: The original query
             
         Returns:
-            dict: Processed result
+            str: Formatted result with citations
         """
-        processed_result = result.copy()
-        
-        # Add citation instructions if needed
-        if 'citation_prompt' in result:
-            citation_prompt = (
-                "IMPORTANT: You MUST cite your sources for any information from the documents. "
-                "For EACH fact or piece of information you provide, include a citation to the source document. "
-                "Use the format [Source: handbook.hypha.coop/path/to/document] after each claim or statement. "
-                "Failing to cite sources is a critical error - all information must be attributed."
-            )
-            messages.append(make_message(ROLE_SYSTEM, citation_prompt))
-        
-        # Add source-specific instruction if available
-        if 'source_specific_instruction' in result:
-            messages.append(make_message(ROLE_SYSTEM, result['source_specific_instruction']))
-        
-        # Handle citations in result
-        if 'citations' in result and 'result' in result:
-            if not result['result'].endswith(result['citations']):
-                processed_result = {
-                    "result": result['result'] + "\n" + result['citations'],
-                    "sources": result.get('sources', [])
-                }
-        
-        # Add source list to result
-        if 'structured_sources' in result and 'result' in result:
-            source_list = "\n\nAvailable Documents for Citation:\n"
-            source_list += "\n".join(f"- [{source['id']}] {source['name']} - {source['path']}" 
-                                   for source in result['structured_sources'])
-            processed_result['result'] = result['result'] + source_list
-        elif 'sources' in result and result['sources'] and 'result' in result:
-            source_list = "\n\nAvailable Sources:\n" + "\n".join(
-                f"- [{i+1}] {s}" for i, s in enumerate(result['sources']))
-            processed_result['result'] = result['result'] + source_list
+        if not result or "error" in result:
+            return "Error retrieving information from documents."
             
-        return processed_result
+        # Get the formatted result with citations
+        formatted_result = result.get("result", "")
+        sources = result.get("sources", [])
+        
+        # Add citation instructions if sources are available
+        if sources:
+            citation_instructions = (
+                "\n\n⚠️ CITATION REQUIREMENT ⚠️\n"
+                "You MUST cite your sources using the EXACT paths provided below.\n"
+                "Format: [Source: handbook.hypha.coop/path/to/document]\n"
+                "Example: [Source: handbook.hypha.coop/Policies/pet.md]\n\n"
+                "Available sources:\n"
+            )
+            
+            # Add each source with its number
+            for i, source in enumerate(sources, 1):
+                citation_instructions += f"[{i}] {source}\n"
+                
+            formatted_result += citation_instructions
+            
+        return formatted_result
+        
+    async def _process_with_minima(self, query, max_retries=3):
+        """
+        Process a query using Minima with retries for citation verification.
+        
+        Args:
+            query: The query to process
+            max_retries: Maximum number of retries for citation verification
+            
+        Returns:
+            str: The processed response with verified citations
+        """
+        retries = 0
+        while retries < max_retries:
+            # Get result from Minima
+            result = await self.minima_adapter.call_tool("query", {"text": query})
+            
+            # Format the result
+            formatted_result = self._handle_minima_result(result, query)
+            
+            # Verify citations using the adapter's method
+            if "source_paths" in result:
+                verified_response, needs_retry = self.minima_adapter.verify_citations(formatted_result, result["source_paths"])
+                
+                if not needs_retry:
+                    return verified_response
+                    
+                retries += 1
+                if retries < max_retries:
+                    # Add retry instruction
+                    retry_instruction = "\n\nPlease try again with proper citations using the exact source paths provided."
+                    formatted_result += retry_instruction
+                    
+        return verified_response
 
     def _extract_sources_from_result(self, result):
         """
@@ -183,12 +205,6 @@ class RooLLMWithMinima(RooLLM):
             messages.append(
                 "Only cite documents that were returned by the query tool. "
                 "If you don't have information from the documents, say so."
-            )
-            
-            # Usage instructions
-            messages.append(
-                "Use the document content to answer questions. "
-                "Cite sources properly."
             )
             
         return messages
@@ -632,47 +648,54 @@ class RooLLMWithMinima(RooLLM):
             return warning_message
         return ""
 
-    def _verify_citations_in_response(self, response, valid_sources):
+    def _verify_citations_in_response(self, response, minima_result):
         """
         Verify that citations in the response match actual sources.
-        Detect potential hallucinated sources and add warnings if needed.
         
         Args:
-            response: The model's response
-            valid_sources: List of valid source paths that were provided to the model
+            response: The model's response text
+            minima_result: The result from Minima containing source information
             
         Returns:
-            dict: Modified response with warnings if needed
+            tuple: (verified_response, needs_retry)
         """
-        content = response.get('content', '')
-        if not content:
-            return response
+        if not minima_result or "source_paths" not in minima_result:
+            return response, False
             
-        # Transform all valid sources to handbook.hypha.coop format
-        transformed_sources = [self._transform_source_path(source) for source in valid_sources]
-        
-        # Extract citations from content
-        cited_sources = self._extract_citations(content)
-        
-        # No citations found when sources were provided
-        if not cited_sources and transformed_sources:
-            logger.warning("No citations found in response despite available sources")
-            response['content'] = content + self._create_warning_message('no_citations')
-            return response
-        
-        # Check for hallucinated sources
-        hallucinated_sources = []
-        for citation in cited_sources:
-            if not self._find_closest_match(citation, transformed_sources):
-                hallucinated_sources.append(citation)
-                logger.warning(f"HALLUCINATED SOURCE DETECTED: '{citation}' not in allowed sources")
-        
-        # Add warning if hallucinated sources found
-        if hallucinated_sources:
-            response['content'] = content + self._create_warning_message('hallucinated_sources', hallucinated_sources)
-            logger.error(f"Response contained {len(hallucinated_sources)} hallucinated sources")
+        source_paths = minima_result["source_paths"]
+        if not source_paths:
+            return response, False
             
-        return response
+        # Check for citations in the format [Source: path] or [Source: number]
+        citation_pattern = r'\[Source:\s*([^\]]+)\]'
+        citations = re.findall(citation_pattern, response)
+        
+        if not citations:
+            # No citations found, add a warning
+            warning = "\n\n⚠️ WARNING: No sources were cited. Please cite your sources using the format [Source: handbook.hypha.coop/path/to/document]"
+            return response + warning, True
+            
+        # Verify each citation
+        invalid_citations = []
+        for citation in citations:
+            # Check if it's a number citation
+            if citation.strip().isdigit():
+                num = int(citation.strip())
+                if 1 <= num <= len(source_paths):
+                    # Replace number with actual path
+                    actual_path = source_paths[num-1]
+                    response = response.replace(f"[Source: {citation}]", f"[Source: {actual_path}]")
+                else:
+                    invalid_citations.append(citation)
+            # Check if it's a path citation
+            elif not any(citation.strip() == path for path in source_paths):
+                invalid_citations.append(citation)
+                
+        if invalid_citations:
+            warning = f"\n\n⚠️ WARNING: The following citations are invalid: {', '.join(invalid_citations)}. Please use only the exact source paths provided."
+            return response + warning, True
+            
+        return response, False
     
     def make_system(self):
         """

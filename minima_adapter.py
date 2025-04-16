@@ -5,6 +5,7 @@ import aiohttp
 from dotenv import load_dotenv
 import asyncio
 import time
+import re
 
 # Load environment variables
 load_dotenv()
@@ -49,10 +50,31 @@ class MinimaRestAdapter:
         self.citation_prompt = (
             "CRITICAL INSTRUCTION: You MUST cite your sources for EVERY piece of information retrieved from documents. "
             "For each statement or fact, include a specific citation to the source document. "
-            "Use the format [Source: document_name] IMMEDIATELY after each statement or claim. "
+            "Use the format [Source: handbook.hypha.coop/path/to/document] IMMEDIATELY after each statement or claim. "
             "Failing to cite sources is a SERIOUS ERROR that affects reliability and trustworthiness. "
-            "Users DEPEND on proper attribution and verification."
+            "Users DEPEND on proper attribution and verification.\n\n"
+            "Only cite documents that were returned by the query tool. "
+            "If you don't have information from the documents, say so.\n\n"
+            "Use the document content to answer questions and cite sources properly."
         )
+        
+        # Define available tools
+        self.tools = {
+            "query": {
+                "name": "query",
+                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. You MUST include a citation for EVERY piece of information using the format [Source: handbook.hypha.coop/path/to/document]. Failing to cite sources is a critical error.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "text": {
+                            "type": "string",
+                            "description": "The text to search for in the documents"
+                        }
+                    },
+                    "required": ["text"]
+                }
+            }
+        }
         
     async def connect(self, force=False):
         """
@@ -98,24 +120,6 @@ class MinimaRestAdapter:
                     ) as response:
                         if response.status == 200:
                             logger.info(f"Successfully connected to Minima indexer at {server_url}")
-                            
-                            # Define available tools
-                            self.tools = {
-                                "query": {
-                                    "name": "query",
-                                    "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. You MUST include a citation for EVERY piece of information using the format [Source: document_name]. Failing to cite sources is a critical error.",
-                                    "parameters": {
-                                        "type": "object",
-                                        "properties": {
-                                            "text": {
-                                                "type": "string",
-                                                "description": "The text to search for in the documents"
-                                            }
-                                        },
-                                        "required": ["text"]
-                                    }
-                                }
-                            }
                             
                             # Update the server URL if it was corrected
                             self.server_url = server_url
@@ -354,6 +358,25 @@ class MinimaRestAdapter:
         formatted_sources = []
         source_paths = []  # List of exact paths that can be cited
         
+        # First pass: collect all source paths
+        for source in sources:
+            # Transform the file path to use handbook.hypha.coop base URL
+            if source.startswith('file://'):
+                # Remove file:// prefix and .md extension
+                clean_path = source.replace('file://', '').replace('.md', '')
+                # Find the md_db/ part and everything after it
+                if 'md_db/' in clean_path:
+                    path_parts = clean_path.split('md_db/')
+                    if len(path_parts) > 1:
+                        # Create the new URL format
+                        new_path = f"handbook.hypha.coop/{path_parts[1]}"
+                        source_paths.append(new_path)
+                        continue
+            
+            # If we couldn't transform it, use the original path
+            source_paths.append(source)
+        
+        # Second pass: format sources with consistent numbering
         for i, source in enumerate(sources):
             # Transform the file path to use handbook.hypha.coop base URL
             if source.startswith('file://'):
@@ -365,12 +388,10 @@ class MinimaRestAdapter:
                     if len(path_parts) > 1:
                         # Create the new URL format
                         new_path = f"handbook.hypha.coop/{path_parts[1]}"
-                        source_paths.append(new_path)  # Add to allowed citation paths
                         formatted_sources.append(f"[{i+1}] {new_path}")
                         continue
             
             # If we couldn't transform it, use the original path
-            source_paths.append(source)
             formatted_sources.append(f"[{i+1}] {source}")
         
         # Format the output with detailed citation info
@@ -394,18 +415,9 @@ class MinimaRestAdapter:
             f"If you cannot find relevant information in these sources, state clearly that you don't have information on that topic."
         )
         
-        # Prepare a pre-formatted result with the document context first
-        context_header = "DOCUMENT CONTEXT FOR YOUR RESPONSE:"
-        context_and_output = (
-            f"{context_header}\n\n"
-            f"The following documents were found for this query. You must ONLY cite these exact documents:\n"
-            f"{allowed_sources_list}\n\n"
-            f"Document content:\n{output}"
-        )
-        
         # Enhanced result with citation prompt and formatted sources
         return {
-            "result": context_and_output,
+            "result": output,  # Only include the actual document content
             "original_output": output,
             "sources": sources,
             "source_paths": source_paths,  # Include exact allowed paths for verification
@@ -413,4 +425,49 @@ class MinimaRestAdapter:
             "citations": citations,
             "citation_prompt": self.citation_prompt,
             "source_specific_instruction": source_specific_instruction
-        } 
+        }
+
+    def verify_citations(self, response_content, source_paths):
+        """
+        Verify that citations in the response match actual sources.
+        
+        Args:
+            response_content: The model's response text
+            source_paths: List of valid source paths
+            
+        Returns:
+            tuple: (verified_response, needs_retry)
+        """
+        if not source_paths:
+            return response_content, False
+            
+        # Check for citations in the format [Source: path] or [Source: number]
+        citation_pattern = r'\[Source:\s*([^\]]+)\]'
+        citations = re.findall(citation_pattern, response_content)
+        
+        if not citations:
+            # No citations found, add a warning
+            warning = "\n\n⚠️ WARNING: No sources were cited. Please cite your sources using the format [Source: handbook.hypha.coop/path/to/document]"
+            return response_content + warning, True
+            
+        # Verify each citation
+        invalid_citations = []
+        for citation in citations:
+            # Check if it's a number citation
+            if citation.strip().isdigit():
+                num = int(citation.strip())
+                if 1 <= num <= len(source_paths):
+                    # Replace number with actual path
+                    actual_path = source_paths[num-1]
+                    response_content = response_content.replace(f"[Source: {citation}]", f"[Source: {actual_path}]")
+                else:
+                    invalid_citations.append(citation)
+            # Check if it's a path citation
+            elif not any(citation.strip() == path for path in source_paths):
+                invalid_citations.append(citation)
+                
+        if invalid_citations:
+            warning = f"\n\n⚠️ WARNING: The following citations are invalid: {', '.join(invalid_citations)}. Please use only the exact source paths provided."
+            return response_content + warning, True
+            
+        return response_content, False 
