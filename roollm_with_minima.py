@@ -10,9 +10,11 @@ import re
 try:
     from .roollm import RooLLM, make_message, ROLE_TOOL, ROLE_SYSTEM, BASE_TOOL_LIST
     from .minima_adapter import MinimaRestAdapter
+    from .system_messages import MINIMA_SYSTEM_MESSAGES, TOOL_SELECTION_GUIDE
 except ImportError:
     from roollm import RooLLM, make_message, ROLE_TOOL, ROLE_SYSTEM, BASE_TOOL_LIST
     from minima_adapter import MinimaRestAdapter
+    from system_messages import MINIMA_SYSTEM_MESSAGES, TOOL_SELECTION_GUIDE
 
 # Load environment variables
 load_dotenv()
@@ -205,17 +207,7 @@ class RooLLMWithMinima(RooLLM):
         messages = []
         
         if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
-            # Base Minima message
-            messages.append(
-                "You can search documents using the query tool. "
-                "When using document information, cite sources with [Source: handbook.hypha.coop/path/to/document]."
-            )
-            
-            # Anti-hallucination warning
-            messages.append(
-                "Only cite documents that were returned by the query tool. "
-                "If you don't have information from the documents, say so."
-            )
+            messages.extend(MINIMA_SYSTEM_MESSAGES)
             
         return messages
 
@@ -323,24 +315,7 @@ class RooLLMWithMinima(RooLLM):
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
             
             # Add a system message to guide tool selection
-            tool_selection_guide = make_message(ROLE_SYSTEM, 
-                "CRITICAL: You MUST use tools to get information. NEVER make up or guess information.\n\n"
-                "Available tools and their use cases:\n"
-                "- get_upcoming_holiday: For questions about holidays (e.g. 'when is the next holiday?')\n"
-                "- get_upcoming_vacations: For questions about who is currently on vacation (e.g. 'who is on vacation?')\n"
-                "- fetch_remaining_vacation_days: For questions about remaining vacation days (e.g. 'how many vacation days do I have left?')\n"
-                "- query: For questions about policy, documents or handbook content (e.g. 'what is the pet policy?')\n"
-                "- calc: For calculations (e.g. 'what is 2+2?')\n"
-                "- github_issues_operations/github_pull_requests_operations: For GitHub operations (e.g. 'list open PRs')\n\n"
-                "IMPORTANT RULES:\n"
-                "1. ALWAYS use the appropriate tool to get information\n"
-                "2. NEVER make up or guess dates, names, or other information\n"
-                "3. NEVER announce which tool you will use\n"
-                "4. NEVER say 'I will use...' or 'Let me...'\n"
-                "5. NEVER explain your actions before taking them\n"
-                "6. Just use the tool and provide the answer directly\n\n"
-                "When using the query tool for documents, cite sources using [Source: handbook.hypha.coop/path/to/document]."
-            )
+            tool_selection_guide = make_message(ROLE_SYSTEM, TOOL_SELECTION_GUIDE)
             messages.append(tool_selection_guide)
         else:
             if self.minima_adapter.using_minima:
