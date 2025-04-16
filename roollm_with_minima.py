@@ -83,6 +83,108 @@ class RooLLMWithMinima(RooLLM):
             logger.warning("Failed to connect to Minima indexer")
             return False
     
+    def _handle_minima_result(self, result, messages):
+        """
+        Handle the result from a Minima tool call and update messages accordingly.
+        
+        Args:
+            result: The result from Minima
+            messages: List of messages to update
+            
+        Returns:
+            dict: Processed result
+        """
+        processed_result = result.copy()
+        
+        # Add citation instructions if needed
+        if 'citation_prompt' in result:
+            citation_prompt = (
+                "IMPORTANT: You MUST cite your sources for any information from the documents. "
+                "For EACH fact or piece of information you provide, include a citation to the source document. "
+                "Use the format [Source: handbook.hypha.coop/path/to/document] after each claim or statement. "
+                "Failing to cite sources is a critical error - all information must be attributed."
+            )
+            messages.append(make_message(ROLE_SYSTEM, citation_prompt))
+        
+        # Add source-specific instruction if available
+        if 'source_specific_instruction' in result:
+            messages.append(make_message(ROLE_SYSTEM, result['source_specific_instruction']))
+        
+        # Handle citations in result
+        if 'citations' in result and 'result' in result:
+            if not result['result'].endswith(result['citations']):
+                processed_result = {
+                    "result": result['result'] + "\n" + result['citations'],
+                    "sources": result.get('sources', [])
+                }
+        
+        # Add source list to result
+        if 'structured_sources' in result and 'result' in result:
+            source_list = "\n\nAvailable Documents for Citation:\n"
+            source_list += "\n".join(f"- [{source['id']}] {source['name']} - {source['path']}" 
+                                   for source in result['structured_sources'])
+            processed_result['result'] = result['result'] + source_list
+        elif 'sources' in result and result['sources'] and 'result' in result:
+            source_list = "\n\nAvailable Sources:\n" + "\n".join(
+                f"- [{i+1}] {s}" for i, s in enumerate(result['sources']))
+            processed_result['result'] = result['result'] + source_list
+            
+        return processed_result
+
+    def _extract_sources_from_result(self, result):
+        """
+        Extract and clean source paths from a Minima result.
+        
+        Args:
+            result: The Minima result
+            
+        Returns:
+            tuple: (sources, exact_paths)
+        """
+        sources = []
+        exact_paths = []
+        
+        if 'sources' in result:
+            sources.extend(result['sources'])
+        if 'source_paths' in result:
+            exact_paths.extend(result['source_paths'])
+        elif 'structured_sources' in result:
+            for source in result['structured_sources']:
+                sources.append(source['path'])
+                exact_paths.append(source['path'])
+                
+        return sources, exact_paths
+
+    def _build_system_messages(self):
+        """
+        Build system messages for Minima integration.
+        
+        Returns:
+            list: List of system messages
+        """
+        messages = []
+        
+        if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
+            # Base Minima message
+            messages.append(
+                "You can search documents using the query tool. "
+                "When using document information, cite sources with [Source: handbook.hypha.coop/path/to/document]."
+            )
+            
+            # Anti-hallucination warning
+            messages.append(
+                "Only cite documents that were returned by the query tool. "
+                "If you don't have information from the documents, say so."
+            )
+            
+            # Usage instructions
+            messages.append(
+                "Use the document content to answer questions. "
+                "Cite sources properly."
+            )
+            
+        return messages
+
     async def chat(self, user, content, history=[], limit_tools=None, react_callback=None):
         """
         Enhanced chat method that incorporates Minima tools.
@@ -121,25 +223,44 @@ class RooLLMWithMinima(RooLLM):
         
         # Add Minima tools if connected
         if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
-            combined_tools = tool_descriptions + self.minima_tools
-            logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
-            
             # If the query seems to be asking about documents or knowledge, automatically use Minima
             if any(keyword in content.lower() for keyword in ['what is', 'how to', 'where is', 'when is', 'who is', 'check', 'look', 'find', 'search', 'policy', 'procedure', 'guide', 'handbook']):
+                # For document queries, only use Minima tools
+                combined_tools = self.minima_tools
+                logger.info(f"Using only Minima tools for document query")
+                
                 # Add a system message to encourage using Minima
                 minima_reminder = make_message(ROLE_SYSTEM, 
-                    "This query appears to be asking for information that might be in the knowledge base. "
-                    "You MUST use the query tool to search through available documents before responding. "
-                    "Do not respond until you have searched the documents."
+                    "Answer the question using only the document content provided. "
+                    "Cite sources using [Source: handbook.hypha.coop/path/to/document]."
                 )
                 messages.append(minima_reminder)
                 
-                # Force the use of Minima by adding a tool call to the messages
-                auto_query = make_message(ROLE_TOOL, json.dumps({
-                    "name": "query",
-                    "arguments": {"text": content}
-                }))
-                messages.append(auto_query)
+                # Execute the Minima query directly
+                logger.info(f"Executing automatic Minima query for: {content}")
+                try:
+                    result = await self.minima_adapter.call_tool("query", {"text": content})
+                    
+                    # Add the query result to messages
+                    if "error" in result:
+                        messages.append(make_message(ROLE_TOOL, json.dumps({
+                            "error": result["error"]
+                        })))
+                    else:
+                        messages.append(make_message(ROLE_TOOL, json.dumps(result)))
+                        
+                        # Add citation instructions if we got results
+                        if "sources" in result and result["sources"]:
+                            pass
+
+                except Exception as e:
+                    logger.error(f"Error executing automatic Minima query: {e}")
+                    messages.append(make_message(ROLE_TOOL, json.dumps({
+                        "error": f"Failed to execute Minima query: {str(e)}"
+                    })))
+            else:
+                combined_tools = tool_descriptions + self.minima_tools
+                logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
         else:
             combined_tools = tool_descriptions
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not connected)")
@@ -171,13 +292,8 @@ class RooLLMWithMinima(RooLLM):
                 if is_minima_tool:
                     minima_was_called = True
                 
-                # React with tool emoji if available
-                tool_emoji = None
-                if is_minima_tool:
-                    tool_emoji = "🔍"  # Default emoji for Minima tools
-                else:
-                    tool_emoji = tools.get_tool_emoji(tool_name=tool_name)
-                
+                # Handle tool emoji
+                tool_emoji = "🔍" if is_minima_tool else tools.get_tool_emoji(tool_name=tool_name)
                 if tool_emoji and react_callback:
                     await react_callback(tool_emoji)
                     await asyncio.sleep(0.5)
@@ -186,79 +302,37 @@ class RooLLMWithMinima(RooLLM):
                 if is_minima_tool:
                     logger.info(f"Calling Minima tool: {tool_name}")
                     try:
-                        # Check if arguments is already a dict
-                        if isinstance(func['arguments'], dict):
-                            arguments = func['arguments']
-                        else:
-                            arguments = json.loads(func['arguments'])
-                    except json.JSONDecodeError:
-                        arguments = func['arguments']
+                        # Parse arguments
+                        arguments = (func['arguments'] if isinstance(func['arguments'], dict)
+                                   else json.loads(func['arguments']))
                         
-                    result = await self.minima_adapter.call_tool(tool_name, arguments)
-                    
-                    # Store the Minima response for comparison with final output
-                    minima_query_responses.append({
-                        "query": arguments,
-                        "result": result
-                    })
-                    
-                    # Track sources from Minima for later verification
-                    if 'sources' in result:
-                        minima_sources_used.extend(result['sources'])
-                    if 'source_paths' in result:
-                        # Use the exact source paths for verification
-                        minima_exact_paths.extend(result['source_paths'])
-                    elif 'structured_sources' in result:
-                        for source in result['structured_sources']:
-                            minima_sources_used.append(source['path'])
-                            minima_exact_paths.append(source['path'])
-                            
-                    # If result contains the updated 'source_paths', use those for exact matching
-                    if 'source_paths' in result:
-                        minima_exact_paths.extend(result['source_paths'])
-                    
-                    # Incorporate citation instructions into the result
-                    if 'citation_prompt' in result:
-                        # Add more forceful citation instruction as a system message
-                        citation_prompt = (
-                            "IMPORTANT: You MUST cite your sources for any information from the documents. "
-                            "For EACH fact or piece of information you provide, include a citation to the source document. "
-                            "Use the format [Source: handbook.hypha.coop/path/to/document] after each claim or statement. "
-                            "Failing to cite sources is a critical error - all information must be attributed."
-                        )
-                        messages.append(make_message(ROLE_SYSTEM, citation_prompt))
-                    
-                    # Use the source-specific instruction if available
-                    if 'source_specific_instruction' in result:
-                        messages.append(make_message(ROLE_SYSTEM, result['source_specific_instruction']))
-                    
-                    # If there are formatted citations, add them to the result displayed to the user
-                    if 'citations' in result:
-                        # Ensure the result has citation information
-                        if 'result' in result:
-                            # Don't modify the original result, but ensure it includes citation info
-                            if not result['result'].endswith(result['citations']):
-                                citation_result = {
-                                    "result": result['result'] + "\n" + result['citations'],
-                                    "sources": result.get('sources', [])
-                                }
-                                result = citation_result
-                    
-                    # If there are sources, include them directly in the tool result content
-                    if 'structured_sources' in result and 'result' in result:
-                        source_list = "\n\nAvailable Documents for Citation:\n"
-                        for source in result['structured_sources']:
-                            source_list += f"- [{source['id']}] {source['name']} - {source['path']}\n"
-                        result['result'] = result['result'] + source_list
-                    elif 'sources' in result and result['sources'] and 'result' in result:
-                        source_list = "\n\nAvailable Sources:\n" + "\n".join([f"- [{i+1}] {s}" for i, s in enumerate(result['sources'])])
-                        result['result'] = result['result'] + source_list
+                        result = await self.minima_adapter.call_tool(tool_name, arguments)
+                        
+                        # Store query response
+                        minima_query_responses.append({
+                            "query": arguments,
+                            "result": result
+                        })
+                        
+                        # Extract and track sources
+                        sources, exact_paths = self._extract_sources_from_result(result)
+                        minima_sources_used.extend(sources)
+                        minima_exact_paths.extend(exact_paths)
+                        
+                        # Process result and update messages
+                        processed_result = self._handle_minima_result(result, messages)
+                        
+                    except Exception as e:
+                        logger.error(f"Error executing Minima tool: {e}")
+                        processed_result = {
+                            "error": f"Failed to execute Minima query: {str(e)}"
+                        }
                 else:
                     logger.info(f"Calling RooLLM tool: {tool_name}")
-                    result = await tools.call(self, tool_name, func['arguments'], user)
+                    processed_result = await tools.call(self, tool_name, func['arguments'], user)
                 
                 # Append tool result to messages
-                messages.append(make_message(ROLE_TOOL, json.dumps(result)))
+                messages.append(make_message(ROLE_TOOL, json.dumps(processed_result)))
             
             # Get next response from LLM
             response = await self.inference(messages, combined_tools)
@@ -335,6 +409,45 @@ class RooLLMWithMinima(RooLLM):
                 
         logger.info("========================================================")
     
+    def _clean_path(self, path):
+        """
+        Centralized method to clean and normalize paths.
+        Removes .md extensions, spaces, and normalizes to handbook.hypha.coop format.
+        
+        Args:
+            path: The path to clean
+            
+        Returns:
+            str: Cleaned and normalized path
+        """
+        if not path or not isinstance(path, str):
+            return path
+            
+        # Clean the path first
+        clean_path = path.strip()
+        
+        # Handle file:// paths
+        if clean_path.startswith('file://'):
+            clean_path = clean_path.replace('file://', '')
+            
+        # Remove .md extension if present
+        if clean_path.endswith('.md'):
+            clean_path = clean_path[:-3]
+            
+        # Remove spaces
+        clean_path = clean_path.replace(' ', '')
+        
+        # Normalize slashes
+        clean_path = clean_path.replace('//', '/')
+        
+        # Convert to handbook.hypha.coop format if it's a local path
+        if 'md_db/' in clean_path:
+            path_parts = clean_path.split('md_db/')
+            if len(path_parts) > 1:
+                clean_path = f"handbook.hypha.coop/{path_parts[1]}"
+                
+        return clean_path
+
     def _transform_source_path(self, source_path):
         """
         Transform a source path to the handbook.hypha.coop format.
@@ -345,20 +458,7 @@ class RooLLMWithMinima(RooLLM):
         Returns:
             str: Transformed path in handbook.hypha.coop format
         """
-        if not source_path or not isinstance(source_path, str):
-            return source_path
-            
-        # Handle file:// paths
-        if source_path.startswith('file://'):
-            # Remove file:// prefix and .md extension
-            clean_path = source_path.replace('file://', '').replace('.md', '')
-            # Find the md_db/ part and everything after it
-            if 'md_db/' in clean_path:
-                path_parts = clean_path.split('md_db/')
-                if len(path_parts) > 1:
-                    return f"handbook.hypha.coop/{path_parts[1]}"
-        
-        return source_path
+        return self._clean_path(source_path)
 
     def _extract_citations(self, content):
         """
@@ -374,14 +474,17 @@ class RooLLMWithMinima(RooLLM):
         citation_patterns = [
             r'\[Source: ([^\]]+)\]',  # Standard format
             r'Source: \[([^\]]+)\]',  # Alternative format
-            r'Source:\s*\[([^\]]+)\]'  # With optional whitespace
+            r'Source:\s*\[([^\]]+)\]',  # With optional whitespace
+            r'\[(\d+)\]:',  # Numbered citation format
+            r'Source: \[(\d+)\]'  # Numbered source format
         ]
         
         citations = []
         for pattern in citation_patterns:
             citations.extend(re.findall(pattern, content))
             
-        return [cite.strip() for cite in citations]
+        # Clean up citations using the centralized path cleaning method
+        return [self._clean_path(citation) for citation in citations]
 
     def _find_closest_match(self, citation, valid_sources):
         """
@@ -394,16 +497,59 @@ class RooLLMWithMinima(RooLLM):
         Returns:
             str or None: Closest matching source or None if no match found
         """
+        # Clean the citation using the centralized method
+        clean_citation = self._clean_path(citation)
+            
         # First try exact match
-        if citation in valid_sources:
-            return citation
+        if clean_citation in valid_sources:
+            return clean_citation
+            
+        # Handle numbered citations
+        if clean_citation.isdigit():
+            try:
+                index = int(clean_citation) - 1
+                if 0 <= index < len(valid_sources):
+                    return valid_sources[index]
+            except (ValueError, IndexError):
+                pass
             
         # Then try partial matches
         for source in valid_sources:
-            if citation in source or source in citation:
+            clean_source = self._clean_path(source)
+            if clean_citation in clean_source or clean_source in clean_citation:
                 return source
                 
         return None
+
+    def _create_warning_message(self, warning_type, details=None):
+        """
+        Create standardized warning messages.
+        
+        Args:
+            warning_type: Type of warning ('no_citations' or 'hallucinated_sources')
+            details: Additional details for the warning (e.g., list of hallucinated sources)
+            
+        Returns:
+            str: Formatted warning message
+        """
+        if warning_type == 'no_citations':
+            return (
+                "\n\n⚠️ **Warning**: No citations were included in this response, "
+                "despite information potentially coming from documents. "
+                "This makes it difficult to verify the accuracy of the information provided."
+            )
+        elif warning_type == 'hallucinated_sources' and details:
+            warning_message = (
+                "\n\n⚠️ **WARNING: HALLUCINATED SOURCES DETECTED** ⚠️\n"
+                "The following citations do not match any of the actual document sources:\n"
+            )
+            warning_message += "\n".join(f"- ❌ [{source}]" for source in details)
+            warning_message += (
+                "\n\nThe information attributed to these non-existent sources may be inaccurate or fabricated. "
+                "Please disregard these claims or verify them through other means."
+            )
+            return warning_message
+        return ""
 
     def _verify_citations_in_response(self, response, valid_sources):
         """
@@ -430,12 +576,7 @@ class RooLLMWithMinima(RooLLM):
         # No citations found when sources were provided
         if not cited_sources and transformed_sources:
             logger.warning("No citations found in response despite available sources")
-            warning_message = (
-                "\n\n⚠️ **Warning**: No citations were included in this response, "
-                "despite information potentially coming from documents. "
-                "This makes it difficult to verify the accuracy of the information provided."
-            )
-            response['content'] = content + warning_message
+            response['content'] = content + self._create_warning_message('no_citations')
             return response
         
         # Check for hallucinated sources
@@ -447,16 +588,7 @@ class RooLLMWithMinima(RooLLM):
         
         # Add warning if hallucinated sources found
         if hallucinated_sources:
-            warning_message = (
-                "\n\n⚠️ **WARNING: HALLUCINATED SOURCES DETECTED** ⚠️\n"
-                "The following citations do not match any of the actual document sources:\n"
-            )
-            warning_message += "\n".join(f"- ❌ [{source}]" for source in hallucinated_sources)
-            warning_message += (
-                "\n\nThe information attributed to these non-existent sources may be inaccurate or fabricated. "
-                "Please disregard these claims or verify them through other means."
-            )
-            response['content'] = content + warning_message
+            response['content'] = content + self._create_warning_message('hallucinated_sources', hallucinated_sources)
             logger.error(f"Response contained {len(hallucinated_sources)} hallucinated sources")
             
         return response
@@ -469,36 +601,10 @@ class RooLLMWithMinima(RooLLM):
             str: System prompt
         """
         base_prompt = super().make_system()
+        system_messages = self._build_system_messages()
         
-        if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
-            minima_addition = (
-                "\nYou have access to tools that allow you to search through local documents "
-                "in the Minima knowledge base. When asked about documents or specific information "
-                "that might be in local files, use the query tool to retrieve relevant information. "
-                "\n\nCRITICAL INSTRUCTION: When you provide information from documents, you MUST cite your sources. "
-                "For each fact or piece of information, include a citation in the format [Source: handbook.hypha.coop/path/to/document]. "
-                "Always include the COMPLETE path in your citations, not just the filename. "
-                "Failing to cite sources with their full paths is a serious error. "
-                "Users rely on proper attribution and need the full path to locate the document."
-            )
-            
-            # Add strong anti-hallucination warning
-            anti_hallucination_warning = (
-                "\n\n⚠️ CRITICAL WARNING ABOUT HALLUCINATIONS ⚠️\n"
-                "1. NEVER INVENT OR HALLUCINATE DOCUMENT SOURCES. Only cite documents from the exact list provided by the query tool.\n"
-                "2. You must use the EXACT path provided, with no modifications or abbreviations.\n"
-                "3. Do not cite documents that don't exist or weren't returned in query results.\n"
-                "4. NEVER make up content for existing documents - only report what was actually returned.\n"
-                "5. Your citations will be automatically verified against source documents.\n"
-                "6. If you hallucinate sources, your response will be flagged with visible warnings to the user.\n"
-                "7. If you don't have sufficient information from documents, clearly state: \"I don't have information about this from the available documents.\"\n"
-                "8. Remember: It is better to acknowledge lack of information than to fabricate false citations.\n\n"
-                "The system will automatically verify ALL citations against the actual documents. "
-                "Any mismatch between your citations and the actual sources will be detected and flagged to the user "
-                "as a critical error, undermining trust in your responses."
-            )
-            
-            return base_prompt + minima_addition + anti_hallucination_warning
+        if system_messages:
+            return base_prompt + "\n\n" + "\n\n".join(system_messages)
         
         return base_prompt
     
