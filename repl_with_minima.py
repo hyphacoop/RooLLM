@@ -115,7 +115,12 @@ else:
     logger.info("Minima integration is disabled")
 
 # Initialize RooLLM with Minima
-inference = make_ollama_inference()
+inference = make_ollama_inference(
+    url="https://ai.hypha.coop/api/chat",
+    model="hermes3",
+    username="hypha",
+    password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
+)
 roo = make_roollm_with_minima(inference, config=config)
 
 # Try to get the current login, otherwise fall back
