@@ -3,8 +3,14 @@ import logging
 import asyncio
 import os
 from dotenv import load_dotenv
-from roollm import RooLLM, make_message, ROLE_TOOL, ROLE_SYSTEM, BASE_TOOL_LIST
-from minima_adapter import MinimaRestAdapter
+
+# Use try-except pattern for imports that can work both in package mode and standalone mode
+try:
+    from .roollm import RooLLM, make_message, ROLE_TOOL, ROLE_SYSTEM, BASE_TOOL_LIST
+    from .minima_adapter import MinimaRestAdapter
+except ImportError:
+    from roollm import RooLLM, make_message, ROLE_TOOL, ROLE_SYSTEM, BASE_TOOL_LIST
+    from minima_adapter import MinimaRestAdapter
 
 # Load environment variables
 load_dotenv()
