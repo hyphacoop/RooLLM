@@ -1,5 +1,5 @@
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2 import service_account
 import os
 
 name = 'fetch_remaining_vacation_days'
@@ -49,7 +49,7 @@ def fetch_remaining_vacation_days(creds, employee_name):
 
 # Tool call implementation
 async def tool(roo, arguments, user):
-    creds = roo.config.get("google_creds")
+    creds_dict = roo.config.get("google_creds")
 
     if not creds:
         return "Google credentials are missing."
@@ -61,8 +61,7 @@ async def tool(roo, arguments, user):
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds, scopes)
-
+    creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scopes)
     
     employee_name = arguments.get('employee_name', user)  
     if not employee_name:

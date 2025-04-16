@@ -1,6 +1,6 @@
 import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2 import service_account
 import os
 
 name = 'get_upcoming_vacations'
@@ -75,7 +75,7 @@ async def tool(roo, arguments, user):
         "https://www.googleapis.com/auth/drive.file",
         "https://www.googleapis.com/auth/drive"
     ]
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scopes)
+    creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scopes)
 
     vacation_info = fetch_upcoming_vacations(creds)
     return f"Tell {user}, {vacation_info}"
