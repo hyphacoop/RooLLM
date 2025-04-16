@@ -51,7 +51,7 @@ def fetch_remaining_vacation_days(creds, employee_name):
 async def tool(roo, arguments, user):
     creds_dict = roo.config.get("google_creds")
 
-    if not creds:
+    if not creds_dict:
         return "Google credentials are missing."
     
     # Convert dictionary to ServiceAccountCredentials object
