@@ -3,6 +3,8 @@ import logging
 import asyncio
 import os
 from dotenv import load_dotenv
+import time
+import re
 
 # Use try-except pattern for imports that can work both in package mode and standalone mode
 try:
@@ -42,6 +44,12 @@ class RooLLMWithMinima(RooLLM):
         
         # Store the requested tool list
         self.requested_tool_list = tool_list
+        
+        # Track connection state
+        self._minima_connection_attempted = False
+        self._minima_connection_failed = False
+        self._minima_last_attempt = 0
+        self._minima_retry_interval = 300  # 5 minutes between retries
         
         # Call parent constructor with possibly modified tool list
         super().__init__(inference, tool_list, config)
@@ -185,6 +193,68 @@ class RooLLMWithMinima(RooLLM):
             
         return messages
 
+    async def _ensure_minima_connection(self):
+        """
+        Ensure Minima is connected, with proper error handling and retry logic.
+        
+        Returns:
+            bool: True if connected, False if connection failed
+        """
+        if not self.minima_adapter.using_minima:
+            return False
+            
+        # If we've already tried and failed to connect, don't try again unless retry interval has passed
+        if self._minima_connection_failed:
+            current_time = time.time()
+            if current_time - self._minima_last_attempt < self._minima_retry_interval:
+                return False
+            # Reset failure state for retry
+            self._minima_connection_failed = False
+            
+        # If we're already connected, return True
+        if self.minima_adapter.is_connected():
+            return True
+            
+        # If we haven't tried to connect yet, try now
+        if not self._minima_connection_attempted:
+            self._minima_connection_attempted = True
+            self._minima_last_attempt = time.time()
+            try:
+                connected = await self.connect_to_minima()
+                if not connected:
+                    self._minima_connection_failed = True
+                    logger.warning("Failed to connect to Minima indexer - will retry in 5 minutes")
+                return connected
+            except Exception as e:
+                self._minima_connection_failed = True
+                logger.error(f"Error connecting to Minima: {e}")
+                return False
+                
+        return False
+
+    def _clean_response_content(self, content):
+        """
+        Clean up response content by removing any unexpected artifacts.
+        
+        Args:
+            content: The response content to clean
+            
+        Returns:
+            str: Cleaned response content
+        """
+        if not content:
+            return content
+            
+        # Remove any text after end_of_text marker
+        if "<|end_of_text|>" in content:
+            content = content.split("<|end_of_text|>")[0]
+            
+        # Remove any URLs or JSON artifacts
+        content = re.sub(r'https?://\S+', '', content)
+        content = re.sub(r'<\|begin_of_text\|>.*', '', content)
+        
+        return content.strip()
+
     async def chat(self, user, content, history=[], limit_tools=None, react_callback=None):
         """
         Enhanced chat method that incorporates Minima tools.
@@ -205,9 +275,8 @@ class RooLLMWithMinima(RooLLM):
         # Log user query
         logger.info(f"User query: {content}")
         
-        # Try to connect to Minima automatically if it's enabled and not connected
-        if self.minima_adapter.using_minima and not self.minima_adapter.is_connected():
-            await self.connect_to_minima()
+        # Try to connect to Minima if needed
+        minima_connected = await self._ensure_minima_connection()
         
         # Prepare messages
         system_message = make_message(ROLE_SYSTEM, self.make_system())
@@ -222,7 +291,7 @@ class RooLLMWithMinima(RooLLM):
         tool_descriptions = tools.descriptions()
         
         # Add Minima tools if connected
-        if self.minima_adapter.using_minima and self.minima_adapter.is_connected():
+        if minima_connected:
             # If the query seems to be asking about documents or knowledge, automatically use Minima
             if any(keyword in content.lower() for keyword in ['what is', 'how to', 'where is', 'when is', 'who is', 'check', 'look', 'find', 'search', 'policy', 'procedure', 'guide', 'handbook']):
                 # For document queries, only use Minima tools
@@ -263,7 +332,15 @@ class RooLLMWithMinima(RooLLM):
                 logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
         else:
             combined_tools = tool_descriptions
-            logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not connected)")
+            if self.minima_adapter.using_minima:
+                logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not connected)")
+                # Add a message to inform the user that Minima is not available
+                messages.append(make_message(ROLE_SYSTEM, 
+                    "Note: Document search functionality is currently unavailable. "
+                    "I'll do my best to answer your question using other available tools."
+                ))
+            else:
+                logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not enabled)")
         
         # For tracking Minima usage and sources
         minima_sources_used = []
@@ -273,6 +350,10 @@ class RooLLMWithMinima(RooLLM):
         
         # Send first request to the LLM
         response = await self.inference(messages, combined_tools)
+        
+        # Clean up response content
+        if 'content' in response:
+            response['content'] = self._clean_response_content(response['content'])
         
         # Handle tool calls in the response
         while 'tool_calls' in response:
