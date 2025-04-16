@@ -35,32 +35,44 @@ def fetch_upcoming_vacations(creds):
     rows = data[1:]
     vacations = [dict(zip(headers, row)) for row in rows]
     
+    # Filter out vacations happening in the next week
     today = datetime.date.today()
     one_week_later = today + datetime.timedelta(days=7)
-    
+
     upcoming_vacations = []
     for entry in vacations:
-        start_date_str = entry.get('Start of Vacation', '')
-        if start_date_str:
+        start_date_str = entry['Start of Vacation']
+        end_date_str = entry['End of Vacation']
+        # Check if the date strings are not empty before converting
+        if start_date_str and end_date_str:
             start_date = datetime.datetime.strptime(start_date_str, '%m/%d/%Y').date()
-            if today <= start_date <= one_week_later:
+            end_date = datetime.datetime.strptime(end_date_str, '%m/%d/%Y').date()
+            # Include vacations that are either:
+            # 1. Starting in the next week
+            # 2. Already in progress
+            if (today <= start_date <= one_week_later) or (start_date <= today <= end_date):
                 upcoming_vacations.append(entry)
     
     if not upcoming_vacations:
         return "No vacations in the upcoming week."
     
-    vacation_msg = "# 🌴Upcoming Vacations and Out of Office notices😎\n\n"
+    vacation_msg = "# 🌴 Vacation Status\n\n"
     for entry in upcoming_vacations:
         start_date = datetime.datetime.strptime(entry['Start of Vacation'], '%m/%d/%Y').date()
         end_date = datetime.datetime.strptime(entry['End of Vacation'], '%m/%d/%Y').date()
         
-        date_msg = f"from {start_date.strftime('%A %m/%d/%Y')} to {end_date.strftime('%A %m/%d/%Y')}"
-        if start_date == end_date:
-            date_msg = f"on {start_date.strftime('%A %m/%d/%Y')}"
-            if start_date == today:
-                date_msg = "today"
+        # Determine the tense based on the dates
+        if start_date > today:
+            # Future vacation
+            date_msg = f"will be away from {start_date.strftime('%A, %B %d')} to {end_date.strftime('%A, %B %d')}"
+        elif start_date <= today <= end_date:
+            # Current vacation
+            date_msg = f"is away until {end_date.strftime('%A, %B %d')}"
+        else:
+            # Past vacation (shouldn't happen with our filtering, but just in case)
+            date_msg = f"was away from {start_date.strftime('%A, %B %d')} to {end_date.strftime('%A, %B %d')}"
         
-        vacation_msg += f"{entry['Employee Name']} is on vacation {date_msg}.\n"
+        vacation_msg += f"• {entry['Employee Name']} {date_msg}\n"
     
     return vacation_msg
 
