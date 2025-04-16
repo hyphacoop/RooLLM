@@ -34,9 +34,11 @@ class MinimaRestAdapter:
         ) or server_url or os.getenv("MINIMA_MCP_SERVER_URL", "http://localhost:8001")
         
         # Check if Minima is enabled (from config or env var)
-        self.using_minima = (
-            config.get("USE_MINIMA_MCP") if config else None
-        ) or os.getenv("USE_MINIMA_MCP", "false").lower() == "true"
+        config_minima = config.get("USE_MINIMA_MCP") if config else None
+        env_minima = os.getenv("USE_MINIMA_MCP", "false").lower() == "true"
+        
+        # If config value exists, convert it to bool, otherwise use env value
+        self.using_minima = bool(config_minima) if config_minima is not None else env_minima
         
         self.connected = False
         self.tools = {}
