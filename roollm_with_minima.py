@@ -115,13 +115,14 @@ class RooLLMWithMinima(RooLLM):
                 "\n\n⚠️ CITATION REQUIREMENT ⚠️\n"
                 "You MUST cite your sources using the EXACT paths provided below.\n"
                 "Format: [Source: handbook.hypha.coop/path/to/document]\n"
-                "Example: [Source: handbook.hypha.coop/Policies/pet.md]\n\n"
+                "Example: [Source: handbook.hypha.coop/Policies/pet]\n\n"
                 "Available sources:\n"
             )
             
             # Add each source with its number
             for i, source in enumerate(sources, 1):
-                citation_instructions += f"[{i}] {source}\n"
+                clean_source = self._clean_path(source)
+                citation_instructions += f"[{i}] {clean_source}\n"
                 
             formatted_result += citation_instructions
             
@@ -341,12 +342,14 @@ class RooLLMWithMinima(RooLLM):
                             "error": result["error"]
                         })))
                     else:
-                        messages.append(make_message(ROLE_TOOL, json.dumps(result)))
+                        # Format the result with citations
+                        formatted_result = self._handle_minima_result(result, content)
+                        messages.append(make_message(ROLE_TOOL, json.dumps({
+                            "result": formatted_result,
+                            "sources": result.get("sources", []),
+                            "source_paths": result.get("source_paths", [])
+                        })))
                         
-                        # Add citation instructions if we got results
-                        if "sources" in result and result["sources"]:
-                            pass
-
                 except Exception as e:
                     logger.error(f"Error executing automatic Minima query: {e}")
                     messages.append(make_message(ROLE_TOOL, json.dumps({
@@ -426,7 +429,12 @@ class RooLLMWithMinima(RooLLM):
                         minima_exact_paths.extend(exact_paths)
                         
                         # Process result and update messages
-                        processed_result = self._handle_minima_result(result, messages)
+                        formatted_result = self._handle_minima_result(result, arguments.get("text", ""))
+                        processed_result = {
+                            "result": formatted_result,
+                            "sources": sources,
+                            "source_paths": exact_paths
+                        }
                         
                     except Exception as e:
                         logger.error(f"Error executing Minima tool: {e}")
