@@ -337,94 +337,44 @@ class MinimaRestAdapter:
 
     def _format_result_with_citations(self, output, sources):
         """
-        Format the result with citation instructions and source information.
+        Format the result with citations and source information.
         
         Args:
-            output: The output text from Minima
-            sources: List of source links/documents
+            output: The output from Minima
+            sources: List of verified sources
             
         Returns:
-            dict: Enhanced result with source citations
+            dict: Formatted result with citations
         """
-        # If no sources, just return the original output with a note
-        if not sources or len(sources) == 0:
-            return {
-                "result": output + "\n\nNo document sources were found for this query.",
-                "sources": [],
-                "citation_prompt": self.citation_prompt
-            }
-            
-        # Format source information with full paths and structured context
-        formatted_sources = []
-        source_paths = []  # List of exact paths that can be cited
-        
-        # First pass: collect all source paths
+        # Clean and transform source paths
+        cleaned_sources = []
         for source in sources:
-            # Transform the file path to use handbook.hypha.coop base URL
-            if source.startswith('file://'):
-                # Remove file:// prefix and .md extension
-                clean_path = source.replace('file://', '').replace('.md', '')
-                # Find the md_db/ part and everything after it
-                if 'md_db/' in clean_path:
-                    path_parts = clean_path.split('md_db/')
-                    if len(path_parts) > 1:
-                        # Create the new URL format
-                        new_path = f"handbook.hypha.coop/{path_parts[1]}"
-                        source_paths.append(new_path)
-                        continue
+            # Extract path after md_db/ and append to handbook.hypha.coop
+            if 'md_db/' in source:
+                path_parts = source.split('md_db/')
+                if len(path_parts) > 1:
+                    source = f"handbook.hypha.coop/{path_parts[1]}"
+                    
+            # Remove .md extension if present
+            if source.endswith('.md'):
+                source = source[:-3]
+                    
+            cleaned_sources.append(source)
             
-            # If we couldn't transform it, use the original path
-            source_paths.append(source)
+        # Format the result with citations
+        formatted_result = f"DOCUMENT CONTEXT FOR YOUR RESPONSE:\n\n"
+        formatted_result += "The following documents were found for this query. You must cite your sources using the format [Source: handbook.hypha.coop/path/to/document]:\n"
         
-        # Second pass: format sources with consistent numbering
-        for i, source in enumerate(sources):
-            # Transform the file path to use handbook.hypha.coop base URL
-            if source.startswith('file://'):
-                # Remove file:// prefix and .md extension
-                clean_path = source.replace('file://', '').replace('.md', '')
-                # Find the md_db/ part and everything after it
-                if 'md_db/' in clean_path:
-                    path_parts = clean_path.split('md_db/')
-                    if len(path_parts) > 1:
-                        # Create the new URL format
-                        new_path = f"handbook.hypha.coop/{path_parts[1]}"
-                        formatted_sources.append(f"[{i+1}] {new_path}")
-                        continue
+        # Add each source
+        for source in cleaned_sources:
+            formatted_result += f"- {source}\n"
             
-            # If we couldn't transform it, use the original path
-            formatted_sources.append(f"[{i+1}] {source}")
+        formatted_result += "\nDocument content:\n" + output
         
-        # Format the output with detailed citation info
-        citation_header = "\n\n-------- DOCUMENT SOURCES --------"
-        citations = f"{citation_header}\n" + "\n".join(formatted_sources)
-        
-        # Create a more explicit instruction with the exact list of allowed sources
-        allowed_sources_formatted = []
-        for i, source in enumerate(source_paths):
-            allowed_sources_formatted.append(f"- [{i+1}] \"{source}\"")
-            
-        allowed_sources_list = "\n".join(allowed_sources_formatted)
-        
-        source_specific_instruction = (
-            f"⚠️ CITATION REQUIREMENT ⚠️\n"
-            f"You are ONLY allowed to cite the following specific documents:\n"
-            f"{allowed_sources_list}\n\n"
-            f"When citing, you MUST use the EXACT path as shown above - do not modify, abbreviate, or create new paths.\n"
-            f"Format your citations as [Source: handbook.hypha.coop/path/to/document] immediately after each claim or statement.\n"
-            f"ANY citation not matching one of the exact sources above will be flagged as a hallucination.\n"
-            f"If you cannot find relevant information in these sources, state clearly that you don't have information on that topic."
-        )
-        
-        # Enhanced result with citation prompt and formatted sources
         return {
-            "result": output,  # Only include the actual document content
-            "original_output": output,
-            "sources": sources,
-            "source_paths": source_paths,  # Include exact allowed paths for verification
-            "formatted_sources": formatted_sources,
-            "citations": citations,
-            "citation_prompt": self.citation_prompt,
-            "source_specific_instruction": source_specific_instruction
+            "result": formatted_result,
+            "sources": cleaned_sources,
+            "source_paths": cleaned_sources
         }
 
     def verify_citations(self, response_content, source_paths):
