@@ -335,6 +335,76 @@ class RooLLMWithMinima(RooLLM):
                 
         logger.info("========================================================")
     
+    def _transform_source_path(self, source_path):
+        """
+        Transform a source path to the handbook.hypha.coop format.
+        
+        Args:
+            source_path: The original source path
+            
+        Returns:
+            str: Transformed path in handbook.hypha.coop format
+        """
+        if not source_path or not isinstance(source_path, str):
+            return source_path
+            
+        # Handle file:// paths
+        if source_path.startswith('file://'):
+            # Remove file:// prefix and .md extension
+            clean_path = source_path.replace('file://', '').replace('.md', '')
+            # Find the md_db/ part and everything after it
+            if 'md_db/' in clean_path:
+                path_parts = clean_path.split('md_db/')
+                if len(path_parts) > 1:
+                    return f"handbook.hypha.coop/{path_parts[1]}"
+        
+        return source_path
+
+    def _extract_citations(self, content):
+        """
+        Extract citations from content using multiple patterns.
+        
+        Args:
+            content: The content to search for citations
+            
+        Returns:
+            list: List of extracted citations
+        """
+        import re
+        citation_patterns = [
+            r'\[Source: ([^\]]+)\]',  # Standard format
+            r'Source: \[([^\]]+)\]',  # Alternative format
+            r'Source:\s*\[([^\]]+)\]'  # With optional whitespace
+        ]
+        
+        citations = []
+        for pattern in citation_patterns:
+            citations.extend(re.findall(pattern, content))
+            
+        return [cite.strip() for cite in citations]
+
+    def _find_closest_match(self, citation, valid_sources):
+        """
+        Find the closest matching source for a citation.
+        
+        Args:
+            citation: The citation to match
+            valid_sources: List of valid source paths
+            
+        Returns:
+            str or None: Closest matching source or None if no match found
+        """
+        # First try exact match
+        if citation in valid_sources:
+            return citation
+            
+        # Then try partial matches
+        for source in valid_sources:
+            if citation in source or source in citation:
+                return source
+                
+        return None
+
     def _verify_citations_in_response(self, response, valid_sources):
         """
         Verify that citations in the response match actual sources.
@@ -351,15 +421,15 @@ class RooLLMWithMinima(RooLLM):
         if not content:
             return response
             
+        # Transform all valid sources to handbook.hypha.coop format
+        transformed_sources = [self._transform_source_path(source) for source in valid_sources]
+        
         # Extract citations from content
-        import re
-        citation_pattern = r'\[Source: ([^\]]+)\]'
-        cited_sources = re.findall(citation_pattern, content)
+        cited_sources = self._extract_citations(content)
         
         # No citations found when sources were provided
-        if len(cited_sources) == 0 and len(valid_sources) > 0:
-            logger.warning("Model did not include any citations despite being provided with sources")
-            # Add a warning about missing citations
+        if not cited_sources and transformed_sources:
+            logger.warning("No citations found in response despite available sources")
             warning_message = (
                 "\n\n⚠️ **Warning**: No citations were included in this response, "
                 "despite information potentially coming from documents. "
@@ -368,45 +438,25 @@ class RooLLMWithMinima(RooLLM):
             response['content'] = content + warning_message
             return response
         
-        # Check for hallucinated sources using exact path matching
+        # Check for hallucinated sources
         hallucinated_sources = []
-        for cited_source in cited_sources:
-            # Strip whitespace and normalize path
-            normalized_cite = cited_source.strip()
-            
-            # Check if this source was in the valid sources list using exact matching
-            if normalized_cite not in valid_sources:
-                hallucinated_sources.append(normalized_cite)
-                logger.warning(f"HALLUCINATED SOURCE DETECTED: '{normalized_cite}' not in allowed sources")
-                
-                # Try to find if it's a partial match or similar to a real source
-                closest_match = None
-                for valid_source in valid_sources:
-                    if normalized_cite in valid_source or valid_source in normalized_cite:
-                        closest_match = valid_source
-                        break
-                
-                if closest_match:
-                    logger.warning(f"  - Closest valid source might be: '{closest_match}'")
+        for citation in cited_sources:
+            if not self._find_closest_match(citation, transformed_sources):
+                hallucinated_sources.append(citation)
+                logger.warning(f"HALLUCINATED SOURCE DETECTED: '{citation}' not in allowed sources")
         
-        # If hallucinated sources were found, modify the response
-        if hallucinated_sources and len(hallucinated_sources) > 0:
+        # Add warning if hallucinated sources found
+        if hallucinated_sources:
             warning_message = (
                 "\n\n⚠️ **WARNING: HALLUCINATED SOURCES DETECTED** ⚠️\n"
                 "The following citations do not match any of the actual document sources:\n"
             )
-            for source in hallucinated_sources:
-                warning_message += f"- ❌ [{source}]\n"
-                
+            warning_message += "\n".join(f"- ❌ [{source}]" for source in hallucinated_sources)
             warning_message += (
-                "\nThe information attributed to these non-existent sources may be inaccurate or fabricated. "
+                "\n\nThe information attributed to these non-existent sources may be inaccurate or fabricated. "
                 "Please disregard these claims or verify them through other means."
             )
-                
-            # Add the warning to the content
             response['content'] = content + warning_message
-            
-            # Log this incident
             logger.error(f"Response contained {len(hallucinated_sources)} hallucinated sources")
             
         return response
