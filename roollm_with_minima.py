@@ -124,14 +124,22 @@ class RooLLMWithMinima(RooLLM):
             combined_tools = tool_descriptions + self.minima_tools
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
             
-            # If the query seems to be asking about documents or knowledge, force use of Minima
-            if any(keyword in content.lower() for keyword in ['search', 'look', 'find', 'check', 'what is', 'how to', 'where is', 'when is', 'who is']):
+            # If the query seems to be asking about documents or knowledge, automatically use Minima
+            if any(keyword in content.lower() for keyword in ['what is', 'how to', 'where is', 'when is', 'who is', 'check', 'look', 'find', 'search', 'policy', 'procedure', 'guide', 'handbook']):
                 # Add a system message to encourage using Minima
                 minima_reminder = make_message(ROLE_SYSTEM, 
                     "This query appears to be asking for information that might be in the knowledge base. "
-                    "Please use the query tool to search through available documents before responding."
+                    "You MUST use the query tool to search through available documents before responding. "
+                    "Do not respond until you have searched the documents."
                 )
                 messages.append(minima_reminder)
+                
+                # Force the use of Minima by adding a tool call to the messages
+                auto_query = make_message(ROLE_TOOL, json.dumps({
+                    "name": "query",
+                    "arguments": {"text": content}
+                }))
+                messages.append(auto_query)
         else:
             combined_tools = tool_descriptions
             logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not connected)")
