@@ -318,48 +318,31 @@ class RooLLMWithMinima(RooLLM):
         
         # Add Minima tools if connected
         if minima_connected:
-            # If the query seems to be asking about documents or knowledge, automatically use Minima
-            if any(keyword in content.lower() for keyword in ['what is', 'how to', 'where is', 'when is', 'who is', 'check', 'look', 'find', 'search', 'policy', 'procedure', 'guide', 'handbook']):
-                # For document queries, only use Minima tools
-                combined_tools = self.minima_tools
-                logger.info(f"Using only Minima tools for document query")
-                
-                # Add a system message to encourage using Minima
-                minima_reminder = make_message(ROLE_SYSTEM, 
-                    "Answer the question using only the document content provided. "
-                    "Cite sources using [Source: handbook.hypha.coop/path/to/document]."
-                )
-                messages.append(minima_reminder)
-                
-                # Execute the Minima query directly
-                logger.info(f"Executing automatic Minima query for: {content}")
-                try:
-                    result = await self.minima_adapter.call_tool("query", {"text": content})
-                    
-                    # Add the query result to messages
-                    if "error" in result:
-                        messages.append(make_message(ROLE_TOOL, json.dumps({
-                            "error": result["error"]
-                        })))
-                    else:
-                        # Format the result with citations
-                        formatted_result = self._handle_minima_result(result, content)
-                        messages.append(make_message(ROLE_TOOL, json.dumps({
-                            "result": formatted_result,
-                            "sources": result.get("sources", []),
-                            "source_paths": result.get("source_paths", [])
-                        })))
-                        
-                except Exception as e:
-                    logger.error(f"Error executing automatic Minima query: {e}")
-                    messages.append(make_message(ROLE_TOOL, json.dumps({
-                        "error": f"Failed to execute Minima query: {str(e)}"
-                    })))
-            else:
-                combined_tools = tool_descriptions + self.minima_tools
-                logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
+            # Make all tools available to the LLM
+            combined_tools = tool_descriptions + self.minima_tools
+            logger.info(f"Using {len(tool_descriptions)} RooLLM tools and {len(self.minima_tools)} Minima tools")
+            
+            # Add a system message to guide tool selection
+            tool_selection_guide = make_message(ROLE_SYSTEM, 
+                "CRITICAL: You MUST use tools to get information. NEVER make up or guess information.\n\n"
+                "Available tools and their use cases:\n"
+                "- get_upcoming_holiday: For questions about holidays (e.g. 'when is the next holiday?')\n"
+                "- get_upcoming_vacations: For questions about who is currently on vacation (e.g. 'who is on vacation?')\n"
+                "- fetch_remaining_vacation_days: For questions about remaining vacation days (e.g. 'how many vacation days do I have left?')\n"
+                "- query: For questions about policy, documents or handbook content (e.g. 'what is the pet policy?')\n"
+                "- calc: For calculations (e.g. 'what is 2+2?')\n"
+                "- github_issues_operations/github_pull_requests_operations: For GitHub operations (e.g. 'list open PRs')\n\n"
+                "IMPORTANT RULES:\n"
+                "1. ALWAYS use the appropriate tool to get information\n"
+                "2. NEVER make up or guess dates, names, or other information\n"
+                "3. NEVER announce which tool you will use\n"
+                "4. NEVER say 'I will use...' or 'Let me...'\n"
+                "5. NEVER explain your actions before taking them\n"
+                "6. Just use the tool and provide the answer directly\n\n"
+                "When using the query tool for documents, cite sources using [Source: handbook.hypha.coop/path/to/document]."
+            )
+            messages.append(tool_selection_guide)
         else:
-            combined_tools = tool_descriptions
             if self.minima_adapter.using_minima:
                 logger.info(f"Using {len(tool_descriptions)} RooLLM tools (Minima not connected)")
                 # Add a message to inform the user that Minima is not available
@@ -443,7 +426,15 @@ class RooLLMWithMinima(RooLLM):
                         }
                 else:
                     logger.info(f"Calling RooLLM tool: {tool_name}")
-                    processed_result = await tools.call(self, tool_name, func['arguments'], user)
+                    # Ensure arguments is a valid dictionary
+                    tool_args = {}
+                    if func.get('arguments'):
+                        try:
+                            tool_args = (func['arguments'] if isinstance(func['arguments'], dict)
+                                       else json.loads(func['arguments']))
+                        except json.JSONDecodeError:
+                            logger.warning(f"Invalid arguments for tool {tool_name}, using empty dict")
+                    processed_result = await tools.call(self, tool_name, tool_args, user)
                 
                 # Append tool result to messages
                 messages.append(make_message(ROLE_TOOL, json.dumps(processed_result)))
