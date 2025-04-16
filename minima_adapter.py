@@ -361,19 +361,9 @@ class MinimaRestAdapter:
                     
             cleaned_sources.append(source)
             
-        # Format the result with citations
-        formatted_result = f"DOCUMENT CONTEXT FOR YOUR RESPONSE:\n\n"
-        formatted_result += "The following documents were found for this query. You must cite your sources using the format [Source: handbook.hypha.coop/path/to/document]:\n"
-        
-        # Add each source
-        for source in cleaned_sources:
-            formatted_result += f"- {source}\n"
-            
-        formatted_result += "\nDocument content:\n" + output
-        
+        # Format the result with just the content and sources
         return {
-            "result": formatted_result,
-            "sources": cleaned_sources,
+            "result": output,
             "source_paths": cleaned_sources
         }
 

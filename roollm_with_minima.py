@@ -31,6 +31,16 @@ class RooLLMWithMinima(RooLLM):
     from local documents while maintaining privacy.
     """
     
+    # Tool name mappings for common variations
+    TOOL_NAME_MAPPINGS = {
+        "get_vacation_days": "fetch_remaining_vacation_days",
+        "check_vacation_days": "fetch_remaining_vacation_days",
+        "vacation_days": "fetch_remaining_vacation_days",
+        "get_vacation": "get_upcoming_vacations",
+        "check_vacation": "get_upcoming_vacations",
+        "vacation": "get_upcoming_vacations"
+    }
+    
     def __init__(self, inference, tool_list=None, config=None):
         """
         Initialize RooLLMWithMinima.
@@ -61,6 +71,18 @@ class RooLLMWithMinima(RooLLM):
             logger.info("Minima integration is enabled")
         else:
             logger.info("Minima integration is disabled")
+    
+    def _map_tool_name(self, tool_name):
+        """
+        Map a tool name to its canonical form using the TOOL_NAME_MAPPINGS.
+        
+        Args:
+            tool_name: The tool name to map
+            
+        Returns:
+            str: The mapped tool name or original if no mapping exists
+        """
+        return self.TOOL_NAME_MAPPINGS.get(tool_name, tool_name)
     
     def _build_tool_list(self):
         """Build tool list based on available configurations, excluding search_handbook if Minima is enabled"""
@@ -107,28 +129,12 @@ class RooLLMWithMinima(RooLLM):
         if not result or "error" in result:
             return "Error retrieving information from documents."
             
-        # Get the formatted result with citations
-        formatted_result = result.get("result", "")
-        sources = result.get("sources", [])
+        # Get the content and sources
+        content = result.get("result", "")
+        sources = result.get("source_paths", [])
         
-        # Add citation instructions if sources are available
-        if sources:
-            citation_instructions = (
-                "\n\n⚠️ CITATION REQUIREMENT ⚠️\n"
-                "You MUST cite your sources using the EXACT paths provided below.\n"
-                "Format: [Source: handbook.hypha.coop/path/to/document]\n"
-                "Example: [Source: handbook.hypha.coop/Policies/pet]\n\n"
-                "Available sources:\n"
-            )
-            
-            # Add each source with its number
-            for i, source in enumerate(sources, 1):
-                clean_source = self._clean_path(source)
-                citation_instructions += f"[{i}] {clean_source}\n"
-                
-            formatted_result += citation_instructions
-            
-        return formatted_result
+        # Just return the content - citation instructions are in the system prompt
+        return content
         
     async def _process_with_minima(self, query, max_retries=3):
         """
@@ -177,18 +183,12 @@ class RooLLMWithMinima(RooLLM):
         sources = []
         exact_paths = []
         
-        if 'sources' in result:
-            for source in result['sources']:
-                clean_source = self._clean_path(source)
-                sources.append(clean_source)
-                exact_paths.append(clean_source)
-                
         if 'source_paths' in result:
             for path in result['source_paths']:
                 clean_path = self._clean_path(path)
-                if clean_path not in exact_paths:
-                    exact_paths.append(clean_path)
-                    
+                sources.append(clean_path)
+                exact_paths.append(clean_path)
+                
         elif 'structured_sources' in result:
             for source in result['structured_sources']:
                 clean_path = self._clean_path(source['path'])
@@ -351,6 +351,12 @@ class RooLLMWithMinima(RooLLM):
                     
                 func = call['function']
                 tool_name = func['name']
+                
+                # Map tool name to canonical form
+                mapped_tool_name = self._map_tool_name(tool_name)
+                if mapped_tool_name != tool_name:
+                    logger.info(f"Mapping tool name from {tool_name} to {mapped_tool_name}")
+                    tool_name = mapped_tool_name
                 
                 # Check if this is a Minima tool
                 is_minima_tool = self.minima_adapter.using_minima and self.minima_adapter.is_connected() and tool_name in self.minima_adapter.tools
