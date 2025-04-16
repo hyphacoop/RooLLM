@@ -175,13 +175,22 @@ class RooLLMWithMinima(RooLLM):
         exact_paths = []
         
         if 'sources' in result:
-            sources.extend(result['sources'])
+            for source in result['sources']:
+                clean_source = self._clean_path(source)
+                sources.append(clean_source)
+                exact_paths.append(clean_source)
+                
         if 'source_paths' in result:
-            exact_paths.extend(result['source_paths'])
+            for path in result['source_paths']:
+                clean_path = self._clean_path(path)
+                if clean_path not in exact_paths:
+                    exact_paths.append(clean_path)
+                    
         elif 'structured_sources' in result:
             for source in result['structured_sources']:
-                sources.append(source['path'])
-                exact_paths.append(source['path'])
+                clean_path = self._clean_path(source['path'])
+                sources.append(clean_path)
+                exact_paths.append(clean_path)
                 
         return sources, exact_paths
 
@@ -444,7 +453,10 @@ class RooLLMWithMinima(RooLLM):
             
             # Use exact paths for verification if available, otherwise fall back to sources
             verify_against = minima_exact_paths if minima_exact_paths else minima_sources_used
-            response = self._verify_citations_in_response(response, verify_against)
+            verified_response, needs_retry = self._verify_citations_in_response(response, verify_against)
+            if needs_retry:
+                logger.warning("Citation verification failed, needs retry")
+            response = verified_response
             
         return response
     
@@ -527,9 +539,8 @@ class RooLLMWithMinima(RooLLM):
         if clean_path.startswith('file://'):
             clean_path = clean_path.replace('file://', '')
             
-        # Remove .md extension if present
-        if clean_path.endswith('.md'):
-            clean_path = clean_path[:-3]
+        # Remove .md extension if present (anywhere in the path)
+        clean_path = clean_path.replace('.md', '')
             
         # Remove spaces
         clean_path = clean_path.replace(' ', '')
