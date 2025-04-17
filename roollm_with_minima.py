@@ -308,6 +308,9 @@ class RooLLMWithMinima(RooLLM):
         
         tool_descriptions = tools.descriptions()
         
+        # Initialize combined_tools with base tool descriptions
+        combined_tools = tool_descriptions
+        
         # Add Minima tools if connected
         if minima_connected:
             # Make all tools available to the LLM
