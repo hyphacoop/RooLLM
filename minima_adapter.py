@@ -349,15 +349,15 @@ class MinimaRestAdapter:
         # Clean and transform source paths
         cleaned_sources = []
         for source in sources:
+            # Remove .md extension if present
+            if source.endswith('.md'):
+                source = source[:-3]
+                
             # Extract path after md_db/ and append to handbook.hypha.coop
             if 'md_db/' in source:
                 path_parts = source.split('md_db/')
                 if len(path_parts) > 1:
                     source = f"handbook.hypha.coop/{path_parts[1]}"
-                    
-            # Remove .md extension if present
-            if source.endswith('.md'):
-                source = source[:-3]
                     
             cleaned_sources.append(source)
             
