@@ -301,6 +301,34 @@ class MinimaRestAdapter:
             logger.error(f"Error calling tool {name}: {e}")
             return {"error": f"Error calling tool: {str(e)}"}
 
+    def _clean_source_path(self, path):
+        """
+        Clean and standardize a source path.
+        
+        Args:
+            path: The source path to clean
+            
+        Returns:
+            str: Cleaned source path
+        """
+        if not path or not isinstance(path, str):
+            return path
+            
+        # Clean up the source path for consistency
+        path = path.strip()
+        
+        # Remove .md extension if present
+        if path.endswith('.md'):
+            path = path[:-3]
+            
+        # Extract path after md_db/ and append to handbook.hypha.coop
+        if 'md_db/' in path:
+            path_parts = path.split('md_db/')
+            if len(path_parts) > 1:
+                path = f"handbook.hypha.coop/{path_parts[1]}"
+                
+        return path
+
     def _verify_sources(self, sources):
         """
         Verify that sources exist and are valid.
@@ -316,10 +344,10 @@ class MinimaRestAdapter:
         for source in sources:
             # For now, we just check if the source is a non-empty string
             if source and isinstance(source, str):
-                # Clean up the source path for consistency
-                source = source.strip()
-                verified_sources.append(source)
-                logger.info(f"Verified source: {source}")
+                # Clean up the source path using centralized method
+                cleaned_source = self._clean_source_path(source)
+                verified_sources.append(cleaned_source)
+                logger.info(f"Verified source: {cleaned_source}")
             else:
                 logger.warning(f"Invalid source: {source}")
         
@@ -346,20 +374,8 @@ class MinimaRestAdapter:
         Returns:
             dict: Formatted result with citations
         """
-        # Clean and transform source paths
-        cleaned_sources = []
-        for source in sources:
-            # Remove .md extension if present
-            if source.endswith('.md'):
-                source = source[:-3]
-                
-            # Extract path after md_db/ and append to handbook.hypha.coop
-            if 'md_db/' in source:
-                path_parts = source.split('md_db/')
-                if len(path_parts) > 1:
-                    source = f"handbook.hypha.coop/{path_parts[1]}"
-                    
-            cleaned_sources.append(source)
+        # Clean and transform source paths using centralized method
+        cleaned_sources = [self._clean_source_path(source) for source in sources]
             
         # Format the result with just the content and sources
         return {
@@ -397,8 +413,8 @@ class MinimaRestAdapter:
             if citation.strip().isdigit():
                 num = int(citation.strip())
                 if 1 <= num <= len(source_paths):
-                    # Replace number with actual path
-                    actual_path = source_paths[num-1]
+                    # Replace number with actual path, ensuring it's cleaned
+                    actual_path = self._clean_source_path(source_paths[num-1])
                     response_content = response_content.replace(f"[Source: {citation}]", f"[Source: {actual_path}]")
                 else:
                     invalid_citations.append(citation)
