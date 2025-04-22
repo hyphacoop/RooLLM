@@ -366,7 +366,7 @@ class RooLLMWithMinima(RooLLM):
                     minima_was_called = True
                 
                 # Handle tool emoji
-                tool_emoji = "🔍" if is_minima_tool else tools.get_tool_emoji(tool_name=tool_name)
+                tool_emoji = "🧠" if is_minima_tool else tools.get_tool_emoji(tool_name=tool_name)
                 if tool_emoji and react_callback:
                     await react_callback(tool_emoji)
                     await asyncio.sleep(0.5)
