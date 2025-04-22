@@ -5,6 +5,7 @@ import logging
 import asyncio
 import sys
 import socket
+import time
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
@@ -18,6 +19,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 # Import roollm
 from roollm import RooLLM, ROLE_USER, ROLE_ASSISTANT, make_ollama_inference
+from roollm_with_minima import make_roollm_with_minima
 from github_app_auth import prepare_github_token
 
 load_dotenv()
@@ -34,13 +36,16 @@ gh_config = {
     "GITHUB_TOKEN": os.getenv("GITHUB_TOKEN"),
 }
 
-
 github_token, auth_method, auth_object = prepare_github_token(gh_config)
 
 # Google Setup
 google_creds = None
 if creds := os.getenv("GOOGLE_CREDENTIALS"):
     google_creds = json.loads(base64.b64decode(creds).decode())
+
+# Minima Setup
+USE_MINIMA = os.getenv("USE_MINIMA_MCP", "false").lower() == "true"
+MINIMA_SERVER_URL = os.getenv("MINIMA_MCP_SERVER_URL", "http://localhost:8000")
 
 # LLM Setup
 config = {
@@ -49,7 +54,7 @@ config = {
     "google_creds": google_creds
 }
 inference = make_ollama_inference()
-roo = RooLLM(inference, config=config)
+roo = make_roollm_with_minima(inference, config=config)
 
 # App & State
 app = FastAPI()
@@ -65,16 +70,47 @@ app.add_middleware(
 
 user = os.getenv("ROO_LLM_AUTH_USERNAME", "frontendUser")
 histories = {}  # store per-session history
+sessions = {}  # store session metadata
+
+def generate_session_title(history):
+    """
+    Generate an initial prompt for a session based on its history.
+    Uses the first user message as the initial prompt, or a default if no messages exist.
+    """
+    if not history:
+        return "New Session"
+    
+    # Find the first user message
+    for message in history:
+        if message.get('role') == ROLE_USER:
+            # Take first 50 characters of the message as initial prompt
+            initial_prompt = message.get('content', '')[:50]
+            if len(initial_prompt) == 50:
+                initial_prompt += "..."
+            return initial_prompt
+    
+    return "New Session"
 
 # Schema
 class ChatRequest(BaseModel):
     message: str
     session_id: str  # allows tracking sessions from frontend
 
+class MinimaQueryRequest(BaseModel):
+    query: str
+    session_id: str
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    await refresh_token_if_needed()
+    # Create session metadata if it doesn't exist
+    if request.session_id not in sessions:
+        sessions[request.session_id] = {
+            "id": request.session_id,
+            "created_at": time.time() * 1000,  # current time in milliseconds
+            "initial_prompt": "New Session",  # Initial prompt
+        }
 
+    await refresh_token_if_needed()
     history = histories.get(request.session_id, [])
 
     async def event_stream():
@@ -97,6 +133,11 @@ async def chat(request: ChatRequest):
             history.append({'role': ROLE_ASSISTANT, 'content': response["content"]})
             histories[request.session_id] = history
 
+            # Update initial prompt if this is the first message
+            if len(history) == 2:  # Just added first user and assistant messages
+                sessions[request.session_id]["initial_prompt"] = generate_session_title(history)
+            
+            # Send the response immediately
             await queue.put({"type": "reply", "content": response["content"]})
             await queue.put(None)  # End signal
 
@@ -110,10 +151,86 @@ async def chat(request: ChatRequest):
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
+@app.post("/minima/query")
+async def minima_query(request: MinimaQueryRequest):
+    logger.info(f"Received Minima query request: {request.query}")
+    
+    if not roo.is_minima_connected():
+        logger.error("Minima not connected")
+        return {"status": "error", "message": "Not connected to Minima server"}
+    
+    try:
+        logger.info("Calling Minima tool with query")
+        start_time = time.time()
+        result = await roo.minima_adapter.call_tool("query", {"text": request.query})
+        end_time = time.time()
+        logger.info(f"Minima query completed in {end_time - start_time:.2f} seconds")
+        logger.info(f"Minima query result: {result}")
+        return {"status": "ok", "result": result}
+    except Exception as e:
+        logger.error(f"Error in Minima query: {str(e)}")
+        return {"status": "error", "message": f"Error querying Minima: {str(e)}"}
+
+@app.get("/minima/status")
+async def minima_status():
+    return {
+        "status": "ok",
+        "connected": roo.is_minima_connected(),
+        "tools_count": len(roo.minima_tools) if roo.is_minima_connected() else 0,
+        "tools": [tool["function"]["name"] for tool in roo.minima_tools] if roo.is_minima_connected() else []
+    }
+
+@app.get("/minima/connect")
+async def connect_minima():
+    try:
+        if await roo.connect_to_minima():
+            return {"status": "ok", "message": "Connected to Minima server"}
+        else:
+            return {"status": "error", "message": "Could not connect to Minima server"}
+    except Exception as e:
+        return {"status": "error", "message": f"Error connecting to Minima: {str(e)}"}
+
+@app.get("/sessions")
+async def get_sessions():
+    """
+    Retrieve all available sessions with their metadata.
+    """
+    # Create session entries for any histories that don't have metadata
+    for session_id in histories:
+        if session_id not in sessions:
+            sessions[session_id] = {
+                "id": session_id,
+                "created_at": time.time() * 1000  # current time in milliseconds
+            }
+    
+    # Return sessions sorted by creation time (newest first)
+    sorted_sessions = sorted(
+        sessions.values(),
+        key=lambda x: x["created_at"],
+        reverse=True
+    )
+    
+    return {"sessions": sorted_sessions}
+
+@app.delete("/sessions/{session_id}")
+async def delete_session(session_id: str):
+    """
+    Delete a session and its associated history.
+    """
+    if session_id in sessions:
+        del sessions[session_id]
+        if session_id in histories:
+            del histories[session_id]
+        return {"status": "ok"}
+    else:
+        return {"status": "error", "message": "Session ID not found"}
+
 @app.get("/clear-history")
 async def clear_history(session_id: str):
     if session_id in histories:
         histories[session_id].clear()
+        if session_id in sessions:
+            del sessions[session_id]
         return {"status": "ok"}
     else:
         return {"status": "error", "message": "Session ID not found"}
@@ -140,7 +257,6 @@ async def refresh_token_if_needed():
             roo.update_config({"gh_token": fresh_token})
             logger.info("Refreshed GitHub token")
 
-
 # Global variable for port
 current_port = None
 
@@ -164,7 +280,6 @@ def find_available_port(start_port, max_attempts=10):
 @app.get("/port-info")
 async def get_port_info():
     return {"port": current_port}
-
 
 if __name__ == "__main__":
     import uvicorn
