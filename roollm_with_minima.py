@@ -501,7 +501,7 @@ class RooLLMWithMinima(RooLLM):
     def _clean_path(self, path):
         """
         Centralized method to clean and normalize paths.
-        Removes .md extensions, spaces, and normalizes to handbook.hypha.coop format.
+        Uses the minima_adapter's path cleaning method.
         
         Args:
             path: The path to clean
@@ -512,29 +512,8 @@ class RooLLMWithMinima(RooLLM):
         if not path or not isinstance(path, str):
             return path
             
-        # Clean the path first
-        clean_path = path.strip()
-        
-        # Handle file:// paths
-        if clean_path.startswith('file://'):
-            clean_path = clean_path.replace('file://', '')
-            
-        # Remove .md extension if present (anywhere in the path)
-        clean_path = clean_path.replace('.md', '')
-            
-        # Remove spaces
-        clean_path = clean_path.replace(' ', '')
-        
-        # Normalize slashes
-        clean_path = clean_path.replace('//', '/')
-        
-        # Convert to handbook.hypha.coop format if it's a local path
-        if 'md_db/' in clean_path:
-            path_parts = clean_path.split('md_db/')
-            if len(path_parts) > 1:
-                clean_path = f"handbook.hypha.coop/{path_parts[1]}"
-                
-        return clean_path
+        # Use the minima_adapter's path cleaning method
+        return self.minima_adapter._clean_source_path(path)
 
     def _transform_source_path(self, source_path):
         """
