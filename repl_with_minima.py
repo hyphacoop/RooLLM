@@ -116,7 +116,7 @@ else:
 
 # Initialize RooLLM with Minima
 inference = make_ollama_inference(
-    url="https://ai.hypha.coop/api/chat",
+    url=os.getenv("ROO_LLM_URL", "https://ai.hypha.coop") + "/api/chat",
     model="hermes3",
     username="hypha",
     password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
