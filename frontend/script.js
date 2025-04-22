@@ -22,9 +22,9 @@ const emojiToolMap = {
     "📖": "`search_handbook`:  \nSearch Hypha's handbook",
     "📅": "`get_upcoming_holiday`:  \nFetch upcoming statutory holidays",
     "🌴": "`get_upcoming_vacations`:  \nGet information about our colleague's upcoming vacations",
-    "🏖️": "`fetch_remaining_vacation_days`:  \nCheck vacation day balances",
     "🗄️": "`get_archive_categories`:  \nList archivable categories with links",
-    "🔢": "`calc`:  \nPerform calculations"
+    "🔢": "`calc`:  \nPerform calculations",
+    "🧠": "`query`:  \nSearch Hypha's handbook with RAG via minima MCP"
 };
  
 // Fetch backend PORT from file
@@ -329,3 +329,98 @@ function showEmojiPopup(event, emoji) {
      return messageDiv;
  }
 
+// Add event listeners for the new buttons
+document.getElementById("history-button").addEventListener("click", showSessionHistory);
+document.getElementById("new-session-button").addEventListener("click", createNewSession);
+
+// Function to show session history
+async function showSessionHistory() {
+    try {
+        const response = await fetch(`http://localhost:${backendPort}/sessions`);
+        if (response.ok) {
+            const data = await response.json();
+            const sessions = data.sessions;  // Get the sessions array from the response
+            
+            // Clear existing chat
+            const chatDiv = document.getElementById("chat");
+            chatDiv.innerHTML = '';
+            
+            // Display sessions as messages
+            addMessage("Session History:", "assistant");
+            sessions.forEach(session => {
+                const sessionInfo = `Initial prompt: ${session.initial_prompt}\nSession ID: ${session.id}\nCreated: ${new Date(session.created_at).toLocaleString()}`;
+                addMessage(sessionInfo, "assistant");
+            });
+            
+            // Add a note about clicking session IDs
+            addMessage("Click a session to load it", "assistant");
+            
+            // Make session messages clickable
+            document.querySelectorAll('.assistant').forEach(div => {
+                if (div.textContent.includes('Session ID:')) {
+                    const sessionId = div.textContent.split('Session ID: ')[1].split('\n')[0];
+                    div.style.cursor = 'pointer';
+                    div.addEventListener('click', () => loadSession(sessionId));
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching session history:", error);
+        addMessage("Error loading session history", "assistant");
+    }
+}
+
+// Function to load a specific session
+async function loadSession(sessionId) {
+    window.sessionId = sessionId;
+    
+    // Update URL with new session ID
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('session_id', sessionId);
+    window.history.pushState(null, '', newUrl);
+    
+    // Clear existing chat
+    const chatDiv = document.getElementById("chat");
+    chatDiv.innerHTML = '';
+    
+    // Load chat history for the session
+    await loadChatHistory(sessionId);
+}
+
+// Function to create a new session
+async function createNewSession() {
+    // Get the latest summary from the current session if it exists
+    let latestSummary = "New session - no messages yet";
+    if (window.sessionId) {
+        try {
+            const response = await fetch(`http://localhost:${backendPort}/sessions/${window.sessionId}/summary`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === "ok") {
+                    latestSummary = data.summary;
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching latest summary:", error);
+        }
+    }
+    
+    // Generate new session ID
+    const newSessionId = generateUUID();
+    window.sessionId = newSessionId;
+    
+    // Update URL with new session ID
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('session_id', newSessionId);
+    window.history.pushState(null, '', newUrl);
+    
+    // Clear existing chat and history
+    const chatDiv = document.getElementById("chat");
+    chatDiv.innerHTML = '';
+    chatHistory = [];
+    
+    // Add a message showing the latest summary
+    if (latestSummary !== "New session - no messages yet") {
+        addMessage(`Previous session summary: ${latestSummary}`, "assistant");
+    }
+}
