@@ -139,14 +139,6 @@ RooLLM supports integration with Google Sheets for organizational data like vaca
      Jane Smith    | 06/01/2023        | 06/10/2023
      ```
      
-   - For the **remaining vacation days** sheet (referenced in `fetch_remaining_vacation_days.py`), use these columns:
-     ```
-     Name        | Day entitlement | Days used | Days left
-     ----------- | --------------- | --------- | ---------
-     John Doe    | 20              | 5         | 15
-     Jane Smith  | 25              | 12        | 13
-     ```
-     
    Note: Dates should be in MM/DD/YYYY format.
 
 ---

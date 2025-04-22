@@ -33,9 +33,6 @@ class RooLLMWithMinima(RooLLM):
     
     # Tool name mappings for common variations
     TOOL_NAME_MAPPINGS = {
-        "get_vacation_days": "fetch_remaining_vacation_days",
-        "check_vacation_days": "fetch_remaining_vacation_days",
-        "vacation_days": "fetch_remaining_vacation_days",
         "get_vacation": "get_upcoming_vacations",
         "check_vacation": "get_upcoming_vacations",
         "vacation": "get_upcoming_vacations"

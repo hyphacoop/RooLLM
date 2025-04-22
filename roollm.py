@@ -28,7 +28,7 @@ BASE_TOOL_LIST = ["calc", "search_handbook", "get_upcoming_holiday", "get_archiv
 GITHUB_TOOL_LIST = ["github_issues_operations", "github_pull_requests_operations"]
 
 # Google tools
-GOOGLE_TOOL_LIST = ["get_upcoming_vacations", "fetch_remaining_vacation_days"]
+GOOGLE_TOOL_LIST = ["get_upcoming_vacations"]
 
 # For backward compatibility
 DEFAULT_TOOL_LIST = BASE_TOOL_LIST + GITHUB_TOOL_LIST + GOOGLE_TOOL_LIST
