@@ -206,3 +206,33 @@ summary {
     max-width: 69vw;
   }
 }
+#session-controls {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+#history-button,
+#new-session-button {
+    background: #000;
+    color: #eee;
+    border: 1px dotted transparent;
+    padding: 8px 16px;
+    font-family: "PT Serif";
+    cursor: pointer;
+    font-size: 18px;
+}
+
+#history-button:hover,
+#new-session-button:hover {
+    border-style: ridge;
+    border-color: #666666;
+}
+
+#history-button:active,
+#new-session-button:active {
+    border-style: inset;
+    border-color: #999999;
+}
