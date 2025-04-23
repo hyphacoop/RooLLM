@@ -2,7 +2,7 @@
     "mcp_adapters": {
         "minima": {
             "command": "/usr/bin/python3",
-            "args": ["roollm/run_mcp_stdio.py"],
+            "args": ["hyphadevbot/roollm/run_mcp_stdio.py"],
             "env": {
                 "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
             }
