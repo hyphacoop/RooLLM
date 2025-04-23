@@ -3,7 +3,11 @@ import json
 import os
 import uuid
 from typing import Any, Dict, List, Optional
-from tool_registry import Tool
+
+try:
+    from .tool_registry import Tool
+except ImportError:
+    from tool_registry import Tool
 
 class MCPClient:
     def __init__(self, name: str, command: str, args: List[str], env: Optional[Dict[str, str]] = None):

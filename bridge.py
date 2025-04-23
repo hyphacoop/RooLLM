@@ -1,9 +1,14 @@
 from typing import Dict, List
-from tool_registry import ToolRegistry, Tool
-from llm_client import LLMClient
-from mcp_client import MCPClient
-import asyncio
 import json
+
+try:
+    from .llm_client import LLMClient
+    from .tool_registry import ToolRegistry
+    from .mcp_client import MCPClient
+except ImportError:
+    from llm_client import LLMClient
+    from tool_registry import ToolRegistry
+    from mcp_client import MCPClient
 
 class MCPLLMBridge:
     def __init__(self, config: Dict, llm_client: LLMClient, tool_registry=None, roollm=None):
