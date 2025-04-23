@@ -87,7 +87,7 @@ if ENCODED_GOOGLE_CREDENTIALS:
 from llm_client import LLMClient
 from roollm import RooLLM
 from load_local_tools import load_local_tools
-
+from mcp_config import MCP_CONFIG
 
 # 1. Init LLM Client
 llm = LLMClient(
@@ -98,10 +98,7 @@ llm = LLMClient(
 )
 
 # 2. give it mcp config
-with open("mcp_config.json") as f:
-    mcp_config = json.load(f)
-
-config.update(mcp_config)
+config.update(**MCP_CONFIG)
 
 # 3. Init RooLLM
 roo = RooLLM(inference=llm, config=config)
