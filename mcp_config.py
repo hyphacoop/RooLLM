@@ -1,22 +1,25 @@
 import sys
 import pathlib
+import zipimport
 
+# get the current file's location
 here = pathlib.Path(__file__).parent
+path = here / "run_mcp_stdio.py"
 
-# are we running this locally from roollm/ or as part of hyphadevbot. zipped or installed?
-in_dev_mode = (here / "run_mcp_stdio.py").exists()
+# check if we're in a zip (maubot plugin context)
+running_in_zip = isinstance(__loader__, zipimport.zipimporter)
 
-if in_dev_mode:
-    command = sys.executable
-    args = [str((here / "run_mcp_stdio.py").resolve())]
-else:
-    command = sys.executable
+if running_in_zip:
+    # use fully-qualified import path relative to plugin root
     args = ["-m", "hyphadevbot.roollm.run_mcp_stdio"]
+else:
+    # when running from source (e.g. python repl.py), just pass the path
+    args = [str(path.resolve())]
 
 MCP_CONFIG = {
     "mcp_adapters": {
         "minima": {
-            "command": command,
+            "command": sys.executable,
             "args": args,
             "env": {
                 "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
