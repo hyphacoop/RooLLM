@@ -17,12 +17,19 @@ def extract_roollm_dir() -> pathlib.Path:
     if spec and spec.origin and spec.origin.endswith(".mbp"):
         # running from a zipped plugin archive
         with zipfile.ZipFile(spec.origin, "r") as zipf:
-            extracted_dir = pathlib.Path(tempfile.mkdtemp())
+            extracted_dir = pathlib.Path("/tmp/maubot_mcp/hyphadevbot")
             for zipinfo in zipf.infolist():
                 if zipinfo.filename.startswith("hyphadevbot/roollm/"):
+                    out_path = extracted_dir / zipinfo.filename
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
                     zipf.extract(zipinfo, extracted_dir)
+                    print(f"✅ extracted: {out_path}")
+
 
             script_path = extracted_dir / "hyphadevbot" / "roollm" / "run_mcp_stdio.py"
+            if not script_path.exists():
+                raise RuntimeError(f"🚨 run_mcp_stdio.py not found at: {script_path}")
+
             sys.path.insert(0, str(extracted_dir))  # allow imports like minima_adapter
             return script_path
 
