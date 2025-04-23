@@ -12,7 +12,11 @@ def load_adapter(adapter_path):
 
 async def main():
     adapter_path = os.getenv("MCP_ADAPTER", "minima_adapter.MinimaRestAdapter")
+    sys.stderr.write(f"📦 Loading adapter: {adapter_path}\n")
+    sys.stderr.flush()
     adapter = load_adapter(adapter_path)
+    sys.stderr.write(f"✅ Adapter loaded: {adapter.__class__}\n")
+    sys.stderr.flush()
 
     loop = asyncio.get_event_loop()
     while True:
