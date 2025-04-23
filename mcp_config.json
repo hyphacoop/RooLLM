@@ -1,0 +1,11 @@
+{
+    "mcp_adapters": {
+        "minima": {
+            "command": "python",
+            "args": ["run_mcp_stdio.py"],
+            "env": {
+                "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
+            }
+        }
+    }
+}
