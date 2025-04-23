@@ -1,35 +1,34 @@
 import sys
 import pathlib
+import tempfile
+import os
 
-here = pathlib.Path(__file__).parent
+def resolve_run_mcp_path() -> str:
+    here = pathlib.Path(__file__).parent
+    dev_path = here / "run_mcp_stdio.py"
 
-# if the script exists on disk, we're probably in local dev (REPL or unzipped plugin dir)
-dev_mode = (here / "run_mcp_stdio.py").exists()
+    if dev_path.exists():
+        # running locally
+        return str(dev_path.resolve())
 
-if dev_mode:
-    command = sys.executable
-    args = [str((here / "run_mcp_stdio.py").resolve())]
-else:
-    # fallback: extract the script to /tmp and run it directly
-    import pkgutil
-    import tempfile
+    # running from zipped plugin
+    try:
+        from importlib.resources import files
+        code = files("hyphadevbot.roollm").joinpath("run_mcp_stdio.py").read_text()
+    except Exception as e:
+        raise RuntimeError("Couldn't load run_mcp_stdio.py from package") from e
 
-    tmp_path = tempfile.NamedTemporaryFile(
-        mode="w+", suffix=".py", delete=False
-    )
-    code = pkgutil.get_data(__package__, "run_mcp_stdio.py")
-    tmp_path.write(code.decode("utf-8"))
-    tmp_path.flush()
-    tmp_path.close()
-
-    command = sys.executable
-    args = [tmp_path.name]
+    tmp = tempfile.NamedTemporaryFile("w+", suffix=".py", delete=False)
+    tmp.write(code)
+    tmp.flush()
+    tmp.close()
+    return tmp.name
 
 MCP_CONFIG = {
     "mcp_adapters": {
         "minima": {
-            "command": command,
-            "args": args,
+            "command": sys.executable,
+            "args": [resolve_run_mcp_path()],
             "env": {
                 "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
             }
