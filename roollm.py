@@ -3,10 +3,17 @@ from datetime import datetime
 import json
 import pathlib
 
-from llm_client import LLMClient
-from bridge import MCPLLMBridge
-from tool_registry import ToolRegistry
-from load_local_tools import load_local_tools  # optional
+try: 
+    from .llm_client import LLMClient
+    from .bridge import MCPLLMBridge
+    from .tool_registry import ToolRegistry
+    from .stats import log_llm_usage
+except ImportError:
+    from llm_client import LLMClient
+    from bridge import MCPLLMBridge
+    from tool_registry import ToolRegistry
+    from stats import log_llm_usage
+
 
 ROLE_USER = "user"
 ROLE_ASSISTANT = "assistant"
@@ -58,7 +65,6 @@ class RooLLM:
 
         # optional: log it
         try:
-            from stats import log_llm_usage
             log_llm_usage(
                 user=user,
                 tool_used=response.get("tool_name"),
