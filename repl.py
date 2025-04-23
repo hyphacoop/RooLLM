@@ -110,7 +110,7 @@ roo = RooLLM(inference=llm, config=config)
 for tool in load_local_tools(config=config):
     roo.tool_registry.register_tool(tool)
 
-for t in roo.bridge.tool_registry._tools.values():
+for t in roo.bridge.tool_registry.all_tools():
     print(f"✅ registered tool: {t.name} ({t.adapter_name})")
 
 
