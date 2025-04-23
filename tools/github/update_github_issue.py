@@ -47,8 +47,6 @@ async def tool(roo, arguments, user):
 
         response = requests.patch(url, headers=headers, json=payload)
 
-        print(response)
-
         if response.status_code == 200:
             issue = response.json()
             return f"✅ Issue updated successfully: [View Issue]({issue['html_url']})"
