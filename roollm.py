@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 import json
+import pathlib
 
 from llm_client import LLMClient
 from bridge import MCPLLMBridge
@@ -18,6 +19,12 @@ def make_message(role, content):
         "role": role,
         "content": content
     }
+
+def load_mcp_config():
+    root = pathlib.Path(__file__).parent
+    path = root / "mcp_config.json"
+    with open(path) as f:
+        return json.load(f)
 
 
 class RooLLM:
