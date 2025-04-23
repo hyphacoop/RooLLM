@@ -51,6 +51,4 @@ async def tool(roo, arguments, user):
         func = getattr(module, func_name)
         return await func(roo, args, user)
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return f"Failed to execute {action}: {type(e).__name__}: {e}"
+        return f"Failed to execute {action}: {e}"

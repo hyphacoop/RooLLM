@@ -27,7 +27,6 @@ class MCPClient:
         self.stdin = self.proc.stdin
         self.stdout = self.proc.stdout
 
-        print(f"[MCPClient] Launched '{self.command} {' '.join(self.args)}' (PID: {self.proc.pid})")
 
     async def _rpc(self, method: str, params: Dict[str, Any]) -> Any:
         """Send a JSON-RPC request and wait for the response."""
@@ -40,7 +39,6 @@ class MCPClient:
         }
 
         msg_json = json.dumps(request)
-        print(f"[MCPClient] → Sending request: {msg_json}")
         self.stdin.write((msg_json + "\n").encode())
         await self.stdin.drain()
 
@@ -54,7 +52,6 @@ class MCPClient:
                 raise Exception(f"[MCPClient] No response received. Process exited with code {returncode}.\nStderr: {stderr_output.decode()}")
 
             try:
-                print(f"[MCPClient] ← Received: {line.decode().strip()}")
                 response = json.loads(line.decode())
                 if response.get("id") == msg_id:
                     if "result" in response:
@@ -62,7 +59,6 @@ class MCPClient:
                     elif "error" in response:
                         raise Exception(f"MCPClient error: {response['error']}")
             except json.JSONDecodeError as e:
-                print(f"[MCPClient] ⚠️ Failed to decode: {line.decode().strip()} ({e})")
                 continue
 
     async def list_tools(self) -> List[Tool]:

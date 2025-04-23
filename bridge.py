@@ -34,8 +34,6 @@ class MCPLLMBridge:
 
         raw_response = await self.llm_client.invoke(messages, tools=tools)
 
-        print(f"Raw LLM response: {json.dumps(raw_response, indent=2)}")
-
         message = raw_response.get("message", {})
 
         if "tool_calls" not in message:
@@ -63,8 +61,6 @@ class MCPLLMBridge:
                 adapter = self.mcp_clients[tool.adapter_name]
                 result = await adapter.call_tool(name, args)
 
-            print(f"Tool call detected: {call}")
-            print(f"Tool selected: {tool.name} from adapter {tool.adapter_name}")
 
             tool_outputs.append({
                 "role": "tool",
@@ -75,7 +71,6 @@ class MCPLLMBridge:
 
         messages.extend(tool_outputs)
 
-        print("TOOLS SENT TO LLM:", json.dumps(tools, indent=2))
 
         final = await self.llm_client.invoke(messages, tools=tools)
         return final.get("message", {})
