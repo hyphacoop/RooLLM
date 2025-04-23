@@ -198,6 +198,49 @@ The MCP server provides:
 - Error handling and crash reporting
 - Support for development mode
 
+### MCP Ollama Bridge Architecture
+
+RooLLM now features a new MCP (Model Control Protocol) Ollama bridge architecture that provides a more robust and flexible way to interact with the LLM. The bridge architecture consists of several key components:
+
+1. **MCPLLMBridge**: The core bridge component that:
+   - Manages communication between the LLM and tools
+   - Handles tool registration and execution
+   - Processes messages and tool calls
+   - Supports multiple MCP adapters
+
+2. **MCPClient**: A client implementation that:
+   - Connects to MCP servers as subprocesses
+   - Manages JSON-RPC communication
+   - Handles tool listing and execution
+   - Provides error handling and connection management
+
+3. **MinimaRestAdapter**: An optional adapter that:
+   - Connects to Minima indexer for local document search
+   - Provides REST API-based communication
+   - Supports configurable server URLs and connection settings
+
+The bridge architecture is configured through `mcp_config.json`, which defines the MCP adapters and their settings. For example:
+
+```json
+{
+    "mcp_adapters": {
+        "minima": {
+            "command": "/usr/bin/python3",
+            "args": ["run_mcp_stdio.py"],
+            "env": {
+                "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
+            }
+        }
+    }
+}
+```
+
+To use the MCP bridge with Minima integration, set these environment variables:
+```
+USE_MINIMA_MCP=true
+MINIMA_MCP_SERVER_URL=http://localhost:8001
+```
+
 You can test the MCP server using the MCP Inspector:
 
 ```bash
