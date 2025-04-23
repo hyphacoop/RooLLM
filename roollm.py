@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 import json
 import pkgutil
+import pathlib
 
 try: 
     from .llm_client import LLMClient
@@ -28,8 +29,12 @@ def make_message(role, content):
     }
 
 def load_mcp_config():
-    data = pkgutil.get_data(__package__, "mcp_config.json")
-    return json.loads(data.decode("utf-8"))
+    try:
+        data = pkgutil.get_data(__package__, "mcp_config.json")
+        return json.loads(data.decode("utf-8"))
+    except Exception:
+        path = pathlib.Path(__file__).parent / "mcp_config.json"
+        return json.load(open(path, "r"))
 
 
 
