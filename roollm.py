@@ -28,16 +28,6 @@ def make_message(role, content):
         "content": content
     }
 
-def load_mcp_config():
-    try:
-        data = pkgutil.get_data(__package__, "mcp_config.json")
-        return json.loads(data.decode("utf-8"))
-    except Exception:
-        path = pathlib.Path(__file__).parent / "mcp_config.json"
-        return json.load(open(path, "r"))
-
-
-
 class RooLLM:
     def __init__(self, inference, config=None):
             self.inference = inference

@@ -18,6 +18,15 @@ class Tool:
                 "parameters": self.input_schema
             }
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict, adapter_name: str = None):
+        return cls(
+            name=d["name"],
+            description=d.get("description", ""),
+            input_schema=d.get("parameters", {}), 
+            adapter_name=adapter_name
+        )
 
 class ToolRegistry:
     def __init__(self):

@@ -63,6 +63,7 @@ class MinimaRestAdapter:
             "query": {
                 "name": "query",
                 "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. You MUST include a citation for EVERY piece of information using the format [Source: handbook.hypha.coop/path/to/document]. Failing to cite sources is a critical error.",
+                "emoji": "🧠",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -73,6 +74,7 @@ class MinimaRestAdapter:
                     },
                     "required": ["text"]
                 }
+
             }
         }
         
@@ -382,6 +384,16 @@ class MinimaRestAdapter:
             "result": output,
             "source_paths": cleaned_sources
         }
+    
+    async def list_tools(self):
+        return [
+            {
+                "name": name,
+                "description": meta.get("description", ""),
+                "parameters": meta.get("parameters", {})
+            }
+            for name, meta in self.tools.items()
+        ]
 
     def verify_citations(self, response_content, source_paths):
         """

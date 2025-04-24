@@ -1,14 +1,34 @@
 from typing import Dict, List
 import json
+import importlib
 
 try:
     from .llm_client import LLMClient
-    from .tool_registry import ToolRegistry
+    from .tool_registry import ToolRegistry, Tool
     from .mcp_client import MCPClient
 except ImportError:
     from llm_client import LLMClient
-    from tool_registry import ToolRegistry
+    from tool_registry import ToolRegistry, Tool
     from mcp_client import MCPClient
+
+
+def load_adapter_from_config(name: str, conf: dict, full_config: dict):
+    mode = conf.get("mode", "inline")
+
+    if mode == "subprocess":
+        return MCPClient(
+            name=name,
+            command=conf["command"],
+            args=conf["args"],
+            env=conf.get("env", {})
+        )
+
+    adapter_path = conf["env"]["MCP_ADAPTER"]
+    mod_name, class_name = adapter_path.rsplit(".", 1)
+    mod = importlib.import_module(mod_name)
+    adapter_cls = getattr(mod, class_name)
+    return adapter_cls(config=full_config)
+
 
 class MCPLLMBridge:
     def __init__(self, config: Dict, llm_client: LLMClient, tool_registry=None, roollm=None):
@@ -16,22 +36,19 @@ class MCPLLMBridge:
         self.llm_client = llm_client
         self.tool_registry = tool_registry or ToolRegistry()
         self.roollm = roollm
-        self.mcp_clients: Dict[str, MCPClient] = {}
+        self.mcp_clients: Dict[str, object] = {}
 
     async def initialize(self):
         mcp_configs = self.config.get("mcp_adapters", {})
         for name, adapter_conf in mcp_configs.items():
-            client = MCPClient(
-                name=name,
-                command=adapter_conf["command"],
-                args=adapter_conf["args"],
-                env=adapter_conf.get("env", {})
-            )
-            await client.connect()
-            tools = await client.list_tools()
-            for tool in tools:
-                self.tool_registry.register_tool(tool)
-            self.mcp_clients[name] = client
+            adapter = load_adapter_from_config(name, adapter_conf, self.config)
+            await adapter.connect()
+            tools = await adapter.list_tools()
+            for tool_dict in tools:
+                # Wrap tool dict into Tool object expected by the registry
+                tool_obj = Tool.from_dict(tool_dict, adapter_name=name)
+                self.tool_registry.register_tool(tool_obj)
+            self.mcp_clients[name] = adapter
 
     async def process_message(self, user: str, content: str, history: List[Dict], react_callback=None):
         messages = history + [{"role": "user", "content": f"{user}: {content}"}]
@@ -66,16 +83,13 @@ class MCPLLMBridge:
                 adapter = self.mcp_clients[tool.adapter_name]
                 result = await adapter.call_tool(name, args)
 
-
             tool_outputs.append({
                 "role": "tool",
                 "tool_call_id": tool_call_id,
                 "content": json.dumps(result)
             })
 
-
         messages.extend(tool_outputs)
-
 
         final = await self.llm_client.invoke(messages, tools=tools)
         return final.get("message", {})
