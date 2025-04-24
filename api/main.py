@@ -17,9 +17,11 @@ from dotenv import load_dotenv
 # Add parent directory to path to import roollm
 sys.path.append(str(Path(__file__).parent.parent))
 
-# Import roollm
-from roollm import RooLLM, ROLE_USER, ROLE_ASSISTANT, make_ollama_inference
-from roollm_with_minima import make_roollm_with_minima
+# Import roollm and related modules
+from roollm import RooLLM
+from llm_client import LLMClient
+from load_local_tools import load_local_tools
+from mcp_config import MCP_CONFIG
 from github_app_auth import prepare_github_token
 
 load_dotenv()
@@ -43,18 +45,30 @@ google_creds = None
 if creds := os.getenv("GOOGLE_CREDENTIALS"):
     google_creds = json.loads(base64.b64decode(creds).decode())
 
-# Minima Setup
-USE_MINIMA = os.getenv("USE_MINIMA_MCP", "false").lower() == "true"
-MINIMA_SERVER_URL = os.getenv("MINIMA_MCP_SERVER_URL", "http://localhost:8000")
-
-# LLM Setup
+# Initialize config dictionary
 config = {
     "gh_token": github_token,
     "gh_auth_object": auth_object,
     "google_creds": google_creds
 }
-inference = make_ollama_inference()
-roo = make_roollm_with_minima(inference, config=config)
+
+# Update config with MCP settings
+config.update(**MCP_CONFIG)
+
+# Initialize LLM Client
+llm = LLMClient(
+    base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
+    model=os.getenv("ROO_LLM_MODEL", "hermes3"),
+    username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
+    password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
+)
+
+# Initialize RooLLM with bridge
+roo = RooLLM(inference=llm, config=config)
+
+# Register local tools
+for tool in load_local_tools(config=config):
+    roo.tool_registry.register_tool(tool)
 
 # App & State
 app = FastAPI()
@@ -72,6 +86,16 @@ user = os.getenv("ROO_LLM_AUTH_USERNAME", "frontendUser")
 histories = {}  # store per-session history
 sessions = {}  # store session metadata
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the bridge when the app starts"""
+    try:
+        await roo.bridge.initialize()
+        logger.info("Bridge initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize bridge: {e}")
+        raise
+
 def generate_session_title(history):
     """
     Generate an initial prompt for a session based on its history.
@@ -82,7 +106,7 @@ def generate_session_title(history):
     
     # Find the first user message
     for message in history:
-        if message.get('role') == ROLE_USER:
+        if message.get('role') == "user":
             # Take first 50 characters of the message as initial prompt
             initial_prompt = message.get('content', '')[:50]
             if len(initial_prompt) == 50:
@@ -121,6 +145,9 @@ async def chat(request: ChatRequest):
             await queue.put({"type": "emoji", "emoji": emoji})
 
         async def runner():
+            # Format the message with username prefix
+            user_message = f"{request.message}"
+            
             response = await roo.chat(
                 user,
                 request.message,
@@ -128,9 +155,9 @@ async def chat(request: ChatRequest):
                 react_callback=safe_react_callback
             )
 
-            # Add to history
-            history.append({'role': ROLE_USER, 'content': request.message})
-            history.append({'role': ROLE_ASSISTANT, 'content': response["content"]})
+            # Add to history with proper format
+            history.append({"role": "user", "content": user_message})
+            history.append(response)  # response already has the correct format
             histories[request.session_id] = history
 
             # Update initial prompt if this is the first message
@@ -250,36 +277,33 @@ async def health_check():
     return {"status": "ok"}
 
 async def refresh_token_if_needed():
-    if auth_object:
-        fresh_token = auth_object.get_token()
+    """Check if GitHub token needs refresh and update it"""
+    if "gh_auth_object" in config:
+        auth = config["gh_auth_object"]
+        # Get a fresh token (will use cached token if still valid)
+        fresh_token = auth.get_token()
         if fresh_token != config.get("gh_token"):
             config["gh_token"] = fresh_token
-            roo.update_config({"gh_token": fresh_token})
             logger.info("Refreshed GitHub token")
 
-# Global variable for port
-current_port = None
-
-# Function to find an available port
 def find_available_port(start_port, max_attempts=10):
-    port = start_port
-    for _ in range(max_attempts):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    """Find an available port starting from start_port"""
+    for port in range(start_port, start_port + max_attempts):
         try:
-            sock.bind(('0.0.0.0', port))
-            sock.close()
-            return port
-        except socket.error:
-            port += 1
-        finally:
-            sock.close()
-    # If no ports are available in the range, return None or raise an exception
-    raise RuntimeError(f"No available ports found in range {start_port}-{start_port+max_attempts-1}")
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('', port))
+                return port
+        except OSError:
+            continue
+    return None
 
-# Add an endpoint to provide port information to the frontend
 @app.get("/port-info")
 async def get_port_info():
-    return {"port": current_port}
+    """Get information about the current port"""
+    return {
+        "port": os.getenv("PORT", "8000"),
+        "host": os.getenv("HOST", "0.0.0.0")
+    }
 
 if __name__ == "__main__":
     import uvicorn
@@ -288,10 +312,12 @@ if __name__ == "__main__":
     
     # Write port to a file for the frontend to read
     port_file = Path(__file__).parent.parent / "frontend" / "port.json"
+    port_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
     with open(port_file, "w") as f:
         json.dump({"port": current_port}, f)
     
     logger.info(f"Server starting on port {current_port}")
+    logger.info(f"Port info written to {port_file}")
     
     # Use workers=1 for better signal handling
     uvicorn.run("main:app", host="0.0.0.0", port=current_port, reload=True)
