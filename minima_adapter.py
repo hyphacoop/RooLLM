@@ -113,33 +113,60 @@ class MinimaRestAdapter:
             # Ensure the server URL doesn't end with a slash
             server_url = server_url.rstrip('/')
             
-            async with aiohttp.ClientSession() as session:
+            # Add retry logic for connection
+            max_retries = 3
+            retry_delay = 2  # seconds
+            connection_timeout = 30  # increased timeout to 30 seconds
+            
+            for attempt in range(max_retries):
                 try:
-                    async with session.post(
-                        f"{server_url}/query", 
-                        json=test_payload,
-                        timeout=10  # Add a timeout to avoid hanging
-                    ) as response:
-                        if response.status == 200:
-                            logger.info(f"Successfully connected to Minima indexer at {server_url}")
-                            
-                            # Update the server URL if it was corrected
-                            self.server_url = server_url
-                            self.connected = True
-                            return True
-                        else:
-                            logger.error(f"Failed to connect to Minima indexer: {response.status}")
-                            error_text = await response.text()
-                            logger.error(f"Error response: {error_text}")
+                    async with aiohttp.ClientSession() as session:
+                        try:
+                            async with session.post(
+                                f"{server_url}/query", 
+                                json=test_payload,
+                                timeout=connection_timeout
+                            ) as response:
+                                if response.status == 200:
+                                    logger.info(f"Successfully connected to Minima indexer at {server_url}")
+                                    
+                                    # Update the server URL if it was corrected
+                                    self.server_url = server_url
+                                    self.connected = True
+                                    return True
+                                else:
+                                    error_text = await response.text()
+                                    logger.error(f"Failed to connect to Minima indexer: {response.status}")
+                                    logger.error(f"Error response: {error_text}")
+                                    self.connected = False
+                                    if attempt < max_retries - 1:
+                                        logger.info(f"Retrying connection in {retry_delay} seconds...")
+                                        await asyncio.sleep(retry_delay)
+                                        continue
+                                    return False
+                        except aiohttp.ClientConnectorError as e:
+                            logger.error(f"Could not connect to Minima server: {e}")
                             self.connected = False
+                            if attempt < max_retries - 1:
+                                logger.info(f"Retrying connection in {retry_delay} seconds...")
+                                await asyncio.sleep(retry_delay)
+                                continue
                             return False
-                except aiohttp.ClientConnectorError as e:
-                    logger.error(f"Could not connect to Minima server: {e}")
+                        except asyncio.TimeoutError:
+                            logger.error(f"Connection to Minima server timed out (attempt {attempt + 1}/{max_retries})")
+                            self.connected = False
+                            if attempt < max_retries - 1:
+                                logger.info(f"Retrying connection in {retry_delay} seconds...")
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            return False
+                except Exception as e:
+                    logger.error(f"Unexpected error during connection attempt: {e}")
                     self.connected = False
-                    return False
-                except asyncio.TimeoutError:
-                    logger.error("Connection to Minima server timed out")
-                    self.connected = False
+                    if attempt < max_retries - 1:
+                        logger.info(f"Retrying connection in {retry_delay} seconds...")
+                        await asyncio.sleep(retry_delay)
+                        continue
                     return False
                         
         except Exception as e:
