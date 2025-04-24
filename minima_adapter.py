@@ -336,12 +336,21 @@ class MinimaRestAdapter:
         if path.endswith('.md'):
             path = path[:-3]
             
-        # Extract path after md_db/ and append to handbook.hypha.coop
+        # Handle handbook paths (md_db)
         if 'md_db/' in path:
             path_parts = path.split('md_db/')
             if len(path_parts) > 1:
-                path = f"handbook.hypha.coop/{path_parts[1]}"
-                
+                return f"handbook.hypha.coop/{path_parts[1]}"
+        
+        # Handle local file paths (Hypha_PUBLIC_Drive)
+        if 'Hypha_PUBLIC_Drive' in path:
+            # Extract the path after Hypha_PUBLIC_Drive
+            path_parts = path.split('Hypha_PUBLIC_Drive')
+            if len(path_parts) > 1:
+                # Remove any leading slashes and return the relative path
+                return f"./Hypha_PUBLIC_Drive{path_parts[1].lstrip('/')}"
+        
+        # For any other paths, return as is
         return path
 
     def _verify_sources(self, sources):
