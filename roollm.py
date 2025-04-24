@@ -5,12 +5,10 @@ import pkgutil
 import pathlib
 
 try: 
-    from .llm_client import LLMClient
     from .bridge import MCPLLMBridge
     from .tool_registry import ToolRegistry
     from .stats import log_llm_usage
 except ImportError:
-    from llm_client import LLMClient
     from bridge import MCPLLMBridge
     from tool_registry import ToolRegistry
     from stats import log_llm_usage
