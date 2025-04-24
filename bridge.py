@@ -16,7 +16,7 @@ def resolve_adapter_path(path: str) -> str:
     if not path.startswith("."):
         return path
     root = __name__.split(".")[0]
-    return f"{root}{path[1:]}"
+    return f"{root}.{path[1:]}"
 
 def load_adapter_from_config(name: str, conf: dict, full_config: dict):
     mode = conf.get("mode", "inline")
