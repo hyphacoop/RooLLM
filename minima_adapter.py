@@ -209,93 +209,106 @@ class MinimaRestAdapter:
                 # Log the query being sent to Minima
                 logger.info(f"Sending query to Minima: '{query_text}'")
                 
-                # Call the query API
-                async with aiohttp.ClientSession() as session:
-                    url = f"{self.server_url}/query"
-                    payload = {"query": query_text}
-                    
-                    logger.info(f"Searching for: {query_text}")
-                    
+                # Call the query API with retry logic
+                max_retries = 3
+                retry_delay = 2  # seconds
+                timeout = 90  # increased timeout to 90 seconds
+                
+                for attempt in range(max_retries):
                     try:
-                        async with session.post(
-                            url, 
-                            json=payload,
-                            timeout=45  # Allow more time for search
-                        ) as response:
-                            if response.status != 200:
-                                error_text = await response.text()
-                                logger.error(f"Error calling query API: {response.status}, {error_text}")
-                                # If we get a 404 or connection error, mark as disconnected
-                                if response.status in [404, 503, 502, 500]:
-                                    self.connected = False
-                                return {"error": f"Error calling query API: {error_text}"}
+                        async with aiohttp.ClientSession() as session:
+                            url = f"{self.server_url}/query"
+                            payload = {"query": query_text}
                             
-                            # Parse the response
-                            try:
-                                result = await response.json()
-                                # Log the raw response from Minima
-                                logger.info(f"Raw Minima response: {json.dumps(result)[:500]}...")
-                            except json.JSONDecodeError:
-                                raw_text = await response.text()
-                                logger.error(f"Failed to parse JSON response: {raw_text[:1000]}")
-                                return {"error": "Invalid JSON response from server"}
+                            logger.info(f"Searching for: {query_text} (attempt {attempt + 1}/{max_retries})")
                             
-                            # Handle empty search results
-                            if (isinstance(result, dict) and "result" in result and "output" in result["result"] and 
-                                not result["result"].get("links") and not result["result"].get("sources")):
-                                logger.warning(f"No documents found for query: '{query_text}'")
-                                return {
-                                    "result": "No relevant documents found for this query. Please try a different search term.",
-                                    "sources": [],
-                                    "no_results": True
-                                }
-                            
-                            # Check if the result contains the expected structure
-                            if isinstance(result, dict) and "result" in result and "output" in result["result"]:
-                                # Format the result in a more readable way with citation prompt
-                                output = result["result"]["output"]
-                                sources = result["result"].get("links", [])
+                            async with session.post(
+                                url, 
+                                json=payload,
+                                timeout=timeout
+                            ) as response:
+                                if response.status != 200:
+                                    error_text = await response.text()
+                                    logger.error(f"Error calling query API: {response.status}, {error_text}")
+                                    # If we get a 404 or connection error, mark as disconnected
+                                    if response.status in [404, 503, 502, 500]:
+                                        self.connected = False
+                                    return {"error": f"Error calling query API: {error_text}"}
                                 
-                                # Verify sources exist
-                                verified_sources = self._verify_sources(sources)
-                                if len(verified_sources) < len(sources):
-                                    logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
+                                # Parse the response
+                                try:
+                                    result = await response.json()
+                                    # Log the raw response from Minima
+                                    logger.info(f"Raw Minima response: {json.dumps(result)[:500]}...")
+                                except json.JSONDecodeError:
+                                    raw_text = await response.text()
+                                    logger.error(f"Failed to parse JSON response: {raw_text[:1000]}")
+                                    return {"error": "Invalid JSON response from server"}
                                 
-                                # Add citations instruction and format sources if available
-                                enhanced_result = self._format_result_with_citations(output, verified_sources)
+                                # Handle empty search results
+                                if (isinstance(result, dict) and "result" in result and "output" in result["result"] and 
+                                    not result["result"].get("links") and not result["result"].get("sources")):
+                                    logger.warning(f"No documents found for query: '{query_text}'")
+                                    return {
+                                        "result": "No relevant documents found for this query. Please try a different search term.",
+                                        "sources": [],
+                                        "no_results": True
+                                    }
                                 
-                                # Log the enhanced result that will be returned to RooLLM
-                                logger.info(f"Enhanced result for RooLLM: {json.dumps(enhanced_result)[:500]}...")
+                                # Check if the result contains the expected structure
+                                if isinstance(result, dict) and "result" in result and "output" in result["result"]:
+                                    # Format the result in a more readable way with citation prompt
+                                    output = result["result"]["output"]
+                                    sources = result["result"].get("links", [])
+                                    
+                                    # Verify sources exist
+                                    verified_sources = self._verify_sources(sources)
+                                    if len(verified_sources) < len(sources):
+                                        logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
+                                    
+                                    # Add citations instruction and format sources if available
+                                    enhanced_result = self._format_result_with_citations(output, verified_sources)
+                                    
+                                    # Log the enhanced result that will be returned to RooLLM
+                                    logger.info(f"Enhanced result for RooLLM: {json.dumps(enhanced_result)[:500]}...")
+                                    
+                                    return enhanced_result
+                                elif isinstance(result, dict) and "output" in result:
+                                    # Alternative format that might be used
+                                    output = result["output"]
+                                    sources = result.get("links", [])
+                                    
+                                    # Verify sources exist
+                                    verified_sources = self._verify_sources(sources)
+                                    if len(verified_sources) < len(sources):
+                                        logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
+                                    
+                                    # Add citations instruction and format sources if available
+                                    enhanced_result = self._format_result_with_citations(output, verified_sources)
+                                    
+                                    # Log the enhanced result that will be returned to RooLLM
+                                    logger.info(f"Enhanced result for RooLLM: {json.dumps(enhanced_result)[:500]}...")
+                                    
+                                    return enhanced_result
                                 
-                                return enhanced_result
-                            elif isinstance(result, dict) and "output" in result:
-                                # Alternative format that might be used
-                                output = result["output"]
-                                sources = result.get("links", [])
-                                
-                                # Verify sources exist
-                                verified_sources = self._verify_sources(sources)
-                                if len(verified_sources) < len(sources):
-                                    logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
-                                
-                                # Add citations instruction and format sources if available
-                                enhanced_result = self._format_result_with_citations(output, verified_sources)
-                                
-                                # Log the enhanced result that will be returned to RooLLM
-                                logger.info(f"Enhanced result for RooLLM: {json.dumps(enhanced_result)[:500]}...")
-                                
-                                return enhanced_result
-                            
-                            # Just return whatever we got
-                            logger.warning(f"Unexpected Minima response format: {json.dumps(result)[:500]}...")
-                            return {"result": result}
+                                # Just return whatever we got
+                                logger.warning(f"Unexpected Minima response format: {json.dumps(result)[:500]}...")
+                                return {"result": result}
                     except aiohttp.ClientConnectorError as e:
                         logger.error(f"Connection error when calling query API: {e}")
                         self.connected = False
+                        if attempt < max_retries - 1:
+                            logger.info(f"Retrying in {retry_delay} seconds...")
+                            await asyncio.sleep(retry_delay)
+                            continue
                         return {"error": f"Connection error: {str(e)}"}
                     except asyncio.TimeoutError:
-                        logger.error("Query request timed out")
-                        return {"error": "Query request timed out"}
+                        logger.error(f"Query request timed out (attempt {attempt + 1}/{max_retries})")
+                        if attempt < max_retries - 1:
+                            logger.info(f"Retrying in {retry_delay} seconds...")
+                            await asyncio.sleep(retry_delay)
+                            continue
+                        return {"error": "Query request timed out after multiple attempts"}
                 
             return {"error": "Unsupported tool"}
                 
