@@ -12,6 +12,12 @@ except ImportError:
     from mcp_client import MCPClient
 
 
+def resolve_adapter_path(path: str) -> str:
+    if not path.startswith("."):
+        return path
+    root = __name__.split(".")[0]
+    return f"{root}{path[1:]}"
+
 def load_adapter_from_config(name: str, conf: dict, full_config: dict):
     mode = conf.get("mode", "inline")
 
@@ -23,7 +29,7 @@ def load_adapter_from_config(name: str, conf: dict, full_config: dict):
             env=conf.get("env", {})
         )
 
-    adapter_path = conf["env"]["MCP_ADAPTER"]
+    adapter_path = resolve_adapter_path(conf["env"]["MCP_ADAPTER"])
     mod_name, class_name = adapter_path.rsplit(".", 1)
     mod = importlib.import_module(mod_name)
     adapter_cls = getattr(mod, class_name)
