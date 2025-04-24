@@ -24,7 +24,7 @@ const emojiToolMap = {
     "🌴": "`get_upcoming_vacations`:  \nGet information about our colleague's upcoming vacations",
     "🗄️": "`get_archive_categories`:  \nList archivable categories with links",
     "🔢": "`calc`:  \nPerform calculations",
-    "🧠": "`query`:  \nSearch Hypha's handbook with RAG via minima MCP"
+    "🧠": "`query`:  \nSearch Hypha's handbook and public drive documents with RAG via minima MCP"
 };
  
 // Fetch backend PORT from file

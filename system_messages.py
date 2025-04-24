@@ -3,7 +3,9 @@ Simplified system messages for RooLLM with Minima integration.
 """
 
 MINIMA_SYSTEM_MESSAGES = [
-    "You can search documents using the query tool. When using document information, cite sources with [Source: handbook.hypha.coop/path/to/document].",
+    "You can search documents using the query tool. When using document information, cite sources appropriately:",
+    "- For handbook documents: [Source: handbook.hypha.coop/path/to/document]",
+    "- For local files: [Source: ./Hypha_PUBLIC_Drive/path/to/file]",
     "Only cite documents that were returned by the query tool. If you don't have information from the documents, say so."
 ]
 

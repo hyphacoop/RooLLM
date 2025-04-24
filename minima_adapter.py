@@ -50,7 +50,8 @@ class MinimaRestAdapter:
         self.citation_prompt = (
             "CRITICAL INSTRUCTION: You MUST cite your sources for EVERY piece of information retrieved from documents. "
             "For each statement or fact, include a specific citation to the source document. "
-            "Use the format [Source: handbook.hypha.coop/path/to/document] IMMEDIATELY after each statement or claim. "
+            "For handbook documents, use the format [Source: handbook.hypha.coop/path/to/document]. "
+            "For local files, use the format [Source: ./Hypha_PUBLIC_Drive/path/to/file]. "
             "Failing to cite sources is a SERIOUS ERROR that affects reliability and trustworthiness. "
             "Users DEPEND on proper attribution and verification.\n\n"
             "Only cite documents that were returned by the query tool. "
@@ -62,7 +63,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. You MUST include a citation for EVERY piece of information using the format [Source: handbook.hypha.coop/path/to/document]. Failing to cite sources is a critical error.",
+                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For local files, use [Source: ./Hypha_PUBLIC_Drive/path/to/file]. Failing to cite sources is a critical error.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
@@ -74,7 +75,6 @@ class MinimaRestAdapter:
                     },
                     "required": ["text"]
                 }
-
             }
         }
         
