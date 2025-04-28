@@ -46,19 +46,6 @@ class MinimaRestAdapter:
         self.last_connection_attempt = 0
         self.connection_retry_interval = 10  # seconds
         
-        # System prompt to encourage source citation
-        self.citation_prompt = (
-            "CRITICAL INSTRUCTION: You MUST cite your sources for EVERY piece of information retrieved from documents. "
-            "For each statement or fact, include a specific citation to the source document. "
-            "For handbook documents, use the format [Source: handbook.hypha.coop/path/to/document]. "
-            "For local files, use the format [Source: ./Hypha_PUBLIC_Drive/path/to/file]. "
-            "Failing to cite sources is a SERIOUS ERROR that affects reliability and trustworthiness. "
-            "Users DEPEND on proper attribution and verification.\n\n"
-            "Only cite documents that were returned by the query tool. "
-            "If you don't have information from the documents, say so.\n\n"
-            "Use the document content to answer questions and cite sources properly."
-        )
-        
         # Define available tools
         self.tools = {
             "query": {
@@ -207,212 +194,93 @@ class MinimaRestAdapter:
         Returns:
             dict: Response from the tool
         """
-        # Try to connect if not connected
-        if not self.connected:
-            success = await self.connect()
-            if not success:
-                return {"error": "Could not connect to Minima indexer"}
+        if not self.connected and not await self.connect():
+            return {"error": "Could not connect to Minima indexer"}
         
         if name not in self.tools:
-            logger.error(f"Tool {name} not found")
             return {"error": f"Tool {name} not found"}
             
-        try:
-            if name == "query":
-                # Extract the search query
-                query_text = ""
-                if isinstance(arguments, dict):
-                    # Support both 'text' (our defined parameter) and 'query' (for compatibility with search_handbook)
-                    if "text" in arguments:
-                        query_text = arguments["text"]
-                    elif "query" in arguments:
-                        query_text = arguments["query"]
-                elif isinstance(arguments, str):
-                    query_text = arguments
-                
-                if not query_text:
-                    return {"error": "No search text provided"}
-                
-                # Log the query being sent to Minima
-                logger.info(f"Sending query to Minima: '{query_text}'")
-                
-                # Call the query API with retry logic
-                max_retries = 3
-                retry_delay = 2  # seconds
-                timeout = 90  # increased timeout to 90 seconds
-                
-                for attempt in range(max_retries):
-                    try:
-                        async with aiohttp.ClientSession() as session:
-                            url = f"{self.server_url}/query"
-                            payload = {"query": query_text}
-                            
-                            logger.info(f"Searching for: {query_text} (attempt {attempt + 1}/{max_retries})")
-                            
-                            async with session.post(
-                                url, 
-                                json=payload,
-                                timeout=timeout
-                            ) as response:
-                                if response.status != 200:
-                                    error_text = await response.text()
-                                    logger.error(f"Error calling query API: {response.status}, {error_text}")
-                                    # If we get a 404 or connection error, mark as disconnected
-                                    if response.status in [404, 503, 502, 500]:
-                                        self.connected = False
-                                    return {"error": f"Error calling query API: {error_text}"}
-                                
-                                # Parse the response
-                                try:
-                                    result = await response.json()
-                                    # Log the raw response from Minima
-                                    logger.info(f"Raw Minima response: {json.dumps(result)[:500]}...")
-                                except json.JSONDecodeError:
-                                    raw_text = await response.text()
-                                    logger.error(f"Failed to parse JSON response: {raw_text[:1000]}")
-                                    return {"error": "Invalid JSON response from server"}
-                                
-                                # Handle empty search results
-                                if (isinstance(result, dict) and "result" in result and "output" in result["result"] and 
-                                    not result["result"].get("links") and not result["result"].get("sources")):
-                                    logger.warning(f"No documents found for query: '{query_text}'")
-                                    return {
-                                        "result": "No relevant documents found for this query. Please try a different search term.",
-                                        "sources": [],
-                                        "no_results": True
-                                    }
-                                
-                                # Check if the result contains the expected structure
-                                if isinstance(result, dict) and "result" in result and "output" in result["result"]:
-                                    # Format the result in a more readable way with citation prompt
-                                    output = result["result"]["output"]
-                                    sources = result["result"].get("links", [])
-                                    
-                                    # Verify sources exist
-                                    verified_sources = self._verify_sources(sources)
-                                    if len(verified_sources) < len(sources):
-                                        logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
-                                    
-                                    # Add citations instruction and format sources if available
-                                    enhanced_result = self._format_result_with_citations(output, verified_sources)
-                                    
-                                    # Log the enhanced result that will be returned to RooLLM
-                                    logger.info(f"Enhanced result for RooLLM: {json.dumps(enhanced_result)[:500]}...")
-                                    
-                                    return enhanced_result
-                                elif isinstance(result, dict) and "output" in result:
-                                    # Alternative format that might be used
-                                    output = result["output"]
-                                    sources = result.get("links", [])
-                                    
-                                    # Verify sources exist
-                                    verified_sources = self._verify_sources(sources)
-                                    if len(verified_sources) < len(sources):
-                                        logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
-                                    
-                                    # Add citations instruction and format sources if available
-                                    enhanced_result = self._format_result_with_citations(output, verified_sources)
-                                    
-                                    # Log the enhanced result that will be returned to RooLLM
-                                    logger.info(f"Enhanced result for RooLLM: {json.dumps(enhanced_result)[:500]}...")
-                                    
-                                    return enhanced_result
-                                
-                                # Just return whatever we got
-                                logger.warning(f"Unexpected Minima response format: {json.dumps(result)[:500]}...")
-                                return {"result": result}
-                    except aiohttp.ClientConnectorError as e:
-                        logger.error(f"Connection error when calling query API: {e}")
-                        self.connected = False
-                        if attempt < max_retries - 1:
-                            logger.info(f"Retrying in {retry_delay} seconds...")
-                            await asyncio.sleep(retry_delay)
-                            continue
-                        return {"error": f"Connection error: {str(e)}"}
-                    except asyncio.TimeoutError:
-                        logger.error(f"Query request timed out (attempt {attempt + 1}/{max_retries})")
-                        if attempt < max_retries - 1:
-                            logger.info(f"Retrying in {retry_delay} seconds...")
-                            await asyncio.sleep(retry_delay)
-                            continue
-                        return {"error": "Query request timed out after multiple attempts"}
-                
+        if name != "query":
             return {"error": "Unsupported tool"}
+            
+        # Extract the search query
+        query_text = ""
+        if isinstance(arguments, dict):
+            query_text = arguments.get("text") or arguments.get("query", "")
+        elif isinstance(arguments, str):
+            query_text = arguments
+        
+        if not query_text:
+            return {"error": "No search text provided"}
+        
+        logger.info(f"Sending query to Minima: '{query_text}'")
+        
+        # Call the query API with retry logic
+        max_retries = 3
+        retry_delay = 2
+        timeout = 90
+        
+        for attempt in range(max_retries):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        f"{self.server_url}/query",
+                        json={"query": query_text},
+                        timeout=timeout
+                    ) as response:
+                        if response.status != 200:
+                            error_text = await response.text()
+                            logger.error(f"Error calling query API: {response.status}, {error_text}")
+                            if response.status in [404, 503, 502, 500]:
+                                self.connected = False
+                            if attempt < max_retries - 1:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            return {"error": f"Error calling query API: {error_text}"}
+                        
+                        try:
+                            result = await response.json()
+                        except json.JSONDecodeError:
+                            return {"error": "Invalid JSON response from server"}
+                        
+                        # Handle empty search results
+                        if (isinstance(result, dict) and "result" in result and "output" in result["result"] and 
+                            not result["result"].get("links") and not result["result"].get("sources")):
+                            return {
+                                "result": "No relevant documents found for this query. Please try a different search term.",
+                                "sources": [],
+                                "no_results": True
+                            }
+                        
+                        # Process the result
+                        if isinstance(result, dict):
+                            if "result" in result and "output" in result["result"]:
+                                output = result["result"]["output"]
+                                sources = result["result"].get("links", [])
+                            elif "output" in result:
+                                output = result["output"]
+                                sources = result.get("links", [])
+                            else:
+                                return {"result": result}
+                            
+                            # Verify sources
+                            verified_sources = [s for s in sources if s and isinstance(s, str)]
+                            if len(verified_sources) < len(sources):
+                                logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
+                            
+                            return self._format_result_with_citations(output, verified_sources)
+                        
+                        return {"result": result}
+                        
+            except (aiohttp.ClientConnectorError, asyncio.TimeoutError) as e:
+                logger.error(f"Connection error when calling query API: {e}")
+                self.connected = False
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                return {"error": f"Connection error: {str(e)}"}
                 
-        except Exception as e:
-            logger.error(f"Error calling tool {name}: {e}")
-            return {"error": f"Error calling tool: {str(e)}"}
-
-    def _clean_source_path(self, path):
-        """
-        Clean and standardize a source path.
-        
-        Args:
-            path: The source path to clean
-            
-        Returns:
-            str: Cleaned source path
-        """
-        if not path or not isinstance(path, str):
-            return path
-            
-        # Clean up the source path for consistency
-        path = path.strip()
-        
-        # Remove .md extension if present
-        if path.endswith('.md'):
-            path = path[:-3]
-            
-        # Handle handbook paths (md_db)
-        if 'md_db/' in path:
-            path_parts = path.split('md_db/')
-            if len(path_parts) > 1:
-                return f"handbook.hypha.coop/{path_parts[1]}"
-        
-        # Handle local file paths (Hypha_PUBLIC_Drive)
-        if 'Hypha_PUBLIC_Drive' in path:
-            # Extract the path after Hypha_PUBLIC_Drive
-            path_parts = path.split('Hypha_PUBLIC_Drive')
-            if len(path_parts) > 1:
-                # Remove any leading slashes and return the relative path
-                return f"./Hypha_PUBLIC_Drive{path_parts[1].lstrip('/')}"
-        
-        # For any other paths, return as is
-        return path
-
-    def _verify_sources(self, sources):
-        """
-        Verify that sources exist and are valid.
-        
-        Args:
-            sources: List of source paths
-            
-        Returns:
-            list: List of verified sources
-        """
-        verified_sources = []
-        
-        for source in sources:
-            # For now, we just check if the source is a non-empty string
-            if source and isinstance(source, str):
-                # Clean up the source path using centralized method
-                cleaned_source = self._clean_source_path(source)
-                verified_sources.append(cleaned_source)
-                logger.info(f"Verified source: {cleaned_source}")
-            else:
-                logger.warning(f"Invalid source: {source}")
-        
-        return verified_sources
-
-    def is_connected(self):
-        """Check if connected to the Minima indexer."""
-        return self.connected
-        
-    async def close(self):
-        """Close the connection to the Minima indexer."""
-        # No need to close anything for REST API
-        self.connected = False
-        logger.info("Closed Minima REST adapter connection")
+        return {"error": "Query request failed after multiple attempts"}
 
     def _format_result_with_citations(self, output, sources):
         """
@@ -425,13 +293,9 @@ class MinimaRestAdapter:
         Returns:
             dict: Formatted result with citations
         """
-        # Clean and transform source paths using centralized method
-        cleaned_sources = [self._clean_source_path(source) for source in sources]
-            
-        # Format the result with just the content and sources
         return {
             "result": output,
-            "source_paths": cleaned_sources
+            "source_paths": sources
         }
     
     async def list_tools(self):
@@ -458,33 +322,29 @@ class MinimaRestAdapter:
         if not source_paths:
             return response_content, False
             
-        # Check for citations in the format [Source: path] or [Source: number]
+        # Check for citations in the format [Source: path]
         citation_pattern = r'\[Source:\s*([^\]]+)\]'
         citations = re.findall(citation_pattern, response_content)
         
         if not citations:
-            # No citations found, add a warning
-            warning = "\n\n⚠️ WARNING: No sources were cited. Please cite your sources using the format [Source: handbook.hypha.coop/path/to/document]"
-            return response_content + warning, True
+            return response_content + "\n\n⚠️ WARNING: No sources were cited.", True
             
         # Verify each citation
         invalid_citations = []
         for citation in citations:
-            # Check if it's a number citation
-            if citation.strip().isdigit():
-                num = int(citation.strip())
-                if 1 <= num <= len(source_paths):
-                    # Replace number with actual path, ensuring it's cleaned
-                    actual_path = self._clean_source_path(source_paths[num-1])
-                    response_content = response_content.replace(f"[Source: {citation}]", f"[Source: {actual_path}]")
-                else:
-                    invalid_citations.append(citation)
-            # Check if it's a path citation
-            elif not any(citation.strip() == path for path in source_paths):
+            if not any(citation.strip() == path for path in source_paths):
                 invalid_citations.append(citation)
                 
         if invalid_citations:
-            warning = f"\n\n⚠️ WARNING: The following citations are invalid: {', '.join(invalid_citations)}. Please use only the exact source paths provided."
-            return response_content + warning, True
+            return response_content + f"\n\n⚠️ WARNING: Invalid citations: {', '.join(invalid_citations)}", True
             
-        return response_content, False 
+        return response_content, False
+
+    def is_connected(self):
+        """Check if connected to the Minima indexer."""
+        return self.connected
+        
+    async def close(self):
+        """Close the connection to the Minima indexer."""
+        self.connected = False
+        logger.info("Closed Minima REST adapter connection") 
