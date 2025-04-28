@@ -13,6 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+# Port configuration
+PORT = int(os.getenv("PORT", "8000"))
 
 # Add parent directory to path to import roollm
 sys.path.append(str(Path(__file__).parent.parent))
@@ -307,17 +309,15 @@ async def get_port_info():
 
 if __name__ == "__main__":
     import uvicorn
-    start_port = int(os.getenv("PORT", 8000))
-    current_port = find_available_port(start_port)
     
     # Write port to a file for the frontend to read
     port_file = Path(__file__).parent.parent / "frontend" / "port.json"
     port_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
     with open(port_file, "w") as f:
-        json.dump({"port": current_port}, f)
+        json.dump({"port": PORT}, f)
     
-    logger.info(f"Server starting on port {current_port}")
+    logger.info(f"Server starting on port {PORT}")
     logger.info(f"Port info written to {port_file}")
     
     # Use workers=1 for better signal handling
-    uvicorn.run("main:app", host="0.0.0.0", port=current_port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
