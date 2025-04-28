@@ -14,7 +14,8 @@ parameters = {
         "start_date": {
             "type": "string",
             "format": "date",
-            "description": "The start date to search for holidays in YYYY-MM-DD format."
+            "description": "The start date to search for holidays in YYYY-MM-DD format.",
+            "default": datetime.datetime.now().strftime("%Y-%m-%d")
         },
         "end_date": {
             "type": "string",
@@ -50,6 +51,7 @@ STATUTORY_HOLIDAYS = [
 # Function to find the next holiday
 def get_upcoming_holidays(start_date, end_date, limit=1):
     """
+
     Find the next `limit` statutory holidays between the given start_date and end_date.
     Args:
         start_date (datetime): The start date of the range.
