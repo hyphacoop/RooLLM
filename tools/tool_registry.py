@@ -25,7 +25,8 @@ class Tool:
             name=d["name"],
             description=d.get("description", ""),
             input_schema=d.get("parameters", {}), 
-            adapter_name=adapter_name
+            adapter_name=adapter_name,
+            emoji=d.get("emoji")
         )
 
 class ToolRegistry:
