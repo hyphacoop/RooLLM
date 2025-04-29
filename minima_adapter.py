@@ -161,28 +161,6 @@ class MinimaRestAdapter:
             self.connected = False
             return False
     
-    def get_tool_descriptions(self):
-        """
-        Get descriptions of available tools in a format compatible with LLM.
-        
-        Returns:
-            list: Tool descriptions in a format compatible with LLM tools API
-        """
-        tool_descriptions = []
-        
-        for name, tool in self.tools.items():
-            tool_desc = {
-                "type": "function",
-                "function": {
-                    "name": name,
-                    "description": tool.get("description", ""),
-                    "parameters": tool.get("parameters", {})
-                }
-            }
-            tool_descriptions.append(tool_desc)
-        
-        return tool_descriptions
-    
     async def call_tool(self, name, arguments):
         """
         Call a tool on the Minima indexer.
