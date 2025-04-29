@@ -3,9 +3,9 @@ import pathlib
 from typing import List
 
 try:
-    from .tool_registry import Tool
+    from .tools.tool_registry import Tool
 except ImportError:
-    from tool_registry import Tool
+    from tools.tool_registry import Tool
 
 TOOLS_DIR = pathlib.Path(__file__).parent / "tools"
 

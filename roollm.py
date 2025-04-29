@@ -6,11 +6,11 @@ import pathlib
 
 try: 
     from .bridge import MCPLLMBridge
-    from .tool_registry import ToolRegistry
+    from .tools.tool_registry import ToolRegistry
     from .stats import log_llm_usage
 except ImportError:
     from bridge import MCPLLMBridge
-    from tool_registry import ToolRegistry
+    from tools.tool_registry import ToolRegistry
     from stats import log_llm_usage
 
 
