@@ -281,7 +281,8 @@ class MinimaRestAdapter:
             {
                 "name": name,
                 "description": meta.get("description", ""),
-                "parameters": meta.get("parameters", {})
+                "parameters": meta.get("parameters", {}),
+                "emoji": meta.get("emoji")
             }
             for name, meta in self.tools.items()
         ]
