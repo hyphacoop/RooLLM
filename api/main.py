@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # Port configuration
-PORT = int(os.getenv("PORT", "8000"))
+PORT = int(os.getenv("PORT", "8081"))
 
 # Add parent directory to path to import roollm
 sys.path.append(str(Path(__file__).parent.parent))
