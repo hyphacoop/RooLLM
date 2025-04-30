@@ -7,12 +7,10 @@ try:
     from .llm_client import LLMClient
     from .tool_registry import ToolRegistry, Tool
     from .mcp_client import MCPClient
-    from .load_local_tools import load_local_tools
 except ImportError:
     from llm_client import LLMClient
     from tool_registry import ToolRegistry, Tool
     from mcp_client import MCPClient
-    from load_local_tools import load_local_tools
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -24,6 +22,7 @@ def resolve_adapter_path(path: str) -> str:
     return f"{root}.{path[1:]}"
 
 def load_adapter_from_config(name: str, conf: dict, full_config: dict):
+    """Load an adapter based on configuration."""
     mode = conf.get("mode", "inline")
 
     if mode == "subprocess":
@@ -36,9 +35,14 @@ def load_adapter_from_config(name: str, conf: dict, full_config: dict):
 
     adapter_path = resolve_adapter_path(conf["env"]["MCP_ADAPTER"])
     mod_name, class_name = adapter_path.rsplit(".", 1)
-    mod = importlib.import_module(mod_name)
-    adapter_cls = getattr(mod, class_name)
-    return adapter_cls(config=full_config)
+    
+    try:
+        mod = importlib.import_module(mod_name)
+        adapter_cls = getattr(mod, class_name)
+        return adapter_cls(config=full_config)
+    except Exception as e:
+        logger.error(f"Failed to load adapter {name} from {adapter_path}: {e}", exc_info=True)
+        raise
 
 
 class MCPLLMBridge:
@@ -48,29 +52,44 @@ class MCPLLMBridge:
         self.tool_registry = tool_registry or ToolRegistry()
         self.roollm = roollm
         self.mcp_clients: Dict[str, object] = {}
+        self.initialized = False
 
     async def initialize(self):
         """Initialize the bridge by loading MCP adapter tools."""
+        if self.initialized:
+            logger.info("Bridge already initialized, skipping initialization")
+            return
+            
         try:
             # Load MCP adapter tools
             logger.info("Loading MCP adapter tools...")
             mcp_configs = self.config.get("mcp_adapters", {})
+            
             for name, adapter_conf in mcp_configs.items():
                 try:
+                    # Create and configure the adapter
                     adapter = load_adapter_from_config(name, adapter_conf, self.config)
+                    
                     # Set roo instance on local tools adapter
-                    if name == "local" and hasattr(adapter, "roo"):
+                    if hasattr(adapter, "roo"):
                         adapter.roo = self.roollm
+                        
+                    # Connect to the adapter
                     await adapter.connect()
+                    
+                    # Get and register tools
                     tools = await adapter.list_tools()
                     for tool_dict in tools:
                         # Wrap tool dict into Tool object expected by the registry
                         tool_obj = Tool.from_dict(tool_dict, adapter_name=name)
                         self.tool_registry.register_tool(tool_obj)
+                        
+                    # Store the adapter for later use
                     self.mcp_clients[name] = adapter
                     logger.info(f"Loaded {len(tools)} tools from adapter {name}")
+                    
                 except Exception as e:
-                    logger.error(f"Failed to load adapter {name}: {e}")
+                    logger.error(f"Failed to load adapter {name}: {e}", exc_info=True)
                     continue
 
             # Log final tool count
@@ -78,24 +97,33 @@ class MCPLLMBridge:
             logger.info(f"Successfully loaded {len(all_tools)} total tools:")
             for tool in all_tools:
                 logger.info(f"- {tool.name} ({tool.adapter_name})")
+                
+            self.initialized = True
 
         except Exception as e:
-            logger.error(f"Error during bridge initialization: {e}")
+            logger.error(f"Error during bridge initialization: {e}", exc_info=True)
             raise
 
     async def process_message(self, user: str, content: str, history: List[Dict], react_callback=None):
+        # Ensure bridge is initialized
+        if not self.initialized:
+            await self.initialize()
+            
         messages = history + [{"role": "user", "content": f"{user}: {content}"}]
         tools = self.tool_registry.openai_descriptions()
 
+        # Get initial response from LLM
         raw_response = await self.llm_client.invoke(messages, tools=tools)
-
         message = raw_response.get("message", {})
 
+        # If no tool calls, just return the response
         if "tool_calls" not in message:
-            return message  # no tool calls—just return
+            return message
 
+        # Add LLM response to messages
         messages.append(message)
 
+        # Process tool calls
         tool_outputs = []
         for call in message["tool_calls"]:
             func = call.get("function", {})
@@ -103,26 +131,48 @@ class MCPLLMBridge:
             args = func.get("arguments", {})
             tool_call_id = call.get("id", name)
 
+            # Get the tool from registry
             tool = self.tool_registry.get_tool(name)
             if not tool:
+                logger.warning(f"Tool {name} not found in registry")
+                tool_outputs.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call_id,
+                    "content": json.dumps({"error": f"Tool {name} not found"})
+                })
                 continue
 
+            # Indicate tool usage if callback provided
             if react_callback:
                 await react_callback(tool.emoji or tool.name)
 
-            if tool.adapter_name == "local" and tool.run_fn:
-                result = await tool.run_fn(self.roollm, args, user)
-            else:
-                adapter = self.mcp_clients[tool.adapter_name]
+            try:
+                # Call through the appropriate adapter
+                adapter = self.mcp_clients.get(tool.adapter_name)
+                if not adapter:
+                    raise ValueError(f"Adapter {tool.adapter_name} not found for tool {name}")
+                    
                 result = await adapter.call_tool(name, args)
 
-            tool_outputs.append({
-                "role": "tool",
-                "tool_call_id": tool_call_id,
-                "content": json.dumps(result)
-            })
+                # Add tool output to messages
+                tool_outputs.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call_id,
+                    "content": json.dumps(result)
+                })
+                
+            except Exception as e:
+                logger.error(f"Error calling tool {name}: {e}", exc_info=True)
+                # Add error output
+                tool_outputs.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call_id,
+                    "content": json.dumps({"error": f"Tool execution failed: {str(e)}"})
+                })
 
+        # Add tool outputs to messages
         messages.extend(tool_outputs)
 
+        # Get final response from LLM
         final = await self.llm_client.invoke(messages, tools=tools)
         return final.get("message", {})
