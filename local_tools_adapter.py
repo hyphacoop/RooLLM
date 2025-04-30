@@ -1,18 +1,13 @@
 import logging
 from typing import Dict, Any, List, Optional
 import importlib.util
-import importlib.resources
 import os
 import sys
 import pathlib
 import traceback
+import inspect
 
-# Add the parent directory to sys.path to allow relative imports
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
-
+# Configure logging
 logger = logging.getLogger(__name__)
 
 # Import Tool class
@@ -45,27 +40,82 @@ class LocalToolsAdapter:
         self.tool_instances = {}  # Actual tool instances for execution
         self.roo = None  # Will be set by the bridge
         
-        # Find the tools directory
-        self.current_file = __file__
-        self.is_development = 'repl.py' in sys.argv[0] if sys.argv else False
-        logger.info(f"Running in development mode: {self.is_development}")
+        # Find the tools directory with improved path handling for maubot
+        self._find_tools_directory()
         
-        if self.is_development:
-            # In development, use the direct filesystem path
-            self.tools_dir = pathlib.Path(self.current_file).parent / "tools"
-            logger.info(f"Using development tools directory: {self.tools_dir}")
-        else:
-            # In production, try to use importlib.resources
-            logger.info("Attempting to find tools directory in production mode")
+    def _find_tools_directory(self):
+        """Find the tools directory using multiple fallback methods."""
+        # Log current working directory and sys.path for debugging
+        logger.info(f"Current working directory: {os.getcwd()}")
+        logger.info(f"sys.path: {sys.path}")
+        
+        # Check if this is running as part of a script (repl.py)
+        is_development = False
+        if sys.argv and len(sys.argv) > 0:
+            is_development = 'repl.py' in sys.argv[0]
+        logger.info(f"Running in development mode: {is_development}")
+        
+        # Method 1: Check for environment variable (highest priority)
+        if tools_dir_env := os.environ.get("ROOLLM_TOOLS_DIR"):
+            self.tools_dir = pathlib.Path(tools_dir_env)
+            logger.info(f"Using tools directory from environment: {self.tools_dir}")
+            return
+
+        # Method 2: Use the file location of this module
+        try:
+            current_file = inspect.getfile(self.__class__)
+            self.tools_dir = pathlib.Path(current_file).parent / "tools"
+            logger.info(f"Using tools directory relative to adapter: {self.tools_dir}")
+            
+            # Verify this directory exists
+            if self.tools_dir.exists():
+                logger.info(f"Verified tools directory exists: {self.tools_dir}")
+                return
+            else:
+                logger.warning(f"Tools directory not found at {self.tools_dir}")
+        except Exception as e:
+            logger.warning(f"Error finding tools directory relative to adapter: {e}")
+            
+        # Method 3: Try relative to current working directory
+        try:
+            # First check for roollm/tools in cwd
+            cwd_tools = pathlib.Path(os.getcwd()) / "roollm" / "tools"
+            if cwd_tools.exists():
+                self.tools_dir = cwd_tools
+                logger.info(f"Using tools directory in cwd/roollm: {self.tools_dir}")
+                return
+                
+            # Then check for just tools in cwd
+            cwd_direct_tools = pathlib.Path(os.getcwd()) / "tools"
+            if cwd_direct_tools.exists():
+                self.tools_dir = cwd_direct_tools
+                logger.info(f"Using tools directory in cwd: {self.tools_dir}")
+                return
+        except Exception as e:
+            logger.warning(f"Error finding tools directory relative to cwd: {e}")
+            
+        # Method 4: Search in sys.path
+        for path_item in sys.path:
             try:
-                with importlib.resources.path('hyphadevbot.roollm.tools', '__init__.py') as tools_path:
-                    self.tools_dir = tools_path.parent
-                    logger.info(f"Found tools directory using importlib.resources: {self.tools_dir}")
-            except Exception as e:
-                logger.warning(f"Could not find tools directory using importlib.resources: {e}")
-                # Fallback to relative path
-                self.tools_dir = pathlib.Path(self.current_file).parent / "tools"
-                logger.info(f"Using fallback tools directory: {self.tools_dir}")
+                potential_path = pathlib.Path(path_item) / "roollm" / "tools"
+                if potential_path.exists():
+                    self.tools_dir = potential_path
+                    logger.info(f"Found tools directory in sys.path: {self.tools_dir}")
+                    return
+            except Exception:
+                continue
+                
+        # Method 5: Final fallback - use the current directory/tools and hope for the best
+        self.tools_dir = pathlib.Path(os.getcwd()) / "tools"
+        logger.warning(f"Using fallback tools directory (may not exist): {self.tools_dir}")
+        
+        # Create the directory if it doesn't exist to avoid errors
+        try:
+            if not self.tools_dir.exists():
+                self.tools_dir.mkdir(parents=True, exist_ok=True)
+                logger.warning(f"Created missing tools directory: {self.tools_dir}")
+        except Exception as e:
+            logger.error(f"Failed to create tools directory: {e}")
         
     async def connect(self, force=False):
         """Connect to the local tools by loading them."""
@@ -96,6 +146,7 @@ class LocalToolsAdapter:
             
         except Exception as e:
             logger.error(f"Failed to load local tools: {e}")
+            logger.debug(traceback.format_exc())
             self.connected = False
             return False
     
@@ -116,39 +167,15 @@ class LocalToolsAdapter:
         # List available tool files for logging
         tool_files = list(self.tools_dir.glob("*.py"))
         logger.info(f"Found {len(tool_files)} potential tool files in {self.tools_dir}")
+        for tool_file in tool_files:
+            logger.debug(f"  Tool file: {tool_file.name}")
         
-        # Load tools based on environment
-        if self.is_development:
-            # In development, use direct file loading
-            logger.info(f"Loading tools from development directory: {self.tools_dir}")
-            
-            for path in tool_files:
-                tool = self._load_tool_from_path(path)
-                if tool:
-                    tools.append(tool)
-                    
-        else:
-            # In production, try importlib.resources first
-            logger.info("Attempting to load tools using importlib.resources")
-            
-            try:
-                with importlib.resources.path('hyphadevbot.roollm.tools', '__init__.py') as tools_path:
-                    tools_dir = tools_path.parent
-                    logger.info(f"Found tools directory in package: {tools_dir}")
-                    
-                    for path in tools_dir.glob("*.py"):
-                        tool = self._load_tool_from_path(path, module_prefix="hyphadevbot.roollm.tools.")
-                        if tool:
-                            tools.append(tool)
-                            
-            except Exception as e:
-                logger.error(f"Error loading tools using importlib.resources: {e}")
-                logger.info("Falling back to direct file loading")
-                
-                for path in tool_files:
-                    tool = self._load_tool_from_path(path)
-                    if tool:
-                        tools.append(tool)
+        # Load each tool file
+        for path in tool_files:
+            tool = self._load_tool_from_path(path)
+            if tool:
+                tools.append(tool)
+                logger.info(f"Successfully loaded tool: {tool.name}")
 
         logger.info(f"Successfully loaded {len(tools)} local tools")
         
@@ -158,13 +185,12 @@ class LocalToolsAdapter:
             
         return tools
     
-    def _load_tool_from_path(self, path: pathlib.Path, module_prefix: str = "") -> Optional[Tool]:
+    def _load_tool_from_path(self, path: pathlib.Path) -> Optional[Tool]:
         """
         Load a single tool from a Python file path.
         
         Args:
             path: Path to the Python file
-            module_prefix: Prefix for the module name
             
         Returns:
             Tool object if successfully loaded, None otherwise
@@ -174,7 +200,10 @@ class LocalToolsAdapter:
             
         try:
             logger.debug(f"Attempting to load tool from: {path}")
-            module_name = f"{module_prefix}{path.stem}"
+            module_name = path.stem
+            
+            # Use importlib.util to load the module directly from file
+            # This is more reliable than normal imports in zipped environments
             spec = importlib.util.spec_from_file_location(module_name, str(path))
             
             if not spec:
