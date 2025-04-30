@@ -4,9 +4,9 @@ import hashlib
 from datetime import datetime
 
 try:
-    from .tools import Tools  # Import Tools class
+    from .tool_registry import ToolRegistry
 except ImportError:
-    from tools import Tools
+    from tool_registry import ToolRegistry
 
 # Determine log file path based on environment
 SERVER_LOG_PATH = "/home/sysadmin/maubot/llm_usage.json"
@@ -18,7 +18,7 @@ LLM_LOG_FILE = SERVER_LOG_PATH if os.path.exists(os.path.dirname(SERVER_LOG_PATH
 os.makedirs(os.path.dirname(LLM_LOG_FILE), exist_ok=True)
 
 # Instantiate the Tools class
-tools_instance = Tools()
+tools_instance = ToolRegistry()
 
 def log_llm_usage(user, emoji=None, tool_used=None, subtool_used=None, response_time=None):
     """Log LLM usage, user, tool calls, and response time."""
