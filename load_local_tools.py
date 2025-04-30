@@ -13,7 +13,10 @@ except ImportError:
     from tool_registry import Tool
     print("Loaded tool_registry from tool_registry")
 
-TOOLS_DIR = pathlib.Path(__file__).parent / "tools"
+# Try absolute path first, then relative path
+TOOLS_DIR = pathlib.Path("tools")
+if not TOOLS_DIR.exists():
+    TOOLS_DIR = pathlib.Path(__file__).parent / "tools"
 
 def load_local_tools(config=None, roo=None):
     tools = []
