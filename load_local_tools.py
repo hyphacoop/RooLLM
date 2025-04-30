@@ -83,6 +83,7 @@ def load_local_tools(config=None, roo=None) -> List[Tool]:
                     continue
 
                 mod = importlib.util.module_from_spec(spec)
+                logger.info(f"Module {module_name} contents: {dir(mod)}")
                 spec.loader.exec_module(mod)
 
                 if not hasattr(mod, "tool"):
