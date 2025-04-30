@@ -7,9 +7,9 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 try:
-    from .tools.tool_registry import Tool
+    from .tool_registry import Tool
 except ImportError:
-    from tools.tool_registry import Tool
+    from tool_registry import Tool
 
 TOOLS_DIR = pathlib.Path(__file__).parent / "tools"
 
@@ -24,7 +24,7 @@ def load_local_tools(config=None, roo=None):
         if path.name.startswith("_"):
             continue  # skip __init__.py etc.
 
-        module_name = f"hyphadevbot.roollm.tools.{path.stem}"
+        module_name = f".tools.{path.stem}"
         logger.debug(f"Loading module: {module_name} from {path}")
         
         spec = importlib.util.spec_from_file_location(module_name, str(path))

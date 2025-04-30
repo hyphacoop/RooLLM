@@ -4,11 +4,11 @@ import importlib
 
 try:
     from .llm_client import LLMClient
-    from .tools.tool_registry import ToolRegistry, Tool
+    from .tool_registry import ToolRegistry, Tool
     from .mcp_client import MCPClient
 except ImportError:
     from llm_client import LLMClient
-    from tools.tool_registry import ToolRegistry, Tool
+    from tool_registry import ToolRegistry, Tool
     from mcp_client import MCPClient
 
 
