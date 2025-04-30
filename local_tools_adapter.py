@@ -47,13 +47,7 @@ class LocalToolsAdapter:
         """Find the tools directory using multiple fallback methods."""
         # Log current working directory and sys.path for debugging
         logger.info(f"Current working directory: {os.getcwd()}")
-        logger.info(f"sys.path: {sys.path}")
-        
-        # Check if this is running as part of a script (repl.py)
-        is_development = False
-        if sys.argv and len(sys.argv) > 0:
-            is_development = 'repl.py' in sys.argv[0]
-        logger.info(f"Running in development mode: {is_development}")
+        logger.debug(f"sys.path: {sys.path}")
         
         # Method 1: Check for environment variable (highest priority)
         if tools_dir_env := os.environ.get("ROOLLM_TOOLS_DIR"):
@@ -63,50 +57,47 @@ class LocalToolsAdapter:
 
         # Method 2: Use the file location of this module
         try:
+            # Get the directory containing this file
             current_file = inspect.getfile(self.__class__)
-            self.tools_dir = pathlib.Path(current_file).parent / "tools"
-            logger.info(f"Using tools directory relative to adapter: {self.tools_dir}")
+            module_dir = pathlib.Path(current_file).parent
+            
+            # Look for ./tools relative to this file
+            self.tools_dir = module_dir / "tools"
+            logger.info(f"Looking for tools in: {self.tools_dir}")
             
             # Verify this directory exists
             if self.tools_dir.exists():
-                logger.info(f"Verified tools directory exists: {self.tools_dir}")
+                logger.info(f"Found tools directory at {self.tools_dir}")
                 return
             else:
                 logger.warning(f"Tools directory not found at {self.tools_dir}")
         except Exception as e:
-            logger.warning(f"Error finding tools directory relative to adapter: {e}")
+            logger.warning(f"Error finding tools directory relative to module: {e}")
             
-        # Method 3: Try relative to current working directory
+        # Method 3: Try finding the tools directory in common locations
         try:
-            # First check for roollm/tools in cwd
-            cwd_tools = pathlib.Path(os.getcwd()) / "roollm" / "tools"
-            if cwd_tools.exists():
-                self.tools_dir = cwd_tools
-                logger.info(f"Using tools directory in cwd/roollm: {self.tools_dir}")
-                return
-                
-            # Then check for just tools in cwd
-            cwd_direct_tools = pathlib.Path(os.getcwd()) / "tools"
-            if cwd_direct_tools.exists():
-                self.tools_dir = cwd_direct_tools
-                logger.info(f"Using tools directory in cwd: {self.tools_dir}")
-                return
-        except Exception as e:
-            logger.warning(f"Error finding tools directory relative to cwd: {e}")
             
-        # Method 4: Search in sys.path
-        for path_item in sys.path:
-            try:
-                potential_path = pathlib.Path(path_item) / "roollm" / "tools"
-                if potential_path.exists():
-                    self.tools_dir = potential_path
-                    logger.info(f"Found tools directory in sys.path: {self.tools_dir}")
+            # Go up one directory from this file and check for 'tools'
+            parent_dir = pathlib.Path(os.path.abspath(__file__)).parent.parent
+            tools_dir_candidates = [
+                parent_dir / "tools",  # plugin_dir/tools
+                parent_dir / "roollm" / "tools",  # plugin_dir/roollm/tools
+                pathlib.Path(os.getcwd()) / "tools",  # cwd/tools
+                pathlib.Path(os.getcwd()) / "roollm" / "tools",  # cwd/roollm/tools
+            ]
+            
+            for candidate in tools_dir_candidates:
+                if candidate.exists():
+                    self.tools_dir = candidate
+                    logger.info(f"Found tools directory at {self.tools_dir}")
                     return
-            except Exception:
-                continue
-                
-        # Method 5: Final fallback - use the current directory/tools and hope for the best
-        self.tools_dir = pathlib.Path(os.getcwd()) / "tools"
+                else:
+                    logger.debug(f"No tools found at {candidate}")
+        except Exception as e:
+            logger.warning(f"Error searching for tools directory: {e}")
+            
+        # Method 4: Final fallback - use a directory relative to CWD
+        self.tools_dir = pathlib.Path(os.getcwd()) / "roollm" / "tools"
         logger.warning(f"Using fallback tools directory (may not exist): {self.tools_dir}")
         
         # Create the directory if it doesn't exist to avoid errors
@@ -203,7 +194,7 @@ class LocalToolsAdapter:
             module_name = path.stem
             
             # Use importlib.util to load the module directly from file
-            # This is more reliable than normal imports in zipped environments
+            # This is more reliable than normal imports in packaged environments
             spec = importlib.util.spec_from_file_location(module_name, str(path))
             
             if not spec:
@@ -211,6 +202,7 @@ class LocalToolsAdapter:
                 return None
                 
             mod = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = mod  
             spec.loader.exec_module(mod)
             
             if not hasattr(mod, "tool"):
