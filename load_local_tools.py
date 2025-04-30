@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 
 try:
     from .tool_registry import Tool
+    print("Loaded tool_registry from .tool_registry")
 except ImportError:
     from tool_registry import Tool
+    print("Loaded tool_registry from tool_registry")
 
 TOOLS_DIR = pathlib.Path(__file__).parent / "tools"
 
@@ -24,10 +26,21 @@ def load_local_tools(config=None, roo=None):
         if path.name.startswith("_"):
             continue  # skip __init__.py etc.
 
-        module_name = f".tools.{path.stem}"
-        logger.debug(f"Loading module: {module_name} from {path}")
-        
-        spec = importlib.util.spec_from_file_location(module_name, str(path))
+        # Try both with and without dot prefix
+        try:
+            module_name = f".tools.{path.stem}"
+            spec = importlib.util.spec_from_file_location(module_name, str(path))
+            if not spec:
+                module_name = f"tools.{path.stem}"
+                spec = importlib.util.spec_from_file_location(module_name, str(path))
+        except Exception as e:
+            logger.error(f"Error loading module {path.stem}: {e}")
+            continue
+
+        if not spec:
+            logger.error(f"Could not load module {path.stem}")
+            continue
+
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
 
