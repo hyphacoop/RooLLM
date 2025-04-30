@@ -22,7 +22,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Import roollm and related modules
 from roollm import RooLLM
 from llm_client import LLMClient
-from load_local_tools import load_local_tools
+# Updated imports for new architecture
+from local_tools_adapter import LocalToolsAdapter
 from mcp_config import MCP_CONFIG
 from github_app_auth import prepare_github_token
 
@@ -68,10 +69,6 @@ llm = LLMClient(
 # Initialize RooLLM with bridge
 roo = RooLLM(inference=llm, config=config)
 
-# Register local tools
-for tool in load_local_tools(config=config):
-    roo.tool_registry.register_tool(tool)
-
 # App & State
 app = FastAPI()
 
@@ -92,10 +89,17 @@ sessions = {}  # store session metadata
 async def startup_event():
     """Initialize the bridge when the app starts"""
     try:
-        await roo.bridge.initialize()
-        logger.info("Bridge initialized successfully")
+        # Initialize RooLLM which will initialize the bridge
+        await roo.initialize()
+        logger.info("RooLLM and Bridge initialized successfully")
+        
+        # Log registered tools for debugging
+        tools = roo.bridge.tool_registry.all_tools()
+        logger.info(f"Successfully loaded {len(tools)} tools:")
+        for tool in tools:
+            logger.info(f"✅ registered tool: {tool.name} ({tool.adapter_name})")
     except Exception as e:
-        logger.error(f"Failed to initialize bridge: {e}")
+        logger.error(f"Failed to initialize RooLLM: {e}", exc_info=True)
         raise
 
 def generate_session_title(history):
@@ -277,6 +281,25 @@ async def get_chat_history(session_id: str):
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/tools")
+async def list_tools():
+    """List all available tools"""
+    try:
+        tools = roo.bridge.tool_registry.all_tools()
+        tool_list = [
+            {
+                "name": tool.name,
+                "description": tool.description,
+                "adapter": tool.adapter_name,
+                "emoji": tool.emoji
+            }
+            for tool in tools
+        ]
+        return {"status": "ok", "tools": tool_list, "count": len(tool_list)}
+    except Exception as e:
+        logger.error(f"Error listing tools: {e}")
+        return {"status": "error", "message": f"Error listing tools: {str(e)}"}
 
 async def refresh_token_if_needed():
     """Check if GitHub token needs refresh and update it"""
