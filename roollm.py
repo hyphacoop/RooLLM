@@ -1,8 +1,7 @@
 import time
 from datetime import datetime
 import json
-import pkgutil
-import pathlib
+import logging
 
 try: 
     from .bridge import MCPLLMBridge
@@ -13,6 +12,8 @@ except ImportError:
     from tool_registry import ToolRegistry
     from stats import log_llm_usage
 
+# Configure logging
+logger = logging.getLogger(__name__)
 
 ROLE_USER = "user"
 ROLE_ASSISTANT = "assistant"
@@ -28,51 +29,100 @@ def make_message(role, content):
 
 class RooLLM:
     def __init__(self, inference, config=None):
-            self.inference = inference
-            self.config = config or {}
-            self.tool_registry = ToolRegistry()
+        """
+        Initialize the RooLLM instance.
+        
+        Args:
+            inference: LLMClient instance for model inference
+            config: Configuration dictionary
+        """
+        self.inference = inference
+        self.config = config or {}
+        self.tool_registry = ToolRegistry()
+        
+        # Create and initialize the bridge
+        self.bridge = MCPLLMBridge(
+            llm_client=inference,
+            config=config,
+            tool_registry=self.tool_registry,
+            roollm=self
+        )
+        logger.info("RooLLM instance created")
 
-            self.bridge = MCPLLMBridge(
-                llm_client=inference,
-                config=config,
-                tool_registry=self.tool_registry,
-                roollm=self
-            )
+    async def initialize(self):
+        """Initialize the RooLLM instance and load all tools."""
+        logger.info("Initializing RooLLM...")
+        await self.bridge.initialize()
+        logger.info("RooLLM initialization complete")
 
     async def chat(self, user, content, history=[], react_callback=None):
+        """
+        Process a chat message and return a response.
+        
+        Args:
+            user: User identifier
+            content: Message content
+            history: Conversation history
+            react_callback: Callback for tool reactions
+            
+        Returns:
+            Response message
+        """
         system_message = make_message(ROLE_SYSTEM, self.make_system())
-        user_message = make_message(ROLE_USER, f"{user}: {content}")
-        messages = [system_message, *history, user_message]
-
+        
+        # Format history with proper system message if not already present
+        formatted_history = []
+        if history and len(history) > 0:
+            # Check if first message is a system message
+            if history[0].get("role") == ROLE_SYSTEM:
+                formatted_history = history
+            else:
+                # Add system message
+                formatted_history = [system_message] + history
+        else:
+            formatted_history = [system_message]
+            
+        # Start timing
         start_time = time.monotonic()
 
-        response = await self.bridge.process_message(
-            user=user,
-            content=content,
-            history=messages,
-            react_callback=react_callback
-        )
-
-        response_time = time.monotonic() - start_time
-
-        # optional: log it
+        # Process the message
         try:
-            log_llm_usage(
+            response = await self.bridge.process_message(
                 user=user,
-                tool_used=response.get("tool_name"),
-                subtool_used=response.get("sub_tool_name"),
-                response_time=response_time
+                content=content,
+                history=formatted_history,
+                react_callback=react_callback
             )
-        except Exception:
-            pass 
+            
+            response_time = time.monotonic() - start_time
 
-        return response
-
+            # Optional: log usage
+            try:
+                log_llm_usage(
+                    user=user,
+                    tool_used=response.get("tool_name"),
+                    subtool_used=response.get("sub_tool_name"),
+                    response_time=response_time
+                )
+            except Exception as e:
+                logger.warning(f"Failed to log LLM usage: {e}")
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error processing message: {e}", exc_info=True)
+            # Return a graceful error message
+            return {
+                "role": ROLE_ASSISTANT,
+                "content": "I'm sorry, I encountered an error while processing your request. Please try again."
+            }
 
     def update_config(self, new_config):
+        """Update the configuration dictionary."""
         self.config.update(new_config)
 
     def make_system(self):
+        """Create the system prompt for the LLM."""
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         return f"""Your name is Roo, also known as LifeForm168.
 You are an AI assistant created by and for the Hypha Worker Coop.
