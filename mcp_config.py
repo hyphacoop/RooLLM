@@ -5,6 +5,12 @@ MCP_CONFIG = {
             "env": {
                 "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
             }
+        },
+        "local": {
+            "mode": "inline",
+            "env": {
+                "MCP_ADAPTER": "local_tools_adapter.LocalToolsAdapter"
+            }
         }
     }
 }

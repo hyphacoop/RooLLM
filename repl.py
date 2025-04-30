@@ -86,30 +86,33 @@ if ENCODED_GOOGLE_CREDENTIALS:
 
 from llm_client import LLMClient
 from roollm import RooLLM
-from load_local_tools import load_local_tools
 from mcp_config import MCP_CONFIG
 
-# 1. Init LLM Client
-llm = LLMClient(
-    base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
-    model=os.getenv("ROO_LLM_MODEL", "hermes3"),
-    username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
-    password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
-)
+async def init_roollm():
+    # 1. Init LLM Client
+    llm = LLMClient(
+        base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
+        model=os.getenv("ROO_LLM_MODEL", "hermes3"),
+        username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
+        password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
+    )
 
-# 2. give it mcp config
-config.update(**MCP_CONFIG)
+    # 2. give it mcp config
+    config.update(**MCP_CONFIG)
 
-# 3. Init RooLLM
-roo = RooLLM(inference=llm, config=config)
+    # 3. Init RooLLM
+    roo = RooLLM(inference=llm, config=config)
 
-# 4. Register local tools into RooLLM's registry
-for tool in load_local_tools(config=config):
-    roo.tool_registry.register_tool(tool)
+    # 4. Initialize bridge to load all tools
+    await roo.bridge.initialize()
 
-for t in roo.bridge.tool_registry.all_tools():
-    print(f"✅ registered tool: {t.name} ({t.adapter_name})")
+    for t in roo.bridge.tool_registry.all_tools():
+        print(f"✅ registered tool: {t.name} ({t.adapter_name})")
 
+    return roo
+
+# Initialize RooLLM
+roo = asyncio.run(init_roollm())
 
 # 5. Who's asking
 try:

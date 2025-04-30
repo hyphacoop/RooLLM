@@ -50,23 +50,17 @@ class MCPLLMBridge:
         self.mcp_clients: Dict[str, object] = {}
 
     async def initialize(self):
-        """Initialize the bridge by loading both local tools and MCP adapter tools."""
+        """Initialize the bridge by loading MCP adapter tools."""
         try:
-            # 1. Load local tools first
-            logger.info("Loading local tools...")
-            local_tools = load_local_tools(config=self.config)
-            for tool in local_tools:
-                if tool.name:
-                    logger.debug(f"Registering local tool: {tool.name}")
-                    self.tool_registry.register_tool(tool)
-            logger.info(f"Loaded {len(local_tools)} local tools")
-
-            # 2. Load MCP adapter tools
+            # Load MCP adapter tools
             logger.info("Loading MCP adapter tools...")
             mcp_configs = self.config.get("mcp_adapters", {})
             for name, adapter_conf in mcp_configs.items():
                 try:
                     adapter = load_adapter_from_config(name, adapter_conf, self.config)
+                    # Set roo instance on local tools adapter
+                    if name == "local" and hasattr(adapter, "roo"):
+                        adapter.roo = self.roollm
                     await adapter.connect()
                     tools = await adapter.list_tools()
                     for tool_dict in tools:
