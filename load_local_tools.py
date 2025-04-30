@@ -1,6 +1,7 @@
 import importlib.util
 import pathlib
 import logging
+import os
 from typing import List
 
 # Configure logging
@@ -12,7 +13,15 @@ except ImportError:
     from tool_registry import Tool
 
 # Get the tools directory relative to this file
-TOOLS_DIR = pathlib.Path(__file__).parent / "tools"
+current_file = __file__
+if current_file.endswith('.zip'):
+    # If running from zip, use the package path
+    TOOLS_DIR = pathlib.Path(os.path.dirname(current_file)) / "tools"
+else:
+    # If running from filesystem, use the normal path
+    TOOLS_DIR = pathlib.Path(current_file).parent / "tools"
+
+logger.debug(f"Tools directory path: {TOOLS_DIR}")
 
 def load_local_tools(config=None, roo=None) -> List[Tool]:
     """Load local tools from the tools directory.
