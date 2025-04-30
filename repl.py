@@ -89,30 +89,42 @@ from roollm import RooLLM
 from mcp_config import MCP_CONFIG
 
 async def init_roollm():
-    # 1. Init LLM Client
-    llm = LLMClient(
-        base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
-        model=os.getenv("ROO_LLM_MODEL", "hermes3"),
-        username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
-        password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
-    )
+    """Initialize the RooLLM instance with LLM client and tools."""
+    try:
+        # 1. Init LLM Client
+        llm = LLMClient(
+            base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
+            model=os.getenv("ROO_LLM_MODEL", "hermes3"),
+            username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
+            password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
+        )
 
-    # 2. give it mcp config
-    config.update(**MCP_CONFIG)
+        # 2. Update config with MCP configuration
+        config.update(**MCP_CONFIG)
 
-    # 3. Init RooLLM
-    roo = RooLLM(inference=llm, config=config)
+        # 3. Init RooLLM
+        roo = RooLLM(inference=llm, config=config)
 
-    # 4. Initialize bridge to load all tools
-    await roo.bridge.initialize()
+        # 4. Initialize RooLLM and load all tools
+        await roo.initialize()
 
-    for t in roo.bridge.tool_registry.all_tools():
-        print(f"✅ registered tool: {t.name} ({t.adapter_name})")
+        # Log registered tools
+        logger.info("Registered tools:")
+        for t in roo.bridge.tool_registry.all_tools():
+            logger.info(f"✅ registered tool: {t.name} ({t.adapter_name})")
 
-    return roo
+        return roo
+    except Exception as e:
+        logger.error(f"Error initializing RooLLM: {e}", exc_info=True)
+        raise
 
 # Initialize RooLLM
-roo = asyncio.run(init_roollm())
+try:
+    roo = asyncio.run(init_roollm())
+except Exception as e:
+    logger.error(f"Failed to initialize RooLLM: {e}")
+    print(f"❌ Failed to initialize RooLLM: {str(e)}")
+    sys.exit(1)
 
 # 5. Who's asking
 try:
@@ -139,26 +151,38 @@ async def refresh_token_if_needed():
 # --- Main REPL Loop ---
 
 async def main():
-    await roo.bridge.initialize()
-
-    print("\n🧠 RooLLM Terminal Chat (now with bridge) — Type 'exit' to quit\n")
+    """Main REPL loop for the RooLLM chat interface."""
+    print("\n🧠 RooLLM Terminal Chat — Type 'exit' to quit\n")
     print(f"GitHub auth method: {auth_method or 'None'}\n")
 
     history = []
 
     while True:
-        await refresh_token_if_needed()
-        query = input(f"{user} > ")
+        try:
+            await refresh_token_if_needed()
+            query = input(f"{user} > ")
 
-        if query.lower() in ["exit", "quit"]:
-            print(f"Goodbye {user}!")
+            if query.lower() in ["exit", "quit"]:
+                print(f"Goodbye {user}!")
+                break
+
+            response = await roo.chat(user, query, history, react_callback=print_emoji_reaction)
+
+            print(f"Roo > {response['content']}")
+            history.append({"role": "user", "content": f"{user}: {query}"})
+            history.append(response)
+        except KeyboardInterrupt:
+            print("\nExiting...")
             break
-
-        response = await roo.chat(user, query, history, react_callback=print_emoji_reaction)
-
-        print(f"Roo> {response['content']}")
-        history.append({"role": "user", "content": f"{user}: {query}"})
-        history.append(response)
+        except Exception as e:
+            logger.error(f"Error during chat: {e}", exc_info=True)
+            print(f"❌ Error: {str(e)}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nGracefully shutting down...")
+    except Exception as e:
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
+        print(f"❌ Critical error: {str(e)}")
