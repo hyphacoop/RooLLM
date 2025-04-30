@@ -53,65 +53,71 @@ class LocalToolsAdapter:
         if tools_dir_env := os.environ.get("ROOLLM_TOOLS_DIR"):
             self.tools_dir = pathlib.Path(tools_dir_env)
             logger.info(f"Using tools directory from environment: {self.tools_dir}")
-            return
+            if self.tools_dir.exists() and any(self.tools_dir.glob("*.py")):
+                return
+            else:
+                logger.warning(f"Tools directory from environment variable does not exist or has no Python files: {self.tools_dir}")
 
         # Method 2: Use the file location of this module
         try:
             # Get the directory containing this file
             current_file = inspect.getfile(self.__class__)
             module_dir = pathlib.Path(current_file).parent
+            logger.debug(f"Module directory: {module_dir}")
             
             # Look for ./tools relative to this file
             self.tools_dir = module_dir / "tools"
             logger.info(f"Looking for tools in: {self.tools_dir}")
             
-            # Verify this directory exists
-            if self.tools_dir.exists():
+            # Verify this directory exists and has Python files
+            if self.tools_dir.exists() and any(self.tools_dir.glob("*.py")):
                 logger.info(f"Found tools directory at {self.tools_dir}")
                 return
             else:
-                logger.warning(f"Tools directory not found at {self.tools_dir}")
+                logger.warning(f"Tools directory not found or has no Python files at {self.tools_dir}")
         except Exception as e:
             logger.warning(f"Error finding tools directory relative to module: {e}")
             
-        # Method 3: Try finding the tools directory in common locations
+        # Method 3: Try finding the tools directory in plugin directories (maubot specific)
         try:
-            
-            # Go up one directory from this file and check for 'tools'
-            parent_dir = pathlib.Path(os.path.abspath(__file__)).parent.parent
-            tools_dir_candidates = [
-                parent_dir / "tools",  # plugin_dir/tools
-                parent_dir / "roollm" / "tools",  # plugin_dir/roollm/tools
-                pathlib.Path(os.getcwd()) / "tools",  # cwd/tools
-                pathlib.Path(os.getcwd()) / "roollm" / "tools",  # cwd/roollm/tools
-            ]
-            
-            for candidate in tools_dir_candidates:
-                if candidate.exists():
-                    self.tools_dir = candidate
-                    logger.info(f"Found tools directory at {self.tools_dir}")
-                    return
-                else:
-                    logger.debug(f"No tools found at {candidate}")
+            # Look for tools in the plugin paths from sys.path
+            for path in sys.path:
+                if ('plugins' in path or 'hyphadevbot' in path):
+                    logger.debug(f"Checking potential plugin path: {path}")
+                    
+                    # Common patterns in maubot plugin structure
+                    candidate_paths = [
+                        pathlib.Path(path) / "roollm" / "tools",
+                        pathlib.Path(path) / "tools",
+                        # Go up one level and check
+                        pathlib.Path(path).parent / "roollm" / "tools"
+                    ]
+                    
+                    for candidate in candidate_paths:
+                        logger.debug(f"Checking candidate path: {candidate}")
+                        if candidate.exists() and any(candidate.glob("*.py")):
+                            self.tools_dir = candidate
+                            logger.info(f"Found tools directory in plugin path: {self.tools_dir}")
+                            return
         except Exception as e:
-            logger.warning(f"Error searching for tools directory: {e}")
-            
-        # Method 4: Final fallback - use a directory relative to CWD
-        self.tools_dir = pathlib.Path(os.getcwd()) / "roollm" / "tools"
-        logger.warning(f"Using fallback tools directory (may not exist): {self.tools_dir}")
+            logger.warning(f"Error searching for tools in plugin paths: {e}")
         
-        # Create the directory if it doesn't exist to avoid errors
-        try:
-            if not self.tools_dir.exists():
-                self.tools_dir.mkdir(parents=True, exist_ok=True)
-                logger.warning(f"Created missing tools directory: {self.tools_dir}")
-        except Exception as e:
-            logger.error(f"Failed to create tools directory: {e}")
+        # If we get here, we could not find a valid tools directory
+        logger.error("No valid tools directory found with Python files")
+        self.tools_dir = None  # Set to None to indicate no valid directory found
         
     async def connect(self, force=False):
         """Connect to the local tools by loading them."""
         if self.connected and not force:
             return True
+            
+        # Check if we have a valid tools directory
+        if not self.tools_dir or not self.tools_dir.exists():
+            logger.error("No valid tools directory found. Cannot load tools.")
+            self.tools_metadata = {}  # Empty dictionary
+            self.tool_instances = {}  # Empty dictionary
+            self.connected = False
+            return False
             
         try:
             # Load local tools
