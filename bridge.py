@@ -1,16 +1,21 @@
 from typing import Dict, List
 import json
 import importlib
+import logging
 
 try:
     from .llm_client import LLMClient
     from .tool_registry import ToolRegistry, Tool
     from .mcp_client import MCPClient
+    from .load_local_tools import load_local_tools
 except ImportError:
     from llm_client import LLMClient
     from tool_registry import ToolRegistry, Tool
     from mcp_client import MCPClient
+    from load_local_tools import load_local_tools
 
+# Configure logging
+logger = logging.getLogger(__name__)
 
 def resolve_adapter_path(path: str) -> str:
     if not path.startswith("."):
@@ -45,16 +50,44 @@ class MCPLLMBridge:
         self.mcp_clients: Dict[str, object] = {}
 
     async def initialize(self):
-        mcp_configs = self.config.get("mcp_adapters", {})
-        for name, adapter_conf in mcp_configs.items():
-            adapter = load_adapter_from_config(name, adapter_conf, self.config)
-            await adapter.connect()
-            tools = await adapter.list_tools()
-            for tool_dict in tools:
-                # Wrap tool dict into Tool object expected by the registry
-                tool_obj = Tool.from_dict(tool_dict, adapter_name=name)
-                self.tool_registry.register_tool(tool_obj)
-            self.mcp_clients[name] = adapter
+        """Initialize the bridge by loading both local tools and MCP adapter tools."""
+        try:
+            # 1. Load local tools first
+            logger.info("Loading local tools...")
+            local_tools = load_local_tools(config=self.config)
+            for tool in local_tools:
+                if tool.name:
+                    logger.debug(f"Registering local tool: {tool.name}")
+                    self.tool_registry.register_tool(tool)
+            logger.info(f"Loaded {len(local_tools)} local tools")
+
+            # 2. Load MCP adapter tools
+            logger.info("Loading MCP adapter tools...")
+            mcp_configs = self.config.get("mcp_adapters", {})
+            for name, adapter_conf in mcp_configs.items():
+                try:
+                    adapter = load_adapter_from_config(name, adapter_conf, self.config)
+                    await adapter.connect()
+                    tools = await adapter.list_tools()
+                    for tool_dict in tools:
+                        # Wrap tool dict into Tool object expected by the registry
+                        tool_obj = Tool.from_dict(tool_dict, adapter_name=name)
+                        self.tool_registry.register_tool(tool_obj)
+                    self.mcp_clients[name] = adapter
+                    logger.info(f"Loaded {len(tools)} tools from adapter {name}")
+                except Exception as e:
+                    logger.error(f"Failed to load adapter {name}: {e}")
+                    continue
+
+            # Log final tool count
+            all_tools = self.tool_registry.all_tools()
+            logger.info(f"Successfully loaded {len(all_tools)} total tools:")
+            for tool in all_tools:
+                logger.info(f"- {tool.name} ({tool.adapter_name})")
+
+        except Exception as e:
+            logger.error(f"Error during bridge initialization: {e}")
+            raise
 
     async def process_message(self, user: str, content: str, history: List[Dict], react_callback=None):
         messages = history + [{"role": "user", "content": f"{user}: {content}"}]
