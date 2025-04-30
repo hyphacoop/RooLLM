@@ -1,4 +1,8 @@
 import datetime
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Tool configuration
 name = "get_upcoming_holiday"
@@ -28,7 +32,7 @@ parameters = {
             "description": "The maximum number of holidays to return. Defaults to 1 if not provided."
         }
     },
-    "required": ["start_date"]
+    "required": []  # Changed from ["start_date"] to make it more flexible
 }
 
 
@@ -51,17 +55,18 @@ STATUTORY_HOLIDAYS = [
 # Function to find the next holiday
 def get_upcoming_holidays(start_date, end_date, limit=1):
     """
-
     Find the next `limit` statutory holidays between the given start_date and end_date.
+    
     Args:
         start_date (datetime): The start date of the range.
         end_date (datetime): The end date of the range.
         limit (int): The number of holidays to return.
+        
     Returns:
         list[dict]: A list of holidays or an empty list if no holidays are found.
     """
-    start = start_date.date()
-    end = end_date.date()
+    start = start_date.date() if isinstance(start_date, datetime.datetime) else start_date
+    end = end_date.date() if isinstance(end_date, datetime.datetime) else end_date
 
     upcoming_holidays = [
         holiday for holiday in STATUTORY_HOLIDAYS if start <= holiday["date"] <= end
@@ -71,36 +76,98 @@ def get_upcoming_holidays(start_date, end_date, limit=1):
 
 
 async def tool(roo, arguments, user):
+    """
+    Tool function to get upcoming holidays.
+    
+    Args:
+        roo: RooLLM instance
+        arguments: Dictionary of arguments from the LLM
+        user: User identifier
+        
+    Returns:
+        Dictionary with holiday information
+    """
+    
     try:
-        # Parse input arguments
-        start_date = datetime.datetime.strptime(arguments["start_date"], "%Y-%m-%d")
-        end_date_str = arguments.get("end_date")
-        limit = max(1, min(10, int(arguments.get("limit", 1))))  # Limit between 1 and 10
+        # Handle parameter variations to make the tool more robust
+        start_date_str = None
+        if "start_date" in arguments:
+            start_date_str = arguments["start_date"]
+        elif "date_from" in arguments:
+            start_date_str = arguments["date_from"]
+        
+        end_date_str = None
+        if "end_date" in arguments:
+            end_date_str = arguments["end_date"]
+        elif "date_to" in arguments:
+            end_date_str = arguments["date_to"]
+            
+        # Use default start date if not provided
+        if not start_date_str:
+            start_date_str = datetime.datetime.now().strftime("%Y-%m-%d")
 
-        # Use the provided `end_date` or set a default of one year from the `start_date`
+        # Parse start date
+        try:
+            start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d")
+        except ValueError as e:
+            return {
+                "error": f"Invalid start date format: {start_date_str}. Please use YYYY-MM-DD format.",
+                "message": "I couldn't understand the start date format. Please provide dates in YYYY-MM-DD format."
+            }
+            
+        # Get limit parameter with default and bounds
+        try:
+            limit = max(1, min(10, int(arguments.get("limit", 1))))
+        except (ValueError, TypeError):
+            limit = 1
+        
+        # Use the provided end_date or set a default of one year from the start_date
         if end_date_str:
-            end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
+            try:
+                end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
+            except ValueError:
+                # Still proceed with a default end date
+                end_date = start_date + datetime.timedelta(days=365)
         else:
             end_date = start_date + datetime.timedelta(days=365)
+            
 
-        # Call the updated function
+        # Call the function to get holidays
         upcoming_holidays = get_upcoming_holidays(start_date, end_date, limit=limit)
 
         if not upcoming_holidays:
-            return {"message": "No holidays found in the given date range."}
+            return {
+                "message": f"No holidays found between {start_date.strftime('%Y-%m-%d')} and {end_date.strftime('%Y-%m-%d')}."
+            }
 
+        # Format the response
+        holidays_formatted = [
+            {"name": holiday["name"], "date": holiday["date"].strftime("%Y-%m-%d")}
+            for holiday in upcoming_holidays
+        ]
+        
         # If fewer holidays are found than requested, adjust the response
-        if len(upcoming_holidays) < limit:
-            message = f"Only {len(upcoming_holidays)} holidays found in the given date range."
+        message = None
+        if len(upcoming_holidays) < limit and limit > 1:
+            message = f"Found {len(upcoming_holidays)} holidays in the given date range."
+        
+        # Format the response based on the number of holidays found
+        if len(upcoming_holidays) == 1:
+            holiday = holidays_formatted[0]
+            return {
+                "holidays": holidays_formatted,
+                "message": f"The next holiday is {holiday['name']} on {holiday['date']}."
+            }
         else:
-            message = None
-
-        return {
-            "holidays": [
-                {"name": holiday["name"], "date": holiday["date"].strftime("%Y-%m-%d")}
-                for holiday in upcoming_holidays
-            ],
-            "message": message,
-        }
+            return {
+                "holidays": holidays_formatted,
+                "count": len(holidays_formatted),
+                "message": message or f"Found {len(holidays_formatted)} upcoming holidays."
+            }
+            
     except Exception as e:
-        return {"error": f"Failed to retrieve holidays: {str(e)}"}
+        logger.error(f"Error in get_upcoming_holiday: {str(e)}", exc_info=True)
+        return {
+            "error": f"Failed to retrieve holidays: {str(e)}",
+            "message": "I encountered an error while trying to find holidays. Please try again or rephrase your question."
+        }
