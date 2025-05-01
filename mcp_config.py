@@ -3,13 +3,13 @@ MCP_CONFIG = {
         "minima": {
             "mode": "inline",
             "env": {
-                "MCP_ADAPTER": "minima_adapter.MinimaRestAdapter"
+                "MCP_ADAPTER": "roollm.minima_adapter.MinimaRestAdapter"
             }
         },
         "local": {
             "mode": "inline",
             "env": {
-                "MCP_ADAPTER": "local_tools_adapter.LocalToolsAdapter"
+                "MCP_ADAPTER": "roollm.local_tools_adapter.LocalToolsAdapter"
             }
         }
     }
