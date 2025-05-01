@@ -7,6 +7,11 @@ import base64
 import logging
 from dotenv import load_dotenv
 
+LIME = "\033[38;5;118m"
+ROO_PURPLE = "\033[38;5;135m"
+RESET = "\033[0m"
+
+
 # Set up logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -19,7 +24,7 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 # --- Auth + Config Setup ---
 
-from github_app_auth import GitHubAppAuth, prepare_github_token
+from .github_app_auth import GitHubAppAuth, prepare_github_token
 
 """
 This script allows local testing of the RooLLM class with GitHub App authentication.
@@ -84,9 +89,9 @@ if ENCODED_GOOGLE_CREDENTIALS:
 
 # --- LLM & Bridge Setup ---
 
-from llm_client import LLMClient
-from roollm import RooLLM
-from mcp_config import MCP_CONFIG
+from .llm_client import LLMClient
+from .roollm import RooLLM
+from .mcp_config import MCP_CONFIG
 
 async def init_roollm():
     """Initialize the RooLLM instance with LLM client and tools."""
@@ -160,7 +165,7 @@ async def main():
     while True:
         try:
             await refresh_token_if_needed()
-            query = input(f"{user} > ")
+            query = input(f"{LIME}{user} >{RESET} ")
 
             if query.lower() in ["exit", "quit"]:
                 print(f"Goodbye {user}!")
@@ -168,7 +173,7 @@ async def main():
 
             response = await roo.chat(user, query, history, react_callback=print_emoji_reaction)
 
-            print(f"Roo > {response['content']}")
+            print(f"{ROO_PURPLE}Roo >{RESET} {response['content']}")
             history.append({"role": "user", "content": f"{user}: {query}"})
             history.append(response)
         except KeyboardInterrupt:
