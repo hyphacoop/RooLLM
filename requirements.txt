@@ -1,11 +1,15 @@
 aiohttp
+async_lru
 beautifulsoup4
 fastapi
 gspread
 jwt
 lunr
+mastodon.py
 mcp[cli]
 oauth2client
 python-dotenv
+pytz
 requests
+tweepy
 uvicorn
