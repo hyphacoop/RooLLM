@@ -15,11 +15,10 @@ except ImportError:
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def resolve_adapter_path(path: str) -> str:
-    if not path.startswith("."):
-        return path
-    root = __name__.split(".")[0]
-    return f"{root}.{path[1:]}"
+def resolve_adapter_path(name: str) -> str:
+    if "." not in name:
+        return f"roollm.{name}"  # hardcoded fallback
+    return name
 
 def load_adapter_from_config(name: str, conf: dict, full_config: dict):
     """Load an adapter based on configuration."""
