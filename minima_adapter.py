@@ -263,6 +263,7 @@ class MinimaRestAdapter:
     def _format_result_with_citations(self, output, sources):
         """
         Format the result with citations and source information.
+        Only includes sources that are referenced in the response content.
         
         Args:
             output: The output from Minima
@@ -286,12 +287,22 @@ class MinimaRestAdapter:
         research_sources = []
         other_sources = []
         
+        # Convert output to lowercase for case-insensitive matching
+        output_lower = output.lower()
+        
         for source in sources:
             if not source:
                 logger.warning(f"Empty source found in sources list: {sources}")
                 continue
                 
             source_lower = source.lower()
+            
+            # Check if source is referenced in the output
+            # Extract the filename/path without extension for matching
+            source_name = os.path.splitext(os.path.basename(source))[0].lower()
+            if source_name not in output_lower:
+                continue
+                
             if "handbook" in source_lower or "policies" in source_lower:
                 handbook_sources.append(source)
             elif any(x in source_lower for x in ["research", "books", "papers", "academic"]):
@@ -335,7 +346,7 @@ class MinimaRestAdapter:
             output += "\n\n" + "\n".join(formatted_sources)
         else:
             logger.warning("No valid sources could be formatted")
-            output += "\n\n⚠️ WARNING: No valid sources could be formatted. This is a critical error."
+            output += "\n\n⚠️ WARNING: No valid sources could be formatted. This response is likely to be hallucinated and the content is not reliable."
         
         return {
             "result": output,
