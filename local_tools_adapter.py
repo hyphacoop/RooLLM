@@ -86,24 +86,26 @@ class LocalToolsAdapter:
     def _resolve_tools_package(self):
         """Resolve the tools package path."""
         try:
-            # First try to get the package from the current module
-            if __package__:
-                return importlib.import_module(__package__)
+            # Get the current file's directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
             
-            # If __package__ is None, try to find the package by walking up from current file
-            current_path = pathlib.Path(__file__).parent
-            while current_path.name != 'hyphadevbot':
-                if current_path.parent == current_path:
-                    logger.error(f"Could not find hyphadevbot package root")
-                    raise ImportError("Could not find hyphadevbot package root")
-                current_path = current_path.parent
+            # Look for tools directory in the current directory
+            tools_dir = os.path.join(current_dir, 'tools')
+            if not os.path.exists(tools_dir):
+                logger.error(f"Tools directory not found at {tools_dir}")
+                raise ImportError(f"Tools directory not found at {tools_dir}")
             
-            # Now try to import the package
-            package_path = str(current_path.parent)
-            if package_path not in sys.path:
-                sys.path.append(package_path)
+            # Add the parent directory to sys.path if not already there
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir not in sys.path:
+                sys.path.append(parent_dir)
             
-            return importlib.import_module('hyphadevbot')
+            # Try to import the package
+            try:
+                return importlib.import_module('hyphadevbot')
+            except ImportError:
+                # If that fails, try to import the current directory as a package
+                return importlib.import_module('roollm')
             
         except Exception as e:
             logger.error(f"Failed to resolve tools package: {e}")
@@ -113,26 +115,36 @@ class LocalToolsAdapter:
     def _load_tools(self) -> List[Tool]:
         tools = []
         try:
-            tools_pkg = self._resolve_tools_package()
-            tools_pkg_name = tools_pkg.__name__
-            
-            # Look for tools in the tools directory
+            # Get the tools directory
             tools_dir = os.path.join(os.path.dirname(__file__), 'tools')
             if not os.path.exists(tools_dir):
                 logger.error(f"Tools directory not found: {tools_dir}")
                 return tools
-                
-            for _, modname, _ in pkgutil.iter_modules([tools_dir]):
-                if modname.startswith("_"):
+            
+            # Add tools directory to Python path
+            if tools_dir not in sys.path:
+                sys.path.append(tools_dir)
+            
+            # Import each tool module
+            for filename in os.listdir(tools_dir):
+                if filename.startswith('_') or not filename.endswith('.py'):
                     continue
-                full_modname = f"{tools_pkg_name}.roollm.tools.{modname}"
+                
+                module_name = filename[:-3]  # Remove .py extension
                 try:
-                    mod = importlib.import_module(full_modname)
+                    # Try importing as a relative module first
+                    try:
+                        mod = importlib.import_module(f'.tools.{module_name}', package='roollm')
+                    except ImportError:
+                        # Fall back to direct import
+                        mod = importlib.import_module(module_name)
+                    
                     if not hasattr(mod, "tool"):
-                        logger.warning(f"Module {modname} has no tool function")
+                        logger.warning(f"Module {module_name} has no tool function")
                         continue
+                        
                     tool = Tool(
-                        name=getattr(mod, "name", modname),
+                        name=getattr(mod, "name", module_name),
                         description=getattr(mod, "description", "No description."),
                         input_schema=getattr(mod, "parameters", {"type": "object", "properties": {}}),
                         adapter_name="local",
@@ -142,11 +154,13 @@ class LocalToolsAdapter:
                     tools.append(tool)
                     logger.debug(f"Loaded tool: {tool.name} (Emoji: {tool.emoji})")
                 except Exception as e:
-                    logger.error(f"Failed to import tool module {full_modname}: {e}")
+                    logger.error(f"Failed to import tool module {module_name}: {e}")
                     logger.debug(traceback.format_exc())
+                    
         except Exception as e:
-            logger.error(f"Failed to resolve tools package: {e}")
+            logger.error(f"Failed to load tools: {e}")
             logger.debug(traceback.format_exc())
+            
         return tools
     
     def _wrap_tool(self, func):
