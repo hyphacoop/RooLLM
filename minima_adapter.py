@@ -312,6 +312,8 @@ class MinimaRestAdapter:
         for source in primary_sources:
             if "handbook" in source.lower():
                 path = source.split("handbook/")[-1] if "handbook/" in source else source
+                # Remove .md extension if present
+                path = path.replace(".md", "")
                 formatted_sources.append(f"[Source: handbook.hypha.coop/{path}]")
             elif "Hypha_PUBLIC_Drive" in source:
                 path = source.split("Hypha_PUBLIC_Drive/")[-1] if "Hypha_PUBLIC_Drive/" in source else source
