@@ -138,8 +138,17 @@ except OSError:
     user = getpass.getuser() or "localTester"
 
 # REPL emoji feedback
-async def print_emoji_reaction(emoji):
-    print(f"> tool call: {emoji}")
+async def print_tool_reaction(emoji):
+    """Print a styled tool call reaction with emoji and description."""
+    if emoji in emojiToolMap:
+        tool_info = emojiToolMap[emoji]
+        tool_name = tool_info.split(":")[0].strip("`")
+        tool_desc = tool_info.split(":")[1].strip()
+        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET}")
+        print(f"{BOLD}{YELLOW}{emoji} {tool_name}{RESET}")
+        print(f"{LIME}└─ {tool_desc}{RESET}\n")
+    else:
+        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET} {emoji}\n")
 
 # GitHub token refresh helper
 async def refresh_token_if_needed():
