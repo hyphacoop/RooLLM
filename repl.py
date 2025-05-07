@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 LIME = "\033[38;5;118m"
 ROO_PURPLE = "\033[38;5;135m"
 RESET = "\033[0m"
+BOLD = "\033[1m"
+CYAN = "\033[36m"
+YELLOW = "\033[33m"
 
 # Tool emoji mapping
 emojiToolMap = {
@@ -223,7 +226,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nGracefully shutting down...")
+        print("{BOLD}{YELLOW}Au revoir{RESET}")
     except Exception as e:
         logger.error(f"Unhandled exception in main: {e}", exc_info=True)
         print(f"❌ Critical error: {str(e)}")
