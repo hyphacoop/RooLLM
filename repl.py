@@ -11,6 +11,33 @@ LIME = "\033[38;5;118m"
 ROO_PURPLE = "\033[38;5;135m"
 RESET = "\033[0m"
 
+# Tool emoji mapping
+emojiToolMap = {
+    "💬": "`comment_github_item`: Add comments to issues or PRs",
+    "👤": "`assign_github_item`: Assign users to issues or PRs",
+    "🏷️": "`add_labels_to_github_item`: Add labels to issues or PRs",
+    "🔖": "`search_repo_labels`: Get available labels in a repository",
+    "🔧": "`github_issues_operations`: Dispatcher for issue operations",
+    "📝": "`create_github_issue`: Create new issues",
+    "🔒": "`close_github_issue`: Close an issue",
+    "🔑": "`reopen_github_issue`: Reopen a closed issue",
+    "🔍": "`search_github_issues`: Search for issues by status, number, assignee, etc.",
+    "📋": "`update_github_issue`: Update issue title/body",
+    "🛠️": "`github_pull_requests_operations`: Dispatcher for PR operations",
+    "🌿": "`create_pull_request`: Create new PRs",
+    "🔐": "`close_pull_request`: Close a PR without merging",
+    "🔓": "`reopen_pull_request`: Reopen a closed PR",
+    "🔀": "`merge_pull_request`: Merge an open PR",
+    "🔎": "`search_pull_requests`: Search for PRs by status, number, assignee, label, etc.",
+    "✏️": "`update_pull_request`: Update PR title/body",
+    "📖": "`search_handbook`: Search Hypha's handbook",
+    "📅": "`get_upcoming_holiday`: Fetch upcoming statutory holidays",
+    "🌴": "`get_upcoming_vacations`: Get information about our colleague's upcoming vacations",
+    "🗄️": "`get_archive_categories`: List archivable categories with links",
+    "🔢": "`calc`: Perform calculations",
+    "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
+    "💻": "`github_dispatcher`: GitHub operations dispatcher"
+}
 
 # Set up logging
 logging.basicConfig(
