@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For local files, use [Source: ./Hypha_PUBLIC_Drive/path/to/file]. Failing to cite sources is a critical error.",
+                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For local files, use [Source: ./Hypha_PUBLIC_Drive/path/to/file]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
@@ -191,7 +191,7 @@ class MinimaRestAdapter:
         if not query_text:
             return {"error": "No search text provided"}
         
-        logger.info(f"Sending query to Minima: '{query_text}'")
+        logger.debug(f"Sending query to Minima: '{query_text}'")
         
         # Call the query API with retry logic
         max_retries = 3
@@ -271,6 +271,70 @@ class MinimaRestAdapter:
         Returns:
             dict: Formatted result with citations
         """
+        logger.debug(f"Formatting result with sources: {sources}")
+        
+        if not sources:
+            logger.warning("No sources provided for result formatting")
+            return {
+                "result": output + "\n\n⚠️ WARNING: No sources were cited. This is a critical error.",
+                "source_paths": []
+            }
+            
+        # Categorize sources by type
+        handbook_sources = []
+        policy_sources = []
+        research_sources = []
+        other_sources = []
+        
+        for source in sources:
+            if not source:
+                logger.warning(f"Empty source found in sources list: {sources}")
+                continue
+                
+            source_lower = source.lower()
+            if "handbook" in source_lower or "policies" in source_lower:
+                handbook_sources.append(source)
+            elif any(x in source_lower for x in ["research", "books", "papers", "academic"]):
+                research_sources.append(source)
+            elif "policy" in source_lower:
+                policy_sources.append(source)
+            else:
+                other_sources.append(source)
+        
+        # Prioritize handbook and policy sources
+        primary_sources = handbook_sources or policy_sources
+        secondary_sources = research_sources or other_sources
+        
+        # Format the source paths for display
+        formatted_sources = []
+        
+        # First add primary sources
+        for source in primary_sources:
+            if "handbook" in source.lower():
+                path = source.split("handbook/")[-1] if "handbook/" in source else source
+                formatted_sources.append(f"[Source: handbook.hypha.coop/{path}]")
+            elif "Hypha_PUBLIC_Drive" in source:
+                path = source.split("Hypha_PUBLIC_Drive/")[-1] if "Hypha_PUBLIC_Drive/" in source else source
+                formatted_sources.append(f"[Source: ./Hypha_PUBLIC_Drive/{path}]")
+            else:
+                formatted_sources.append(f"[Source: {source}]")
+        
+        # Then add secondary sources if no primary sources were found
+        if not formatted_sources:
+            for source in secondary_sources:
+                if "Hypha_PUBLIC_Drive" in source:
+                    path = source.split("Hypha_PUBLIC_Drive/")[-1] if "Hypha_PUBLIC_Drive/" in source else source
+                    formatted_sources.append(f"[Source: ./Hypha_PUBLIC_Drive/{path}]")
+                else:
+                    formatted_sources.append(f"[Source: {source}]")
+        
+        # Add the formatted sources to the output
+        if formatted_sources:
+            output += "\n\n" + "\n".join(formatted_sources)
+        else:
+            logger.warning("No valid sources could be formatted")
+            output += "\n\n⚠️ WARNING: No valid sources could be formatted. This is a critical error."
+        
         return {
             "result": output,
             "source_paths": sources
