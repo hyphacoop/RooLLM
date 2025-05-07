@@ -50,7 +50,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Set up UTF-8 encoding for stdin
-sys.stdin.reconfigure(encoding='utf-8')
+sys.stdin.reconfigure(encoding='utf-8', errors='replace')
 
 # --- Auth + Config Setup ---
 
