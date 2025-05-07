@@ -54,7 +54,10 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 # --- Auth + Config Setup ---
 
-from .github_app_auth import GitHubAppAuth, prepare_github_token
+try:
+    from .github_app_auth import GitHubAppAuth, prepare_github_token
+except ImportError:
+    from github_app_auth import GitHubAppAuth, prepare_github_token
 
 """
 This script allows local testing of the RooLLM class with GitHub App authentication.
@@ -119,9 +122,14 @@ if ENCODED_GOOGLE_CREDENTIALS:
 
 # --- LLM & Bridge Setup ---
 
-from .llm_client import LLMClient
-from .roollm import RooLLM
-from .mcp_config import MCP_CONFIG
+try:
+    from .llm_client import LLMClient
+    from .roollm import RooLLM
+    from .mcp_config import MCP_CONFIG
+except ImportError:
+    from llm_client import LLMClient
+    from roollm import RooLLM
+    from mcp_config import MCP_CONFIG
 
 async def init_roollm():
     """Initialize the RooLLM instance with LLM client and tools."""
@@ -210,7 +218,7 @@ async def main():
                 print(f"Goodbye {user}!")
                 break
 
-            response = await roo.chat(user, query, history, react_callback=print_emoji_reaction)
+            response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
 
             print(f"{ROO_PURPLE}Roo >{RESET} {response['content']}")
             history.append({"role": "user", "content": f"{user}: {query}"})
