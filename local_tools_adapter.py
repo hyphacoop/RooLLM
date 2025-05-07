@@ -84,54 +84,48 @@ class LocalToolsAdapter:
             return False
 
     def _resolve_tools_package(self):
-        # First try direct import
+        """Resolve the tools package path."""
         try:
-            pkg = importlib.import_module("tools")
-            logger.debug("Resolved tools package as 'tools'")
-            return pkg
-        except ImportError as e:
-            logger.debug(f"Failed to import 'tools': {e}")
-
-        # Then try with roollm prefix
-        try:
-            pkg = importlib.import_module("roollm.tools")
-            logger.debug("Resolved tools package as 'roollm.tools'")
-            return pkg
-        except ImportError as e:
-            logger.debug(f"Failed to import 'roollm.tools': {e}")
-
-        # Finally try relative import
-        if __package__:
-            try:
-                pkg = importlib.import_module(".tools", package=__package__)
-                logger.debug(f"Resolved tools package as relative '.tools' from {__package__}")
-                return pkg
-            except ImportError as e:
-                logger.debug(f"Failed relative import '.tools': {e}")
-
-        # Last resort: try to find tools directory in current path
-        tools_dir = os.path.join(current_dir, "tools")
-        if os.path.exists(tools_dir) and os.path.isdir(tools_dir):
-            if tools_dir not in sys.path:
-                sys.path.append(tools_dir)
-            try:
-                pkg = importlib.import_module("tools")
-                logger.debug("Resolved tools package from local tools directory")
-                return pkg
-            except ImportError as e:
-                logger.debug(f"Failed to import from local tools directory: {e}")
-
-        raise ImportError("Could not resolve tools package — check PYTHONPATH or working directory.")
+            # First try to get the package from the current module
+            if __package__:
+                return importlib.import_module(__package__)
+            
+            # If __package__ is None, try to find the package by walking up from current file
+            current_path = pathlib.Path(__file__).parent
+            while current_path.name != 'hyphadevbot':
+                if current_path.parent == current_path:
+                    logger.error(f"Could not find hyphadevbot package root")
+                    raise ImportError("Could not find hyphadevbot package root")
+                current_path = current_path.parent
+            
+            # Now try to import the package
+            package_path = str(current_path.parent)
+            if package_path not in sys.path:
+                sys.path.append(package_path)
+            
+            return importlib.import_module('hyphadevbot')
+            
+        except Exception as e:
+            logger.error(f"Failed to resolve tools package: {e}")
+            logger.debug(traceback.format_exc())
+            raise
 
     def _load_tools(self) -> List[Tool]:
         tools = []
         try:
             tools_pkg = self._resolve_tools_package()
             tools_pkg_name = tools_pkg.__name__
-            for _, modname, _ in pkgutil.iter_modules(tools_pkg.__path__):
+            
+            # Look for tools in the tools directory
+            tools_dir = os.path.join(os.path.dirname(__file__), 'tools')
+            if not os.path.exists(tools_dir):
+                logger.error(f"Tools directory not found: {tools_dir}")
+                return tools
+                
+            for _, modname, _ in pkgutil.iter_modules([tools_dir]):
                 if modname.startswith("_"):
                     continue
-                full_modname = f"{tools_pkg_name}.{modname}"
+                full_modname = f"{tools_pkg_name}.roollm.tools.{modname}"
                 try:
                     mod = importlib.import_module(full_modname)
                     if not hasattr(mod, "tool"):
