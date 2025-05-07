@@ -259,7 +259,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("{BOLD}{YELLOW}Au revoir{RESET}")
+        print(f"{BOLD}{YELLOW}Au revoir{RESET}")
     except Exception as e:
         logger.error(f"Unhandled exception in main: {e}", exc_info=True)
         print(f"❌ Critical error: {str(e)}")
