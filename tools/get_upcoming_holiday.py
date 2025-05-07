@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 name = "get_upcoming_holiday"
 emoji = "📅"
 description = (
-    "Fetch the next statutory holiday between a given start date and end date. "
+    "Fetch the next statutory holiday at Hypha between a given start date and end date. "
     "Use this for direct queries about holidays, such as 'What is the next holiday?' or 'Are there holidays next month?'. "
     "If the user asks for multiple holidays, use the 'limit' parameter to specify the desired number of holidays."
 )
@@ -131,38 +131,46 @@ async def tool(roo, arguments, user):
         else:
             end_date = start_date + datetime.timedelta(days=365)
             
-
         # Call the function to get holidays
         upcoming_holidays = get_upcoming_holidays(start_date, end_date, limit=limit)
 
         if not upcoming_holidays:
+            # Format dates in a more natural way
+            start_str = start_date.strftime("%B %d, %Y")
+            end_str = end_date.strftime("%B %d, %Y")
             return {
-                "message": f"No holidays found between {start_date.strftime('%Y-%m-%d')} and {end_date.strftime('%Y-%m-%d')}."
+                "message": f"There are no statutory holidays at Hypha between {start_str} and {end_str}."
             }
 
         # Format the response
         holidays_formatted = [
-            {"name": holiday["name"], "date": holiday["date"].strftime("%Y-%m-%d")}
+            {
+                "name": holiday["name"],
+                "date": holiday["date"].strftime("%Y-%m-%d"),
+                "formatted_date": holiday["date"].strftime("%B %d, %Y")
+            }
             for holiday in upcoming_holidays
         ]
         
         # If fewer holidays are found than requested, adjust the response
         message = None
         if len(upcoming_holidays) < limit and limit > 1:
-            message = f"Found {len(upcoming_holidays)} holidays in the given date range."
+            message = f"Found {len(upcoming_holidays)} statutory holidays at Hypha in the given date range."
         
         # Format the response based on the number of holidays found
         if len(upcoming_holidays) == 1:
             holiday = holidays_formatted[0]
             return {
                 "holidays": holidays_formatted,
-                "message": f"The next holiday is {holiday['name']} on {holiday['date']}."
+                "message": f"The next statutory holiday at Hypha is {holiday['name']} on {holiday['formatted_date']}."
             }
         else:
+            # Format multiple holidays in a list
+            holiday_list = "\n".join([f"• {h['name']} on {h['formatted_date']}" for h in holidays_formatted])
             return {
                 "holidays": holidays_formatted,
                 "count": len(holidays_formatted),
-                "message": message or f"Found {len(holidays_formatted)} upcoming holidays."
+                "message": f"Here are the upcoming statutory holidays at Hypha:\n{holiday_list}"
             }
             
     except Exception as e:

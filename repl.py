@@ -10,11 +10,41 @@ from dotenv import load_dotenv
 LIME = "\033[38;5;118m"
 ROO_PURPLE = "\033[38;5;135m"
 RESET = "\033[0m"
+BOLD = "\033[1m"
+CYAN = "\033[36m"
+YELLOW = "\033[33m"
 
+# Tool emoji mapping
+emojiToolMap = {
+    "💬": "`comment_github_item`: Add comments to issues or PRs",
+    "👤": "`assign_github_item`: Assign users to issues or PRs",
+    "🏷️": "`add_labels_to_github_item`: Add labels to issues or PRs",
+    "🔖": "`search_repo_labels`: Get available labels in a repository",
+    "🔧": "`github_issues_operations`: Dispatcher for issue operations",
+    "📝": "`create_github_issue`: Create new issues",
+    "🔒": "`close_github_issue`: Close an issue",
+    "🔑": "`reopen_github_issue`: Reopen a closed issue",
+    "🔍": "`search_github_issues`: Search for issues by status, number, assignee, etc.",
+    "📋": "`update_github_issue`: Update issue title/body",
+    "🛠️": "`github_pull_requests_operations`: Dispatcher for PR operations",
+    "🌿": "`create_pull_request`: Create new PRs",
+    "🔐": "`close_pull_request`: Close a PR without merging",
+    "🔓": "`reopen_pull_request`: Reopen a closed PR",
+    "🔀": "`merge_pull_request`: Merge an open PR",
+    "🔎": "`search_pull_requests`: Search for PRs by status, number, assignee, label, etc.",
+    "✏️": "`update_pull_request`: Update PR title/body",
+    "📖": "`search_handbook`: Search Hypha's handbook",
+    "📅": "`get_upcoming_holiday`: Fetch upcoming statutory holidays",
+    "🌴": "`get_upcoming_vacations`: Get information about our colleague's upcoming vacations",
+    "🗄️": "`get_archive_categories`: List archivable categories with links",
+    "🔢": "`calc`: Perform calculations",
+    "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
+    "💻": "`github_dispatcher`: GitHub operations dispatcher"
+}
 
 # Set up logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -24,7 +54,10 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 # --- Auth + Config Setup ---
 
-from .github_app_auth import GitHubAppAuth, prepare_github_token
+try:
+    from .github_app_auth import GitHubAppAuth, prepare_github_token
+except ImportError:
+    from github_app_auth import GitHubAppAuth, prepare_github_token
 
 """
 This script allows local testing of the RooLLM class with GitHub App authentication.
@@ -89,9 +122,14 @@ if ENCODED_GOOGLE_CREDENTIALS:
 
 # --- LLM & Bridge Setup ---
 
-from .llm_client import LLMClient
-from .roollm import RooLLM
-from .mcp_config import MCP_CONFIG
+try:
+    from .llm_client import LLMClient
+    from .roollm import RooLLM
+    from .mcp_config import MCP_CONFIG
+except ImportError:
+    from llm_client import LLMClient
+    from roollm import RooLLM
+    from mcp_config import MCP_CONFIG
 
 async def init_roollm():
     """Initialize the RooLLM instance with LLM client and tools."""
@@ -138,8 +176,17 @@ except OSError:
     user = getpass.getuser() or "localTester"
 
 # REPL emoji feedback
-async def print_emoji_reaction(emoji):
-    print(f"> tool call: {emoji}")
+async def print_tool_reaction(emoji):
+    """Print a styled tool call reaction with emoji and description."""
+    if emoji in emojiToolMap:
+        tool_info = emojiToolMap[emoji]
+        tool_name = tool_info.split(":")[0].strip("`")
+        tool_desc = tool_info.split(":")[1].strip()
+        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET}")
+        print(f"{BOLD}{YELLOW}{emoji} {tool_name}{RESET}")
+        print(f"{LIME}└─ {tool_desc}{RESET}\n")
+    else:
+        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET} {emoji}\n")
 
 # GitHub token refresh helper
 async def refresh_token_if_needed():
@@ -157,8 +204,31 @@ async def refresh_token_if_needed():
 
 async def main():
     """Main REPL loop for the RooLLM chat interface."""
+    global user
+    
     print("\n🧠 RooLLM Terminal Chat — Type 'exit' to quit\n")
     print(f"GitHub auth method: {auth_method or 'None'}\n")
+
+    # Welcome and name confirmation
+    print(f"{BOLD}{CYAN}Welcome to RooLLM!{RESET}")
+    print(f"I see your username is {BOLD}{user}{RESET}. Is this how you would like to be addressed? (y/n)")
+    
+    while True:
+        response = input().lower().strip()
+        if response in ['y', 'yes']:
+            break
+        elif response in ['n', 'no']:
+            print(f"{BOLD}{CYAN}What would you like to be called?{RESET}")
+            new_name = input().strip()
+            if new_name:
+                user = new_name
+                break
+            else:
+                print("Please enter a valid name.")
+        else:
+            print("Please answer with 'y' or 'n'.")
+
+    print(f"\n{BOLD}{CYAN}Great! Let's get started, {user}!{RESET}\n")
 
     history = []
 
@@ -171,9 +241,11 @@ async def main():
                 print(f"Goodbye {user}!")
                 break
 
-            response = await roo.chat(user, query, history, react_callback=print_emoji_reaction)
+            response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
 
-            print(f"{ROO_PURPLE}Roo >{RESET} {response['content']}")
+            # Remove leading newlines while preserving internal formatting
+            content = response['content'].lstrip('\n')
+            print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
             history.append({"role": "user", "content": f"{user}: {query}"})
             history.append(response)
         except KeyboardInterrupt:
@@ -187,7 +259,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nGracefully shutting down...")
+        print(f"{BOLD}{YELLOW}Au revoir{RESET}")
     except Exception as e:
         logger.error(f"Unhandled exception in main: {e}", exc_info=True)
         print(f"❌ Critical error: {str(e)}")

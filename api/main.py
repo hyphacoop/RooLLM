@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from contextlib import asynccontextmanager
 
 # Port configuration
 PORT = int(os.getenv("PORT", "8081"))
@@ -69,8 +70,34 @@ llm = LLMClient(
 # Initialize RooLLM with bridge
 roo = RooLLM(inference=llm, config=config)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize the bridge when the app starts and clean up when it shuts down"""
+    try:
+        # Initialize RooLLM which will initialize the bridge
+        await roo.initialize()
+        logger.debug("RooLLM and Bridge initialized successfully")
+        
+        # Log registered tools for debugging
+        tools = roo.bridge.tool_registry.all_tools()
+        logger.debug(f"Successfully loaded {len(tools)} tools:")
+        for tool in tools:
+            logger.debug(f"✅ registered tool: {tool.name} ({tool.adapter_name})")
+    except Exception as e:
+        logger.error(f"Failed to initialize RooLLM: {e}", exc_info=True)
+        raise
+    yield
+    # Cleanup code here if needed
+    logger.debug("FastAPI Lifespan: Shutdown event")
+    try:
+        logger.debug("Attempting to call RooLLM cleanup method...")
+        await roo.cleanup()
+        logger.debug("RooLLM cleanup method called successfully.")
+    except Exception as e:
+        logger.error(f"Error during cleanup: {e}", exc_info=True)
+
 # App & State
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 # Configure CORS
 app.add_middleware(
@@ -84,23 +111,6 @@ app.add_middleware(
 user = os.getenv("ROO_LLM_AUTH_USERNAME", "frontendUser")
 histories = {}  # store per-session history
 sessions = {}  # store session metadata
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the bridge when the app starts"""
-    try:
-        # Initialize RooLLM which will initialize the bridge
-        await roo.initialize()
-        logger.info("RooLLM and Bridge initialized successfully")
-        
-        # Log registered tools for debugging
-        tools = roo.bridge.tool_registry.all_tools()
-        logger.info(f"Successfully loaded {len(tools)} tools:")
-        for tool in tools:
-            logger.info(f"✅ registered tool: {tool.name} ({tool.adapter_name})")
-    except Exception as e:
-        logger.error(f"Failed to initialize RooLLM: {e}", exc_info=True)
-        raise
 
 def generate_session_title(history):
     """
@@ -186,19 +196,19 @@ async def chat(request: ChatRequest):
 
 @app.post("/minima/query")
 async def minima_query(request: MinimaQueryRequest):
-    logger.info(f"Received Minima query request: {request.query}")
+    logger.debug(f"Received Minima query request: {request.query}")
     
     if not roo.is_minima_connected():
         logger.error("Minima not connected")
         return {"status": "error", "message": "Not connected to Minima server"}
     
     try:
-        logger.info("Calling Minima tool with query")
+        logger.debug("Calling Minima tool with query")
         start_time = time.time()
         result = await roo.minima_adapter.call_tool("query", {"text": request.query})
         end_time = time.time()
-        logger.info(f"Minima query completed in {end_time - start_time:.2f} seconds")
-        logger.info(f"Minima query result: {result}")
+        logger.debug(f"Minima query completed in {end_time - start_time:.2f} seconds")
+        logger.debug(f"Minima query result: {result}")
         return {"status": "ok", "result": result}
     except Exception as e:
         logger.error(f"Error in Minima query: {str(e)}")
@@ -309,7 +319,7 @@ async def refresh_token_if_needed():
         fresh_token = auth.get_token()
         if fresh_token != config.get("gh_token"):
             config["gh_token"] = fresh_token
-            logger.info("Refreshed GitHub token")
+            logger.debug("Refreshed GitHub token")
 
 def find_available_port(start_port, max_attempts=10):
     """Find an available port starting from start_port"""
@@ -339,8 +349,8 @@ if __name__ == "__main__":
     with open(port_file, "w") as f:
         json.dump({"port": PORT}, f)
     
-    logger.info(f"Server starting on port {PORT}")
-    logger.info(f"Port info written to {port_file}")
+    logger.debug(f"Server starting on port {PORT}")
+    logger.debug(f"Port info written to {port_file}")
     
     # Use workers=1 for better signal handling
     uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)

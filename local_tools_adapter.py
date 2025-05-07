@@ -3,13 +3,18 @@ import pkgutil
 import importlib
 import pathlib
 import traceback
+import os
+import sys
 
 from typing import Dict, Any, List, Optional
-import sys
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Add current directory to Python path if not already there
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
 
 logger.debug(f"sys.path: {sys.path}")
 logger.debug(f"cwd: {pathlib.Path.cwd()}")
@@ -79,15 +84,15 @@ class LocalToolsAdapter:
             return False
 
     def _resolve_tools_package(self):
-        # try the long path (maubot context)
+        # First try direct import
         try:
-            pkg = importlib.import_module("hyphadevbot.roollm.tools")
-            logger.debug("Resolved tools package as 'hyphadevbot.roollm.tools'")
+            pkg = importlib.import_module("tools")
+            logger.debug("Resolved tools package as 'tools'")
             return pkg
         except ImportError as e:
-            logger.debug(f"Failed to import 'hyphadevbot.roollm.tools': {e}")
+            logger.debug(f"Failed to import 'tools': {e}")
 
-        # try short path (e.g., run from project root with PYTHONPATH=. or installed module)
+        # Then try with roollm prefix
         try:
             pkg = importlib.import_module("roollm.tools")
             logger.debug("Resolved tools package as 'roollm.tools'")
@@ -95,7 +100,7 @@ class LocalToolsAdapter:
         except ImportError as e:
             logger.debug(f"Failed to import 'roollm.tools': {e}")
 
-        # try local relative import via package context
+        # Finally try relative import
         if __package__:
             try:
                 pkg = importlib.import_module(".tools", package=__package__)
@@ -103,6 +108,18 @@ class LocalToolsAdapter:
                 return pkg
             except ImportError as e:
                 logger.debug(f"Failed relative import '.tools': {e}")
+
+        # Last resort: try to find tools directory in current path
+        tools_dir = os.path.join(current_dir, "tools")
+        if os.path.exists(tools_dir) and os.path.isdir(tools_dir):
+            if tools_dir not in sys.path:
+                sys.path.append(tools_dir)
+            try:
+                pkg = importlib.import_module("tools")
+                logger.debug("Resolved tools package from local tools directory")
+                return pkg
+            except ImportError as e:
+                logger.debug(f"Failed to import from local tools directory: {e}")
 
         raise ImportError("Could not resolve tools package — check PYTHONPATH or working directory.")
 
@@ -129,7 +146,7 @@ class LocalToolsAdapter:
                         emoji=getattr(mod, "emoji", None)
                     )
                     tools.append(tool)
-                    logger.info(f"Loaded tool: {tool.name} (Emoji: {tool.emoji})")
+                    logger.debug(f"Loaded tool: {tool.name} (Emoji: {tool.emoji})")
                 except Exception as e:
                     logger.error(f"Failed to import tool module {full_modname}: {e}")
                     logger.debug(traceback.format_exc())

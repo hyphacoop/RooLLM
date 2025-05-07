@@ -17,7 +17,16 @@ logger = logging.getLogger(__name__)
 
 def resolve_adapter_path(name: str) -> str:
     if "." not in name:
-        return f"roollm.{name}"  # hardcoded fallback
+        # Try both with and without roollm prefix
+        try:
+            importlib.import_module(f"roollm.{name}")
+            return f"roollm.{name}"
+        except ImportError:
+            try:
+                importlib.import_module(name)
+                return name
+            except ImportError:
+                return f"roollm.{name}"  # fallback to roollm prefix
     return name
 
 def load_adapter_from_config(name: str, conf: dict, full_config: dict):
@@ -56,12 +65,12 @@ class MCPLLMBridge:
     async def initialize(self):
         """Initialize the bridge by loading MCP adapter tools."""
         if self.initialized:
-            logger.info("Bridge already initialized, skipping initialization")
+            logger.debug("Bridge already initialized, skipping initialization")
             return
             
         try:
             # Load MCP adapter tools
-            logger.info("Loading MCP adapter tools...")
+            logger.debug("Loading MCP adapter tools...")
             mcp_configs = self.config.get("mcp_adapters", {})
             
             for name, adapter_conf in mcp_configs.items():
@@ -85,7 +94,7 @@ class MCPLLMBridge:
                         
                     # Store the adapter for later use
                     self.mcp_clients[name] = adapter
-                    logger.info(f"Loaded {len(tools)} tools from adapter {name}")
+                    logger.debug(f"Loaded {len(tools)} tools from adapter {name}")
                     
                 except Exception as e:
                     logger.error(f"Failed to load adapter {name}: {e}", exc_info=True)
@@ -93,9 +102,9 @@ class MCPLLMBridge:
 
             # Log final tool count
             all_tools = self.tool_registry.all_tools()
-            logger.info(f"Successfully loaded {len(all_tools)} total tools:")
+            logger.debug(f"Successfully loaded {len(all_tools)} total tools:")
             for tool in all_tools:
-                logger.info(f"- {tool.name} ({tool.adapter_name})")
+                logger.debug(f"- {tool.name} ({tool.adapter_name})")
                 
             self.initialized = True
 
