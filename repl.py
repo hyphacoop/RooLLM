@@ -204,8 +204,31 @@ async def refresh_token_if_needed():
 
 async def main():
     """Main REPL loop for the RooLLM chat interface."""
+    global user
+    
     print("\n🧠 RooLLM Terminal Chat — Type 'exit' to quit\n")
     print(f"GitHub auth method: {auth_method or 'None'}\n")
+
+    # Welcome and name confirmation
+    print(f"{BOLD}{CYAN}Welcome to RooLLM!{RESET}")
+    print(f"I see your username is {BOLD}{user}{RESET}. Is this how you would like to be addressed? (y/n)")
+    
+    while True:
+        response = input().lower().strip()
+        if response in ['y', 'yes']:
+            break
+        elif response in ['n', 'no']:
+            print(f"{BOLD}{CYAN}What would you like to be called?{RESET}")
+            new_name = input().strip()
+            if new_name:
+                user = new_name
+                break
+            else:
+                print("Please enter a valid name.")
+        else:
+            print("Please answer with 'y' or 'n'.")
+
+    print(f"\n{BOLD}{CYAN}Great! Let's get started, {user}!{RESET}\n")
 
     history = []
 
