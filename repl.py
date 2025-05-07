@@ -243,7 +243,9 @@ async def main():
 
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
 
-            print(f"{ROO_PURPLE}Roo >{RESET} {response['content']}")
+            # Remove leading newlines while preserving internal formatting
+            content = response['content'].lstrip('\n')
+            print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
             history.append({"role": "user", "content": f"{user}: {query}"})
             history.append(response)
         except KeyboardInterrupt:
