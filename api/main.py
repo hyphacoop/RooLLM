@@ -23,15 +23,16 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Import roollm and related modules
 from roollm import RooLLM
 from llm_client import LLMClient
-# Updated imports for new architecture
-from local_tools_adapter import LocalToolsAdapter
 from mcp_config import MCP_CONFIG
 from github_app_auth import prepare_github_token
 
 load_dotenv()
 
 # Logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # GitHub Setup
