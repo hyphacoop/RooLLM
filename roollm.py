@@ -3,14 +3,14 @@ from datetime import datetime
 import json
 import logging
 
-try: 
-    from .bridge import MCPLLMBridge
-    from .tool_registry import ToolRegistry
-    from .stats import log_llm_usage
-except ImportError:
+try:
     from bridge import MCPLLMBridge
-    from tool_registry import ToolRegistry
+    from tools.tool_registry import ToolRegistry
     from stats import log_llm_usage
+except ImportError:
+    from .bridge import MCPLLMBridge
+    from .tools.tool_registry import ToolRegistry
+    from .stats import log_llm_usage
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -47,13 +47,13 @@ class RooLLM:
             tool_registry=self.tool_registry,
             roollm=self
         )
-        logger.info("RooLLM instance created")
+        logger.debug("RooLLM instance created")
 
     async def initialize(self):
         """Initialize the RooLLM instance and load all tools."""
-        logger.info("Initializing RooLLM...")
+        logger.debug("Initializing RooLLM...")
         await self.bridge.initialize()
-        logger.info("RooLLM initialization complete")
+        logger.debug("RooLLM initialization complete")
 
     async def chat(self, user, content, history=[], react_callback=None):
         """

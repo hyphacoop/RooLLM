@@ -9,7 +9,7 @@ MCP_CONFIG = {
         "local": {
             "mode": "inline",
             "env": {
-                "MCP_ADAPTER": "local_tools_adapter.LocalToolsAdapter"
+                "MCP_ADAPTER": "tools.local_tools_adapter.LocalToolsAdapter"
             }
         }
     }

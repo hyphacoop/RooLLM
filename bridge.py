@@ -5,11 +5,11 @@ import logging
 
 try:
     from .llm_client import LLMClient
-    from .tool_registry import ToolRegistry, Tool
+    from .tools.tool_registry import ToolRegistry, Tool
     from .mcp_client import MCPClient
 except ImportError:
     from llm_client import LLMClient
-    from tool_registry import ToolRegistry, Tool
+    from tools.tool_registry import ToolRegistry, Tool
     from mcp_client import MCPClient
 
 # Configure logging
