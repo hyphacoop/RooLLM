@@ -4,9 +4,9 @@ import hashlib
 from datetime import datetime
 
 try:
-    from tools.tool_registry import ToolRegistry
-except ImportError:
     from .tools.tool_registry import ToolRegistry
+except ImportError:
+    from tools.tool_registry import ToolRegistry
 
 # Determine log file path based on environment
 SERVER_LOG_PATH = "/home/sysadmin/maubot/llm_usage.json"

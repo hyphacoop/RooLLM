@@ -4,13 +4,13 @@ import json
 import logging
 
 try:
-    from bridge import MCPLLMBridge
-    from tools.tool_registry import ToolRegistry
-    from stats import log_llm_usage
-except ImportError:
     from .bridge import MCPLLMBridge
     from .tools.tool_registry import ToolRegistry
     from .stats import log_llm_usage
+except ImportError:
+    from bridge import MCPLLMBridge
+    from tools.tool_registry import ToolRegistry
+    from stats import log_llm_usage
 
 # Configure logging
 logger = logging.getLogger(__name__)
