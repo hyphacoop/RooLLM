@@ -89,7 +89,7 @@ class MinimaRestAdapter:
         
         try:
             # Test connection to the server with a simple query
-            logger.info(f"Attempting to connect to Minima at {self.server_url}")
+            logger.debug(f"Attempting to connect to Minima at {self.server_url}")
             test_payload = {"query": "test"}
             
             # Make sure the server URL has the correct format
@@ -115,7 +115,7 @@ class MinimaRestAdapter:
                                 timeout=connection_timeout
                             ) as response:
                                 if response.status == 200:
-                                    logger.info(f"Successfully connected to Minima indexer at {server_url}")
+                                    logger.debug(f"Successfully connected to Minima indexer at {server_url}")
                                     
                                     # Update the server URL if it was corrected
                                     self.server_url = server_url
