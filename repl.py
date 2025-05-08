@@ -7,12 +7,14 @@ import base64
 import logging
 from dotenv import load_dotenv
 
-LIME = "\033[38;5;118m"
-ROO_PURPLE = "\033[38;5;135m"
+# Color constants - using softer, more muted colors
+LIME = "\033[38;5;108m"      # Softer green
+ROO_PURPLE = "\033[38;5;139m"  # Softer purple
+PINK = "\033[38;5;175m"      # Softer pink
 RESET = "\033[0m"
 BOLD = "\033[1m"
-CYAN = "\033[36m"
-YELLOW = "\033[33m"
+CYAN = "\033[38;5;73m"       # Softer cyan
+YELLOW = "\033[38;5;179m"    # Softer yellow
 
 # Tool emoji mapping
 emojiToolMap = {
@@ -42,10 +44,13 @@ emojiToolMap = {
     "💻": "`github_dispatcher`: GitHub operations dispatcher"
 }
 
+# Exit message constant
+EXIT_MESSAGE = f"\n{BOLD}{YELLOW}Au revoir!{RESET}"
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -102,11 +107,11 @@ gh_config = {
 github_token, auth_method, auth_object = prepare_github_token(gh_config)
 
 if github_token:
-    logger.info(f"Successfully configured GitHub token using {auth_method} authentication")
+    logger.debug(f"Successfully configured GitHub token using {auth_method} authentication")
     config["gh_token"] = github_token
     # Store the auth object for potential token refresh
     config["gh_auth_object"] = auth_object
-    logger.info(f"GitHub token configured with {auth_method} auth")
+    logger.debug(f"GitHub token configured with {auth_method} auth")
 else:
     logger.warning("⚠️ GitHub token unavailable")
 
@@ -116,20 +121,20 @@ if ENCODED_GOOGLE_CREDENTIALS:
     try:
         DECODED_GOOGLE_CREDENTIALS = json.loads(base64.b64decode(ENCODED_GOOGLE_CREDENTIALS).decode())
         config["google_creds"] = DECODED_GOOGLE_CREDENTIALS
-        logger.info("Successfully loaded Google credentials")
+        logger.debug("Successfully loaded Google credentials")
     except Exception as e:
         logger.error(f"Error decoding Google credentials: {e}")
 
 # --- LLM & Bridge Setup ---
 
 try:
-    from .llm_client import LLMClient
-    from .roollm import RooLLM
-    from .mcp_config import MCP_CONFIG
-except ImportError:
     from llm_client import LLMClient
     from roollm import RooLLM
     from mcp_config import MCP_CONFIG
+except ImportError:
+    from .llm_client import LLMClient
+    from .roollm import RooLLM
+    from .mcp_config import MCP_CONFIG
 
 async def init_roollm():
     """Initialize the RooLLM instance with LLM client and tools."""
@@ -141,6 +146,7 @@ async def init_roollm():
             username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
             password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
         )
+        logger.info(f"{PINK}{llm.base_url}{RESET}")
 
         # 2. Update config with MCP configuration
         config.update(**MCP_CONFIG)
@@ -152,9 +158,10 @@ async def init_roollm():
         await roo.initialize()
 
         # Log registered tools
-        logger.info("Registered tools:")
+        all_tools = roo.bridge.tool_registry.all_tools()
+        logger.info(f"{LIME}{len(all_tools)} Registered tools{RESET}")
         for t in roo.bridge.tool_registry.all_tools():
-            logger.info(f"✅ registered tool: {t.name} ({t.adapter_name})")
+            logger.debug(f"✅ registered tool: {t.name} ({t.adapter_name})")
 
         return roo
     except Exception as e:
@@ -184,9 +191,9 @@ async def print_tool_reaction(emoji):
         tool_desc = tool_info.split(":")[1].strip()
         print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET}")
         print(f"{BOLD}{YELLOW}{emoji} {tool_name}{RESET}")
-        print(f"{LIME}└─ {tool_desc}{RESET}\n")
+        print(f"{LIME}└─ {tool_desc}{RESET}")
     else:
-        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET} {emoji}\n")
+        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET} {emoji}")
 
 # GitHub token refresh helper
 async def refresh_token_if_needed():
@@ -205,61 +212,102 @@ async def refresh_token_if_needed():
 async def main():
     """Main REPL loop for the RooLLM chat interface."""
     global user
-    
-    print("\n🧠 RooLLM Terminal Chat — Type 'exit' to quit\n")
-    print(f"GitHub auth method: {auth_method or 'None'}\n")
-
-    # Welcome and name confirmation
-    print(f"{BOLD}{CYAN}Welcome to RooLLM!{RESET}")
-    print(f"I see your username is {BOLD}{user}{RESET}. Is this how you would like to be addressed? (y/n)")
-    
-    while True:
-        response = input().lower().strip()
-        if response in ['y', 'yes']:
-            break
-        elif response in ['n', 'no']:
-            print(f"{BOLD}{CYAN}What would you like to be called?{RESET}")
-            new_name = input().strip()
-            if new_name:
-                user = new_name
-                break
-            else:
-                print("Please enter a valid name.")
-        else:
-            print("Please answer with 'y' or 'n'.")
-
-    print(f"\n{BOLD}{CYAN}Great! Let's get started, {user}!{RESET}\n")
-
     history = []
-
-    while True:
+    
+    # Get session username
+    try:
+        user = getpass.getuser()
+    except Exception:
+        user = "localTester"
+    
+    # Handle command line argument if provided
+    if len(sys.argv) > 1:
+        query = " ".join(sys.argv[1:])
         try:
             await refresh_token_if_needed()
-            query = input(f"{LIME}{user} >{RESET} ")
-
-            if query.lower() in ["exit", "quit"]:
-                print(f"Goodbye {user}!")
-                break
-
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
-
-            # Remove leading newlines while preserving internal formatting
             content = response['content'].lstrip('\n')
             print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
-            history.append({"role": "user", "content": f"{user}: {query}"})
-            history.append(response)
+        except Exception as e:
+            logger.error(f"Error during chat: {e}")
+            print(f"❌ Error: {str(e)}")
+        return
+
+    # Interactive mode
+    print(f"\n{BOLD}{PINK}Welcome to RooLLM Chat!{RESET}")
+    print(f"Type {BOLD}'/help'{RESET} to see available commands\n")
+    
+    while True:
+        try:
+            print(f"{CYAN}{user} >{RESET} ", end="", flush=True)
+            query = input().strip()
+            
+            if not query:
+                continue
+
+            # Handle help command
+            if query.lower() == '/help':
+                print(f"\n{BOLD}{CYAN}Available Commands:{RESET}")
+                print(f"{BOLD}{YELLOW}/username <new_name>{RESET} - Change your username")
+                print(f"{BOLD}{YELLOW}/tools{RESET} - List all available tools")
+                print(f"{BOLD}{YELLOW}/details :emoji:{RESET} - See tool details")
+                print(f"{BOLD}{YELLOW}/exit{RESET} or {BOLD}{YELLOW}/quit{RESET} - Exit the chat\n")
+                continue
+
+            # Handle exit/quit commands
+            if query.lower() in ['/exit', '/quit']:
+                print(EXIT_MESSAGE)
+                break
+
+            # Handle username change command
+            if query.startswith('/username '):
+                new_username = query[10:].strip()
+                if new_username:
+                    user = new_username
+                    print(f"{LIME}Username changed to: {user}{RESET}\n")
+                    continue
+                else:
+                    print(f"{YELLOW}Please provide a username after /username{RESET}\n")
+                    continue
+
+            # Handle tools command
+            if query.lower() == '/tools':
+                print(f"\n{BOLD}{CYAN}Available Tools:{RESET}")
+                for emoji, tool_info in emojiToolMap.items():
+                    tool_name = tool_info.split(":")[0].strip("`")
+                    print(f"{BOLD}{YELLOW}{emoji}\t→ {tool_name}{RESET}")
+                print(f"\n{LIME}Use /details :emoji: to see more information about a specific tool{RESET}\n")
+                continue
+
+            # Handle details command
+            if query.startswith('/details '):
+                emoji = query[9:].strip()
+                if emoji in emojiToolMap:
+                    tool_info = emojiToolMap[emoji]
+                    tool_name = tool_info.split(":")[0].strip("`")
+                    tool_desc = tool_info.split(":")[1].strip()
+                    print(f"\n{BOLD}{CYAN}Tool Details:{RESET}")
+                    print(f"{BOLD}{YELLOW}{emoji} {tool_name}{RESET}")
+                    print(f"{LIME}└─ {tool_desc}{RESET}\n")
+                else:
+                    print(f"{YELLOW}Tool with emoji {emoji} not found. Use /tools to see available tools{RESET}\n")
+                continue
+                
+            await refresh_token_if_needed()
+            response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
+            content = response['content'].lstrip('\n')
+            print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
+            
         except KeyboardInterrupt:
-            print("\nExiting...")
+            print(EXIT_MESSAGE)
             break
         except Exception as e:
-            logger.error(f"Error during chat: {e}", exc_info=True)
+            logger.error(f"Error during chat: {e}")
             print(f"❌ Error: {str(e)}")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except KeyboardInterrupt:
-        print(f"{BOLD}{YELLOW}Au revoir{RESET}")
     except Exception as e:
         logger.error(f"Unhandled exception in main: {e}", exc_info=True)
         print(f"❌ Critical error: {str(e)}")
