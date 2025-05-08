@@ -5,9 +5,9 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 try:
-    from tools.tool_registry import Tool
-except ImportError:
     from .tools.tool_registry import Tool
+except ImportError:
+    from tools.tool_registry import Tool
 
 
 class MCPClient:

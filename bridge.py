@@ -15,20 +15,6 @@ except ImportError:
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def resolve_adapter_path(name: str) -> str:
-    if "." not in name:
-        # Try both with and without roollm prefix
-        try:
-            importlib.import_module(f"roollm.{name}")
-            return f"roollm.{name}"
-        except ImportError:
-            try:
-                importlib.import_module(name)
-                return name
-            except ImportError:
-                return f"roollm.{name}"  # fallback to roollm prefix
-    return name
-
 def load_adapter_from_config(name: str, conf: dict, full_config: dict):
     """Load an adapter based on configuration."""
     mode = conf.get("mode", "inline")
@@ -41,11 +27,21 @@ def load_adapter_from_config(name: str, conf: dict, full_config: dict):
             env=conf.get("env", {})
         )
 
-    adapter_path = resolve_adapter_path(conf["env"]["MCP_ADAPTER"])
+    adapter_path = conf["env"]["MCP_ADAPTER"]
     mod_name, class_name = adapter_path.rsplit(".", 1)
     
     try:
-        mod = importlib.import_module(mod_name)
+        # First try relative import
+        if mod_name.startswith('.'):
+            mod_name = mod_name.lstrip('.')
+            try:
+                mod = importlib.import_module(f".{mod_name}", package="roollm")
+            except ImportError:
+                # If that fails, try direct import
+                mod = importlib.import_module(mod_name)
+        else:
+            mod = importlib.import_module(mod_name)
+            
         adapter_cls = getattr(mod, class_name)
         return adapter_cls(config=full_config)
     except Exception as e:

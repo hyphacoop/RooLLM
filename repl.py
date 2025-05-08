@@ -128,13 +128,13 @@ if ENCODED_GOOGLE_CREDENTIALS:
 # --- LLM & Bridge Setup ---
 
 try:
-    from llm_client import LLMClient
-    from roollm import RooLLM
-    from mcp_config import MCP_CONFIG
-except ImportError:
     from .llm_client import LLMClient
     from .roollm import RooLLM
     from .mcp_config import MCP_CONFIG
+except ImportError:
+    from llm_client import LLMClient
+    from roollm import RooLLM
+    from mcp_config import MCP_CONFIG
 
 async def init_roollm():
     """Initialize the RooLLM instance with LLM client and tools."""
