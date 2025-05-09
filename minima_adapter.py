@@ -263,7 +263,7 @@ class MinimaRestAdapter:
     def _format_result_with_citations(self, output, sources):
         """
         Format the result with citations and source information.
-        Only includes sources that are referenced in the response content.
+        Aims to cite all sources provided by Minima, with special formatting for known paths.
         
         Args:
             output: The output from Minima
@@ -272,85 +272,60 @@ class MinimaRestAdapter:
         Returns:
             dict: Formatted result with citations
         """
-        logger.debug(f"Formatting result with sources: {sources}")
-        
+        logger.debug(f"Formatting result. Initial output snippet: '{output[:200]}...', All sources: {sources}")
+
         if not sources:
-            logger.warning("No sources provided for result formatting")
+            logger.warning("No sources provided by Minima for result formatting.")
             return {
-                "result": output + "\n\n⚠️ WARNING: No sources were cited. This is a critical error.",
+                "result": output + "\n\n⚠️ WARNING: No sources were cited by the search tool. This is a critical error if information was retrieved.",
                 "source_paths": []
             }
             
-        # Categorize sources by type
-        handbook_sources = []
-        policy_sources = []
-        research_sources = []
-        other_sources = []
-        
-        # Convert output to lowercase for case-insensitive matching
-        output_lower = output.lower()
+        formatted_citations = []
         
         for source in sources:
-            if not source:
-                logger.warning(f"Empty source found in sources list: {sources}")
+            if not source or not isinstance(source, str):
+                logger.warning(f"Invalid or empty source found in sources list: {source}. Skipping this source.")
                 continue
                 
-            source_lower = source.lower()
+            logger.debug(f"Processing source for citation: '{source}'")
+            source_lower = source.lower() # For case-insensitive checks on keywords like 'handbook'
             
-            # Check if source is referenced in the output
-            # Extract the filename/path without extension for matching
-            source_name = os.path.splitext(os.path.basename(source))[0].lower()
-            if source_name not in output_lower:
-                continue
-                
-            if "handbook" in source_lower or "policies" in source_lower:
-                handbook_sources.append(source)
-            elif any(x in source_lower for x in ["research", "books", "papers", "academic"]):
-                research_sources.append(source)
-            elif "policy" in source_lower:
-                policy_sources.append(source)
+            citation_text = ""
+            # Handbook source formatting
+            if "handbook" in source_lower:
+                # Extracts path relative to 'handbook/'
+                path_segment = source.split("handbook/", 1)[-1] if "handbook/" in source_lower else source
+                path_segment = path_segment.replace(".md", "") # Remove .md extension if present
+                citation_text = f"[Source: handbook.hypha.coop/{path_segment}]"
+                logger.debug(f"Formatted as handbook source: {citation_text}")
+            # Hypha Public Drive formatting
+            elif "Hypha_PUBLIC_Drive" in source: # Path components are often case-sensitive
+                path_segment = source.split("Hypha_PUBLIC_Drive/", 1)[-1] if "Hypha_PUBLIC_Drive/" in source else source
+                citation_text = f"[From Hypha's Public Drive: {path_segment}]"
+                logger.debug(f"Formatted from Hypha's Public Drive source: {citation_text}")
+            # Generic formatting for all other sources
             else:
-                other_sources.append(source)
+                citation_text = f"[Source: {source}]" # Simplest form, using the original source string
+                logger.debug(f"Formatted as generic source: {citation_text}")
+            
+            formatted_citations.append(citation_text)
         
-        # Prioritize handbook and policy sources
-        primary_sources = handbook_sources or policy_sources
-        secondary_sources = research_sources or other_sources
-        
-        # Format the source paths for display
-        formatted_sources = []
-        
-        # First add primary sources
-        for source in primary_sources:
-            if "handbook" in source.lower():
-                path = source.split("handbook/")[-1] if "handbook/" in source else source
-                # Remove .md extension if present
-                path = path.replace(".md", "")
-                formatted_sources.append(f"[Source: handbook.hypha.coop/{path}]")
-            elif "Hypha_PUBLIC_Drive" in source:
-                path = source.split("Hypha_PUBLIC_Drive/")[-1] if "Hypha_PUBLIC_Drive/" in source else source
-                formatted_sources.append(f"[Source: ./Hypha_PUBLIC_Drive/{path}]")
-            else:
-                formatted_sources.append(f"[Source: {source}]")
-        
-        # Then add secondary sources if no primary sources were found
-        if not formatted_sources:
-            for source in secondary_sources:
-                if "Hypha_PUBLIC_Drive" in source:
-                    path = source.split("Hypha_PUBLIC_Drive/")[-1] if "Hypha_PUBLIC_Drive/" in source else source
-                    formatted_sources.append(f"[Source: ./Hypha_PUBLIC_Drive/{path}]")
-                else:
-                    formatted_sources.append(f"[Source: {source}]")
-        
-        # Add the formatted sources to the output
-        if formatted_sources:
-            output += "\n\n" + "\n".join(formatted_sources)
+        if formatted_citations:
+            # Remove duplicates by converting to set and back to list, then sort for consistent order
+            unique_sorted_citations = sorted(list(set(formatted_citations)))
+            output += "\n\n" + "\n".join(unique_sorted_citations)
+            logger.debug(f"Appended citations to output. Final output snippet with citations: '{output[:300]}...'")
         else:
-            logger.warning("No valid sources could be formatted")
-            output += "\n\n⚠️ WARNING: No valid sources could be formatted. This response is likely to be hallucinated and the content is not reliable."
+            # This case should now only be hit if all source strings were empty or invalid,
+            # which is handled by the 'continue' in the loop.
+            # If `sources` was non-empty but all were invalid, formatted_citations would be empty.
+            logger.warning("No valid sources could be formatted from the provided list. Original sources: {sources}")
+            output += "\n\n⚠️ WARNING: Although sources were provided, none could be validly formatted. Please check source data integrity."
         
         return {
             "result": output,
-            "source_paths": sources
+            "source_paths": sources # Always return the original, complete list of sources from Minima
         }
     
     async def list_tools(self):
@@ -363,38 +338,6 @@ class MinimaRestAdapter:
             }
             for name, meta in self.tools.items()
         ]
-
-    def verify_citations(self, response_content, source_paths):
-        """
-        Verify that citations in the response match actual sources.
-        
-        Args:
-            response_content: The model's response text
-            source_paths: List of valid source paths
-            
-        Returns:
-            tuple: (verified_response, needs_retry)
-        """
-        if not source_paths:
-            return response_content, False
-            
-        # Check for citations in the format [Source: path]
-        citation_pattern = r'\[Source:\s*([^\]]+)\]'
-        citations = re.findall(citation_pattern, response_content)
-        
-        if not citations:
-            return response_content + "\n\n⚠️ WARNING: No sources were cited.", True
-            
-        # Verify each citation
-        invalid_citations = []
-        for citation in citations:
-            if not any(citation.strip() == path for path in source_paths):
-                invalid_citations.append(citation)
-                
-        if invalid_citations:
-            return response_content + f"\n\n⚠️ WARNING: Invalid citations: {', '.join(invalid_citations)}", True
-            
-        return response_content, False
 
     def is_connected(self):
         """Check if connected to the Minima indexer."""
