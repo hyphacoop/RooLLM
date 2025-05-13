@@ -2,6 +2,23 @@
 
 RooLLM is a conversational AI assistant designed for Hypha Worker Coop to streamline organizational workflows and enhance productivity. Powered by large language models through Ollama, Roo offers a variety of tool calls such as GitHub integration and organizational support capabilities.
 
+## Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+  - [Requirements](#requirements)
+  - [Install Dependencies](#install-dependencies)
+  - [Set Environment Variables](#set-environment-variables)
+  - [Google Integration Setup](#google-integration-setup)
+  - [Run the project](#run-the-project)
+  - [Folder and File Structure](#folder-and-file-structure)
+  - [Run the project locally](#run-the-project-locally)
+- [MCP Ollama Bridge Architecture](#mcp-ollama-bridge-architecture)
+- [CLI interface](#cli-interface)
+- [Quality feedback assessment](#quality-feedback-assessment)
+- [MCP Server](#mcp-server)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Overview
 
 Roo serves as Hypha's digital assistant, providing access to an LLM through an Ollama API endpoint running on a GPU in our datacenter. This project is designed to be flexible as it can run fully locally by installing Ollama and running the model yourself, or connect to a hosted endpoint. Additionally, RooLLM offers multiple ways to interact with the assistant: through a browser-based web interface, a simple CLI for terminal users, or by leveraging its API endpoints to integrate with other chat services and applications.
