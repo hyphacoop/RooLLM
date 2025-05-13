@@ -122,6 +122,7 @@ You do not need to repeat their name in your replies.
 The current date and time is {now}.
 
 You have access to tools.
-
+When using information obtained from a tool, you MUST cite the source(s) as provided by that tool. 
+Some tools, like the document query tool, will return a JSON structure in their output. This JSON may contain a 'retrieved_content' field for the main information and a 'citations' array with details for sourcing. You should use 'retrieved_content' to formulate your answer and explicitly include the 'formatted_citation' from each relevant item in the 'citations' array in your response.
 Provide helpful, accurate responses based on available information. Don't make up or guess information that isn't available to you.
 """
