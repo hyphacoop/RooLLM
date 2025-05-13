@@ -20,8 +20,8 @@ os.makedirs(os.path.dirname(LLM_LOG_FILE), exist_ok=True)
 # Instantiate the Tools class
 tools_instance = ToolRegistry()
 
-def log_llm_usage(user, request_event_id: str, response_event_id: str, emoji=None, tool_used=None, subtool_used=None, response_time=None):
-    """Log LLM usage, user, tool calls, response time, and event IDs for quality assessment."""
+def log_llm_usage(user, request_event_id: str = None, response_event_id: str = None, emoji=None, tool_used=None, subtool_used=None, response_time=None):
+    """Log LLM usage, user, tool calls, response time, and event IDs (if available) for quality assessment."""
 
     # Semi-anonymized username by hashing
     hashed_username = hashlib.sha256(user.encode()).hexdigest()[:8]  # Use first 8 chars for brevity
@@ -29,13 +29,20 @@ def log_llm_usage(user, request_event_id: str, response_event_id: str, emoji=Non
     entry = {
         "timestamp": datetime.utcnow().isoformat(),
         "user": hashed_username,
-        "request_event_id": request_event_id, # ID of the user's message
-        "response_event_id": response_event_id, # ID of the bot's message
         "tool_used": tool_used,
         "subtool_used": subtool_used,
         "response_time": response_time,
         "quality_assessment": None  # Placeholder for 👍/👎 feedback
     }
+
+    if request_event_id:
+        entry["request_event_id"] = request_event_id
+    if response_event_id:
+        entry["response_event_id"] = response_event_id
+        # Quality assessment is only relevant if there's a response event to react to
+    else:
+        # If there's no response_event_id, quality assessment can't be linked
+        entry["quality_assessment"] = "N/A"
 
     try:
         # Ensure the log file exists
