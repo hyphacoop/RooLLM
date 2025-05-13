@@ -24,7 +24,7 @@ parameters = {
         "end_date": {
             "type": "string",
             "format": "date",
-            "description": "The end date to search for holidays (YYYY-MM-DD). Defaults to one month after the start date if not provided."
+            "description": "The end date to search for holidays (YYYY-MM-DD). Defaults to two months after the start date if not provided."
         },
         "limit": {
             "type": "integer",
