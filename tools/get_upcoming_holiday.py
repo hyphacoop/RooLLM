@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 name = "get_upcoming_holiday"
 emoji = "📅"
 description = (
-    "Fetch the next statutory holiday at Hypha between a given start date and end date. "
-    "Use this for direct queries about holidays, such as 'What is the next holiday?' or 'Are there holidays next month?'. "
-    "If the user asks for multiple holidays, use the 'limit' parameter to specify the desired number of holidays."
+    "Fetch the next statutory holiday(s) at Hypha. Defaults to searching for the single next holiday "
+    "from today's date if no dates or limit are specified. Use `start_date`, `end_date`, and `limit` "
+    "for more specific queries (e.g., 'Are there holidays next month?', 'List the next 3 holidays')."
 )
 parameters = {
     "type": "object",
@@ -18,21 +18,21 @@ parameters = {
         "start_date": {
             "type": "string",
             "format": "date",
-            "description": "The start date to search for holidays in YYYY-MM-DD format.",
+            "description": "The start date to search for holidays (YYYY-MM-DD). Defaults to the current date if not provided.",
             "default": datetime.datetime.now().strftime("%Y-%m-%d")
         },
         "end_date": {
             "type": "string",
             "format": "date",
-            "description": "The end date to search for holidays in YYYY-MM-DD format."
+            "description": "The end date to search for holidays (YYYY-MM-DD). Defaults to one month after the start date if not provided."
         },
         "limit": {
             "type": "integer",
             "minimum": 1,
-            "description": "The maximum number of holidays to return. Defaults to 1 if not provided."
+            "description": "The maximum number of holidays to return. Defaults to 1."
         }
     },
-    "required": []  # Changed from ["start_date"] to make it more flexible
+    "required": []
 }
 
 
@@ -121,15 +121,19 @@ async def tool(roo, arguments, user):
         except (ValueError, TypeError):
             limit = 1
         
-        # Use the provided end_date or set a default of one year from the start_date
+        # Handle end_date
         if end_date_str:
             try:
                 end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
             except ValueError:
-                # Still proceed with a default end date
-                end_date = start_date + datetime.timedelta(days=365)
+                # Return error if provided end_date is invalid
+                return {
+                    "error": f"Invalid end date format: {end_date_str}. Please use YYYY-MM-DD format.",
+                    "message": "I couldn't understand the end date format. Please provide dates in YYYY-MM-DD format."
+                }
         else:
-            end_date = start_date + datetime.timedelta(days=365)
+            # Default end_date if not provided
+            end_date = start_date + datetime.timedelta(days=60)
             
         # Call the function to get holidays
         upcoming_holidays = get_upcoming_holidays(start_date, end_date, limit=limit)
