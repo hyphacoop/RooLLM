@@ -6,11 +6,9 @@ import logging
 try:
     from .bridge import MCPLLMBridge
     from .tools.tool_registry import ToolRegistry
-    from .stats import log_llm_usage
 except ImportError:
     from bridge import MCPLLMBridge
     from tools.tool_registry import ToolRegistry
-    from stats import log_llm_usage
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -93,19 +91,6 @@ class RooLLM:
                 history=formatted_history,
                 react_callback=react_callback
             )
-            
-            response_time = time.monotonic() - start_time
-
-            # Optional: log usage
-            try:
-                log_llm_usage(
-                    user=user,
-                    tool_used=response.get("tool_name"),
-                    subtool_used=response.get("sub_tool_name"),
-                    response_time=response_time
-                )
-            except Exception as e:
-                logger.warning(f"Failed to log LLM usage: {e}")
             
             return response
             
