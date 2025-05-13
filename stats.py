@@ -56,3 +56,37 @@ def log_llm_usage(user, request_event_id: str, response_event_id: str, emoji=Non
 
     except Exception as e:
         print(f"Error writing LLM log: {e}")
+
+def update_llm_log_quality(event_id_of_bot_response: str, quality_assessment: str) -> bool:
+    """Update the quality assessment for a given bot's response_event_id in the LLM log."""
+    if not os.path.exists(LLM_LOG_FILE):
+        print(f"Error: LLM log file not found at {LLM_LOG_FILE}")
+        return False
+
+    try:
+        with open(LLM_LOG_FILE, "r") as f:
+            try:
+                logs = json.load(f)
+            except json.JSONDecodeError:
+                print(f"Error: LLM log file {LLM_LOG_FILE} is not valid JSON or is empty.")
+                return False
+        
+        updated = False
+        for entry in logs:
+            if entry.get("response_event_id") == event_id_of_bot_response: # Match on response_event_id
+                entry["quality_assessment"] = quality_assessment
+                updated = True
+                break
+        
+        if updated:
+            with open(LLM_LOG_FILE, "w") as f:
+                json.dump(logs, f, indent=4)
+            print(f"Successfully updated quality assessment for response_event_id {event_id_of_bot_response} to {quality_assessment}")
+            return True
+        else:
+            print(f"Warning: response_event_id {event_id_of_bot_response} not found in LLM log for quality update.")
+            return False
+
+    except Exception as e:
+        print(f"Error updating LLM log quality: {e}")
+        return False
