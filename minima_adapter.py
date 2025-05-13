@@ -50,7 +50,15 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For local files, use [Source: ./Hypha_PUBLIC_Drive/path/to/file]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
+                "description": (
+                    "Find information in local files (PDF, CSV, DOCX, MD, TXT). "
+                    "This tool will return a JSON string in the 'content' field of the tool message. "
+                    "The JSON will have the following structure: "
+                    "{\"retrieved_content\": \"textual content found...\", \"citations\": [{\"original_source\": \"...\", \"formatted_citation\": \"[Source: ...]\", \"rule_applied\": \"...\"}]} "
+                    "Use the 'retrieved_content' field to formulate your answer. "
+                    "ALWAYS cite your sources using the 'formatted_citation' from each object in the 'citations' array. "
+                    "Failing to cite sources is a critical error. Every response MUST include at least one source citation if information is used from 'retrieved_content'."
+                ),
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
@@ -263,70 +271,86 @@ class MinimaRestAdapter:
     def _format_result_with_citations(self, output, sources):
         """
         Format the result with citations and source information.
-        Aims to cite all sources provided by Minima, with special formatting for known paths.
+        Returns a structured dictionary with content and processed citation details.
         
         Args:
             output: The output from Minima
             sources: List of verified sources
             
         Returns:
-            dict: Formatted result with citations
+            dict: Structured result with 'retrieved_content', 'citations', and 'raw_source_paths'
         """
-        logger.debug(f"Formatting result. Initial output snippet: '{output[:200]}...', All sources: {sources}")
+        logger.debug(f"[MINIMA_ADAPTER_TRACE] Initializing _format_result_with_citations. Output snippet: '{output[:200]}...', All raw sources from Minima: {sources}")
 
         if not sources:
-            logger.warning("No sources provided by Minima for result formatting.")
+            logger.warning("[MINIMA_ADAPTER_TRACE] No sources provided by Minima. Returning empty citations.")
             return {
-                "result": output + "\n\n⚠️ WARNING: No sources were cited by the search tool. This is a critical error if information was retrieved.",
-                "source_paths": []
+                "retrieved_content": output + "\n\n⚠️ WARNING: No sources were cited by the search tool. This is a critical error if information was retrieved.",
+                "citations": [],
+                "raw_source_paths": []
             }
             
-        formatted_citations = []
+        processed_citations_details_list = [] 
         
-        for source in sources:
+        for source_index, source in enumerate(sources):
             if not source or not isinstance(source, str):
-                logger.warning(f"Invalid or empty source found in sources list: {source}. Skipping this source.")
+                logger.warning(f"[MINIMA_ADAPTER_TRACE] Source at index {source_index} is invalid or empty: '{source}'. Skipping.")
                 continue
                 
-            logger.debug(f"Processing source for citation: '{source}'")
-            source_lower = source.lower() # For case-insensitive checks on keywords like 'handbook'
+            logger.debug(f"[MINIMA_ADAPTER_TRACE] Processing source #{source_index}: '{source}'")
+            source_lower = source.lower() 
             
             citation_text = ""
-            # Handbook source formatting
+            applied_rule = "none"
+            
             if "handbook" in source_lower:
-                # Extracts path relative to 'handbook/'
                 path_segment = source.split("handbook/", 1)[-1] if "handbook/" in source_lower else source
-                path_segment = path_segment.replace(".md", "") # Remove .md extension if present
+                path_segment = path_segment.replace(".md", "")
                 citation_text = f"[Source: handbook.hypha.coop/{path_segment}]"
-                logger.debug(f"Formatted as handbook source: {citation_text}")
-            # Hypha Public Drive formatting
-            elif "Hypha_PUBLIC_Drive" in source: # Path components are often case-sensitive
+                applied_rule = "handbook"
+                logger.debug(f"[MINIMA_ADAPTER_TRACE] Source '{source}' matched HANDBOOK rule. Formatted as: {citation_text}")
+            elif "Hypha_PUBLIC_Drive" in source: 
                 path_segment = source.split("Hypha_PUBLIC_Drive/", 1)[-1] if "Hypha_PUBLIC_Drive/" in source else source
                 citation_text = f"[From Hypha's Public Drive: {path_segment}]"
-                logger.debug(f"Formatted from Hypha's Public Drive source: {citation_text}")
-            # Generic formatting for all other sources
+                applied_rule = "hypha_public_drive"
+                logger.debug(f"[MINIMA_ADAPTER_TRACE] Source '{source}' matched HYPHA_PUBLIC_DRIVE rule. Formatted as: {citation_text}")
             else:
-                citation_text = f"[Source: {source}]" # Simplest form, using the original source string
-                logger.debug(f"Formatted as generic source: {citation_text}")
+                citation_text = f"[Source: {source}]"
+                applied_rule = "generic"
+                logger.debug(f"[MINIMA_ADAPTER_TRACE] Source '{source}' matched GENERIC rule. Formatted as: {citation_text}")
             
-            formatted_citations.append(citation_text)
+            processed_citations_details_list.append({"original_source": source, "formatted_citation": citation_text, "rule_applied": applied_rule})
         
-        if formatted_citations:
-            # Remove duplicates by converting to set and back to list, then sort for consistent order
-            unique_sorted_citations = sorted(list(set(formatted_citations)))
-            output += "\n\n" + "\n".join(unique_sorted_citations)
-            logger.debug(f"Appended citations to output. Final output snippet with citations: '{output[:300]}...'")
-        else:
-            # This case should now only be hit if all source strings were empty or invalid,
-            # which is handled by the 'continue' in the loop.
-            # If `sources` was non-empty but all were invalid, formatted_citations would be empty.
-            logger.warning("No valid sources could be formatted from the provided list. Original sources: {sources}")
-            output += "\n\n⚠️ WARNING: Although sources were provided, none could be validly formatted. Please check source data integrity."
+        logger.debug(f"[MINIMA_ADAPTER_TRACE] All processed citation details (before unique): {processed_citations_details_list}")
+
+        # Ensure unique citations based on the formatted_citation string, preserving order of first appearance
+        unique_formatted_citations_seen = set()
+        unique_processed_citations_details = []
+        for detail in processed_citations_details_list:
+            if detail["formatted_citation"] not in unique_formatted_citations_seen:
+                unique_processed_citations_details.append(detail)
+                unique_formatted_citations_seen.add(detail["formatted_citation"])
         
-        return {
-            "result": output,
-            "source_paths": sources # Always return the original, complete list of sources from Minima
+        # Sort unique citations by the 'formatted_citation' string for consistent ordering if needed,
+        # or maintain first-seen order (current implementation above does first-seen).
+        # For consistency similar to previous behavior, let's sort:
+        unique_processed_citations_details = sorted(unique_processed_citations_details, key=lambda x: x["formatted_citation"])
+
+        logger.debug(f"[MINIMA_ADAPTER_TRACE] Unique processed citation details: {unique_processed_citations_details}")
+        
+        final_result = {
+            "retrieved_content": output,
+            "citations": unique_processed_citations_details,
+            "raw_source_paths": sources 
         }
+        
+        if not unique_processed_citations_details and sources: # Sources existed but none were valid/could be formatted
+             logger.warning(f"[MINIMA_ADAPTER_TRACE] No valid citations could be generated from sources: {sources}. Adding warning to content.")
+             final_result["retrieved_content"] = output + "\n\n⚠️ WARNING: Although sources were provided, none could be validly formatted. Please check source data integrity."
+
+
+        logger.debug(f"[MINIMA_ADAPTER_TRACE] Final structured result: {final_result}")
+        return final_result
     
     async def list_tools(self):
         return [
