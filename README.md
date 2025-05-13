@@ -9,9 +9,9 @@ Roo serves as Hypha's digital assistant, providing access to an LLM through an O
 ### Key Features
 
 - **GitHub Integration**: Manage issues, pull requests, comments, labels, and other GitHub operations directly through chat
-- **Documentation Search**: Quickly search through Hypha's handbook
-- **Organizational Tools**: Access calendar information, vacation tracking, and other organizational data
-- **Multiple Interfaces**: Use either the web interface or CLI according to your workflow
+- **Documentation Search**: Quickly search through Hypha's handbook and public google drive
+- **Organizational Tools**: Access calendar information such as vacation tracking, and other organizational data
+- **Multiple Interfaces**: Use either the web interface or CLI according to your workflow. This repo is also used as a submodule of a Matrix Bot Plugin.
 
 Roo is built to be extensible, with a modular tool system that makes it easy to add new capabilities as needed.
 
@@ -25,7 +25,7 @@ To run RooLLM, ensure you have the following installed:
 - **Node.js**: Version 16 or higher (for serving the web interface)
 - **Pip**: Python package manager (use `pip3` if necessary)
 
-Additionally, if you plan to run the project locally with Ollama, ensure you have installed [Ollama](https://ollama.com/download).
+Additionally, if you plan to run the project locally with Ollama, ensure you have installed [Ollama](https://ollama.com/download). If you do not run it locally you will need access to an endpoint. Hypha's Ollama endpoint is using basic auth. You will need to add the username and password to the .env file. See below for full .env configs.
 
 ### Install Dependencies
 
@@ -97,7 +97,7 @@ These default values are used when users don't provide an organization or reposi
 
 ### Google Integration Setup
 
-RooLLM supports integration with Google Sheets for organizational data like vacation tracking. To set this up, you will need to create a service account and share the Google Sheets with the service account email address.
+RooLLM supports integration with Google Sheets for organizational data like vacation tracking. To set up your own google access, you will need to create a service account and share the Google Sheets with the service account email address.
 
 
 1. **Create a Service Account**:
@@ -120,7 +120,7 @@ RooLLM supports integration with Google Sheets for organizational data like vaca
 
 4. **Share Google Sheets**:
    - Share any Google Sheets you want to access with the Service Account email address
-   - Set appropriate permissions (usually Editor)
+   - Set appropriate permissions (usually Editor but basic access should work for simply reading the file)
 
 5. **Configure Sheet IDs**:
    - Set the following environment variables:
@@ -184,20 +184,6 @@ Then, run the project with:
 npm run start
 ```
 
-### MCP Server
-
-As an alternative to the standard web interface, you can run RooLLM using the MCP (Model Control Protocol) server:
-
-```bash
-python mcp_server.py
-```
-
-The MCP server provides:
-- A standardized interface for tool registration and execution
-- Extended timeout handling (60 seconds global timeout)
-- Error handling and crash reporting
-- Support for development mode
-
 ### MCP Ollama Bridge Architecture
 
 RooLLM now features a new MCP (Model Control Protocol) Ollama bridge architecture that provides a more robust and flexible way to interact with the LLM. The bridge architecture consists of several key components:
@@ -257,6 +243,23 @@ As an alternative to the web interface, you can have interactions with RooLLM in
 python repl.py
 ```
 
+### Quality feedback assessment
+
+In the Matrix version of Roo, logs contain a field with information regarding the quality of the response. This is provided by user's with thumbs up/ thumbs down reactions. This will allow us to analyze the quality of RooLLM's response and benchmark prompts and tools.   
+
+### MCP Server
+
+As an alternative to the standard web interface, you can run RooLLM using the MCP (Model Control Protocol) server. By doing so, you can bring RooLLM's tool in any MCP compatible client such as Claude Desktop.
+
+```bash
+python mcp_server.py
+```
+
+The MCP server provides:
+- A standardized interface for tool registration and execution
+- Error handling and crash reporting
+- Support for development mode
+
 ## Contributing
 
 We welcome contributions! Here are some guidelines to help you get started:
@@ -276,23 +279,14 @@ We welcome contributions! Here are some guidelines to help you get started:
 
 5. **Submit a pull request**: Open a PR with a clear description of your changes.
 
-### Development Guidelines
-
-- Follow the existing code style and conventions
-- Write clear, descriptive commit messages
-- Document new features or changes to existing functionality
-- Add tests for new features when possible
-
-### Reporting Issues
+### Feature requests and reporting Issues
 
 If you encounter any bugs or have feature requests, please open an issue on the repository with:
 - A clear description of the problem or suggestion
 - Steps to reproduce (for bugs)
 - Any relevant screenshots or error messages
 
-### Code of Conduct
 
-We expect all contributors to be respectful and considerate of others. Harassment or offensive behavior will not be tolerated.
 
 ## License
 
