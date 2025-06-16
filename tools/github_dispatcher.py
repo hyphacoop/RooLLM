@@ -13,7 +13,15 @@ logger.debug(f"github_dispatcher: Module loading. __name__ = '{__name__}', __pac
 # --- End initial logging ---
 
 name = "github_dispatcher"
-description = "Perform GitHub actions like creating, updating, commenting on issues or PRs. Known actions include search_issues, create_issue, comment, etc."
+description = """Perform GitHub actions like creating, updating, commenting on issues or PRs. 
+
+Available actions:
+- Issues: create_issue, update_issue, close_issue, reopen_issue, comment (on issues)
+- Pull Requests: create_pr, update_pr, close_pr, reopen_pr, merge_pr, comment (on PRs)  
+- Search: search_issues, list_issues, search_prs, search_labels
+- Management: add_labels, assign
+
+Use specific action names (e.g., 'close_issue' not 'close', 'create_issue' not 'create')."""
 emoji = "💻"
 
 parameters = {
@@ -21,7 +29,33 @@ parameters = {
     "properties": {
         "action": {
             "type": "string",
-            "description": "The GitHub action to perform (e.g., search_issues, create_issue, comment)."
+            "description": """The specific GitHub action to perform. Available actions:
+            
+Issues:
+- create_issue: Create a new issue
+- update_issue: Update an existing issue  
+- close_issue: Close an issue
+- reopen_issue: Reopen a closed issue
+- comment: Add a comment to an issue (requires 'number' parameter)
+
+Pull Requests:
+- create_pr: Create a new pull request
+- update_pr: Update an existing pull request
+- close_pr: Close a pull request
+- reopen_pr: Reopen a closed pull request  
+- merge_pr: Merge a pull request
+
+Search & Discovery:
+- search_issues: Search for issues (supports query, assignee, state filters)
+- list_issues: List issues (alias for search_issues)
+- search_prs: Search for pull requests
+- search_labels: Search repository labels
+
+Management:
+- add_labels: Add labels to an issue or PR
+- assign: Assign someone to an issue or PR
+
+Always use the specific action name (e.g., 'close_issue' for closing an issue, not just 'close')."""
         },
         "org": {
             "type": "string",
@@ -29,7 +63,7 @@ parameters = {
         },
         "repo": {
             "type": "string", 
-            "description": "Repository name (e.g., 'matrix-robot', 'organizing-private')."
+            "description": "Repository name (e.g., 'matrix-roobot', 'organizing-private'). IMPORTANT: Use the EXACT repository name as provided by the user - do not auto-correct or fix apparent typos (e.g., 'matrix-roobot' should stay 'matrix-roobot', not be changed to 'matrix-robot')."
         },
         "number": {
             "type": "integer",
