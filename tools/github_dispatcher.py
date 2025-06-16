@@ -23,9 +23,41 @@ parameters = {
             "type": "string",
             "description": "The GitHub action to perform (e.g., search_issues, create_issue, comment)."
         },
+        "org": {
+            "type": "string",
+            "description": "GitHub organization name (e.g., 'hyphacoop')."
+        },
+        "repo": {
+            "type": "string", 
+            "description": "Repository name (e.g., 'matrix-robot', 'organizing-private')."
+        },
+        "number": {
+            "type": "integer",
+            "description": "Issue or PR number for actions that operate on specific items."
+        },
+        "issue_number": {
+            "type": "string",
+            "description": "Issue number as string (will be converted to integer). Alternative to 'number' parameter."
+        },
+        "body": {
+            "type": "string",
+            "description": "Comment text for comment action, or issue/PR body for create/update actions."
+        },
+        "comment_text": {
+            "type": "string", 
+            "description": "Comment text (alternative to 'body' parameter for comment action)."
+        },
+        "text": {
+            "type": "string",
+            "description": "Text content (alternative to 'body' parameter)."
+        },
+        "title": {
+            "type": "string",
+            "description": "Title for create_issue or update_issue actions."
+        },
         "assignee": {
             "type": "string",
-            "description": "Filter by assignee username for search_issues/list_issues."
+            "description": "Filter by assignee username for search_issues/list_issues, or assignee for assignment actions."
         },
         "state": {
             "type": "string",
@@ -35,9 +67,14 @@ parameters = {
             "type": "string",
             "description": "A specific GitHub search query string for search_issues."
         },
+        "labels": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Labels for create_issue or add_labels actions."
+        },
         "args": {
             "type": "object",
-            "description": "Specific arguments for the chosen action if not covered by top-level params."
+            "description": "Specific arguments for the chosen action if not covered by top-level params. Arguments in here will be merged with top-level arguments."
         }
     },
     "required": ["action"]
@@ -94,15 +131,18 @@ async def tool(roo_context, arguments, user_identifier=None):  # Renamed for cla
         logger.warning(f"({__name__}) Unsupported GitHub action: '{action}'. Supported: {', '.join(ACTION_TO_HANDLER.keys())}")
         return f"Unsupported GitHub action: {action}. Supported actions are: {', '.join(ACTION_TO_HANDLER.keys())}"
 
+    # Transform arguments based on action type
+    transformed_args = transform_arguments(action, arguments)
+    
     module_path_str_with_tool_func = ACTION_TO_HANDLER[action]
     module_to_import_path, func_name_in_module = module_path_str_with_tool_func.rsplit('.', 1)
 
-    logger.debug(f"({__name__}) Dispatching action '{action}' to module '{module_to_import_path}' function '{func_name_in_module}'")
+    logger.debug(f"({__name__}) Dispatching action '{action}' to module '{module_to_import_path}' function '{func_name_in_module}' with transformed args: {transformed_args}")
 
     try:
         module_instance = importlib.import_module(module_to_import_path)
         actual_tool_func = getattr(module_instance, func_name_in_module)
-        return await actual_tool_func(roo_context, arguments, user_identifier) 
+        return await actual_tool_func(roo_context, transformed_args, user_identifier) 
     except ModuleNotFoundError:
         logger.error(f"({__name__}) ModuleNotFoundError while dispatching action '{action}': Could not import '{module_to_import_path}'. Check path and ensure target module exists. sys.path: {sys.path}", exc_info=True)
         return f"Failed to find module for {action}: {module_to_import_path}."
@@ -112,3 +152,74 @@ async def tool(roo_context, arguments, user_identifier=None):  # Renamed for cla
     except Exception as e:
         logger.error(f"({__name__}) Exception during execution of dispatched action '{action}' (module: {module_to_import_path}): {e}", exc_info=True)
         return f"Failed to execute {action}: {e}"
+
+
+def transform_arguments(action, arguments):
+    """Transform arguments to match the expected format for each action."""
+    # Start with a copy of the original arguments
+    transformed = arguments.copy()
+    
+    # If arguments are nested in 'args', merge them with top-level arguments
+    if 'args' in arguments and isinstance(arguments['args'], dict):
+        # Top-level arguments take precedence over nested ones
+        nested_args = arguments['args'].copy()
+        nested_args.update(transformed)
+        transformed = nested_args
+    
+    # Remove the 'action' and 'args' keys as they're not needed by the underlying tools
+    transformed.pop('action', None)
+    transformed.pop('args', None)
+    
+    # Action-specific transformations
+    if action == "comment":
+        # Map various comment parameter names to the expected format
+        # comment_github_item expects: org, repo, number (int), body
+        
+        # Map comment text variations to 'body'
+        if 'comment_text' in transformed:
+            transformed['body'] = transformed.pop('comment_text')
+        elif 'text' in transformed:
+            transformed['body'] = transformed.pop('text')
+        elif 'comment' in transformed:
+            transformed['body'] = transformed.pop('comment')
+            
+        # Map issue number variations to 'number' and ensure it's an integer
+        if 'issue_number' in transformed:
+            try:
+                transformed['number'] = int(transformed.pop('issue_number'))
+            except (ValueError, TypeError):
+                logger.warning(f"Could not convert issue_number to integer: {transformed.get('issue_number')}")
+        elif 'number' in transformed and isinstance(transformed['number'], str):
+            try:
+                transformed['number'] = int(transformed['number'])
+            except (ValueError, TypeError):
+                logger.warning(f"Could not convert number to integer: {transformed.get('number')}")
+                
+    elif action in ["create_issue", "update_issue"]:
+        # These actions expect 'number' as integer if provided
+        if 'issue_number' in transformed:
+            try:
+                transformed['number'] = int(transformed.pop('issue_number'))
+            except (ValueError, TypeError):
+                logger.warning(f"Could not convert issue_number to integer: {transformed.get('issue_number')}")
+        elif 'number' in transformed and isinstance(transformed['number'], str):
+            try:
+                transformed['number'] = int(transformed['number'])
+            except (ValueError, TypeError):
+                logger.warning(f"Could not convert number to integer: {transformed.get('number')}")
+                
+    elif action in ["search_issues", "list_issues"]:
+        # These actions might need number conversion too
+        if 'issue_number' in transformed:
+            try:
+                transformed['number'] = int(transformed.pop('issue_number'))
+            except (ValueError, TypeError):
+                logger.warning(f"Could not convert issue_number to integer: {transformed.get('issue_number')}")
+        elif 'number' in transformed and isinstance(transformed['number'], str):
+            try:
+                transformed['number'] = int(transformed['number'])
+            except (ValueError, TypeError):
+                logger.warning(f"Could not convert number to integer: {transformed.get('number')}")
+    
+    logger.debug(f"({__name__}) Argument transformation for action '{action}': {arguments} -> {transformed}")
+    return transformed
