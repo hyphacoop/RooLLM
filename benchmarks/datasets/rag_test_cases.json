@@ -1,0 +1,100 @@
+{
+  "knowledge_retrieval": [
+    {
+      "id": "rag_001",
+      "input": "What are Hypha's core values?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "core values"
+      },
+      "description": "Test knowledge retrieval for organizational values",
+      "category": "knowledge_retrieval"
+    },
+    {
+      "id": "rag_002", 
+      "input": "How does Hypha's consensus decision-making process work?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "consensus decision-making process"
+      },
+      "description": "Test complex process explanation retrieval",
+      "category": "knowledge_retrieval"
+    },
+    {
+      "id": "rag_003",
+      "input": "What projects has Hypha worked on related to governance?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "governance projects"
+      },
+      "description": "Test project history retrieval",
+      "category": "knowledge_retrieval"
+    }
+  ],
+  "technical_documentation": [
+    {
+      "id": "tech_001",
+      "input": "How do I set up a distributed press node?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "distributed press node setup"
+      },
+      "description": "Test technical setup documentation",
+      "category": "technical_documentation"
+    },
+    {
+      "id": "tech_002",
+      "input": "What are the system requirements for running Hypha's infrastructure?",
+      "expected_tool": "query", 
+      "expected_params": {
+        "query": "system requirements infrastructure"
+      },
+      "description": "Test technical requirements documentation",
+      "category": "technical_documentation"
+    }
+  ],
+  "policy_queries": [
+    {
+      "id": "policy_001",
+      "input": "What is the code of conduct for Hypha members?", 
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "code of conduct"
+      },
+      "description": "Test policy document retrieval",
+      "category": "policy_queries"
+    },
+    {
+      "id": "policy_002",
+      "input": "How are conflicts resolved at Hypha?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "conflict resolution"
+      },
+      "description": "Test conflict resolution policy",
+      "category": "policy_queries"
+    }
+  ],
+  "contextual_queries": [
+    {
+      "id": "context_001",
+      "input": "Based on our past projects, what would be a good approach for a new governance toolkit?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "governance toolkit projects approach"
+      },
+      "description": "Test contextual reasoning with historical data",
+      "category": "contextual_queries"
+    },
+    {
+      "id": "context_002",
+      "input": "How has Hypha's approach to distributed systems evolved over time?",
+      "expected_tool": "query",
+      "expected_params": {
+        "query": "distributed systems evolution approach"
+      },
+      "description": "Test temporal understanding and evolution tracking",
+      "category": "contextual_queries"
+    }
+  ]
+} 

@@ -10,7 +10,13 @@
     "interfac3": "cd frontend && python3 -m http.server 8080",
     "start3": "npm run open:browser & concurrently --kill-others --handle-input -n RooLLM,interface -c green,cyan \"npm run RooLLM3\" \"npm run interfac3\"",
     "prestart": "bash -c 'if command -v ollama >/dev/null 2>&1; then echo -e \"\\033[92mOllama is installed. You are using a local LLM API endpoint\\033[0m\"; else echo \"Ollama not installed. Install Ollama or set ROO_LLM_URL to a different endpoint.\"; exit 1; fi'",
-    "prestart3": "bash -c 'if command -v ollama >/dev/null 2>&1; then echo -e \"\\033[92mOllama is installed. You are using a local LLM API endpoint\\033[0m\"; else echo \"Ollama not installed. Install Ollama or set ROO_LLM_URL to a different endpoint.\"; exit 1; fi'"
+    "prestart3": "bash -c 'if command -v ollama >/dev/null 2>&1; then echo -e \"\\033[92mOllama is installed. You are using a local LLM API endpoint\\033[0m\"; else echo \"Ollama not installed. Install Ollama or set ROO_LLM_URL to a different endpoint.\"; exit 1; fi'",
+    "benchmark": "echo '🚀 For benchmarking, use: python repl.py' && echo 'Then type: /benchmark'",
+    "benchmark:info": "python benchmarks/simple_cli.py benchmark-info --dataset all",
+    "benchmark:tools": "python benchmarks/simple_cli.py benchmark-info --dataset tool",
+    "benchmark:rag": "python benchmarks/simple_cli.py benchmark-info --dataset rag", 
+    "analytics": "python benchmarks/simple_cli.py analytics",
+    "analytics:week": "python benchmarks/simple_cli.py analytics --days 7"
   },
   "devDependencies": {
     "concurrently": "^8.0.1",

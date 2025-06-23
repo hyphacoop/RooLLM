@@ -1,6 +1,7 @@
 aiohttp
 async_lru
 beautifulsoup4
+deepeval
 fastapi
 gspread
 jwt
