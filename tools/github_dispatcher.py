@@ -69,10 +69,6 @@ Always use the specific action name (e.g., 'close_issue' for closing an issue, n
             "type": "integer",
             "description": "Issue or PR number for actions that operate on specific items."
         },
-        "issue_number": {
-            "type": "string",
-            "description": "Issue number as string (will be converted to integer). Alternative to 'number' parameter."
-        },
         "body": {
             "type": "string",
             "description": "Comment text for comment action, or issue/PR body for create/update actions."
@@ -218,38 +214,18 @@ def transform_arguments(action, arguments):
             transformed['body'] = transformed.pop('comment')
             
         # Map issue number variations to 'number' and ensure it's an integer
-        if 'issue_number' in transformed:
-            try:
-                transformed['number'] = int(transformed.pop('issue_number'))
-            except (ValueError, TypeError):
-                logger.warning(f"Could not convert issue_number to integer: {transformed.get('issue_number')}")
-        elif 'number' in transformed and isinstance(transformed['number'], str):
+        if 'number' in transformed and isinstance(transformed['number'], str):
             try:
                 transformed['number'] = int(transformed['number'])
             except (ValueError, TypeError):
                 logger.warning(f"Could not convert number to integer: {transformed.get('number')}")
                 
-    elif action in ["create_issue", "update_issue"]:
-        # These actions expect 'number' as integer if provided
-        if 'issue_number' in transformed:
-            try:
-                transformed['number'] = int(transformed.pop('issue_number'))
-            except (ValueError, TypeError):
-                logger.warning(f"Could not convert issue_number to integer: {transformed.get('issue_number')}")
-        elif 'number' in transformed and isinstance(transformed['number'], str):
-            try:
-                transformed['number'] = int(transformed['number'])
-            except (ValueError, TypeError):
-                logger.warning(f"Could not convert number to integer: {transformed.get('number')}")
-                
-    elif action in ["search_issues", "list_issues"]:
-        # These actions might need number conversion too
-        if 'issue_number' in transformed:
-            try:
-                transformed['number'] = int(transformed.pop('issue_number'))
-            except (ValueError, TypeError):
-                logger.warning(f"Could not convert issue_number to integer: {transformed.get('issue_number')}")
-        elif 'number' in transformed and isinstance(transformed['number'], str):
+    # Actions that expect 'number' as integer parameter
+    elif action in ["create_issue", "update_issue", "close_issue", "reopen_issue", 
+                   "close_pr", "reopen_pr", "update_pr", "merge_pr",
+                   "assign", "add_labels", "search_issues", "list_issues", "search_prs"]:
+        # Convert issue_number to number and ensure it's an integer
+        if 'number' in transformed and isinstance(transformed['number'], str):
             try:
                 transformed['number'] = int(transformed['number'])
             except (ValueError, TypeError):
