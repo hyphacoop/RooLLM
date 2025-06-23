@@ -1,0 +1,130 @@
+{
+  "github_operations": [
+    {
+      "id": "github_001",
+      "input": "Create an issue titled 'Fix login bug' in hyphacoop/RooLLM",
+      "expected_tool": "create_github_issue",
+      "expected_params": {
+        "title": "Fix login bug",
+        "repo": "hyphacoop/RooLLM"
+      },
+      "description": "Test GitHub issue creation with basic parameters",
+      "category": "github_operations"
+    },
+    {
+      "id": "github_002", 
+      "input": "Search for open issues in hyphacoop/RooLLM assigned to tripledoublev",
+      "expected_tool": "search_github_issues",
+      "expected_params": {
+        "repo": "hyphacoop/RooLLM",
+        "assignee": "tripledoublev",
+        "state": "open"
+      },
+      "description": "Test GitHub issue search with filters",
+      "category": "github_operations"
+    },
+    {
+      "id": "github_003",
+      "input": "Close issue #33 in hyphacoop/RooLLM",
+      "expected_tool": "close_github_issue",
+      "expected_params": {
+        "repo": "hyphacoop/RooLLM",
+        "issue_number": 33
+      },
+      "description": "Test GitHub issue closure",
+      "category": "github_operations"
+    },
+    {
+      "id": "github_004",
+      "input": "Reopen the closed issue #33 in hyphacoop/RooLLM",
+      "expected_tool": "reopen_github_issue",
+      "expected_params": {
+        "repo": "hyphacoop/RooLLM",
+        "issue_number": 33
+      },
+      "description": "Test GitHub issue reopening",
+      "category": "github_operations"
+    }
+  ],
+  "calculations": [
+    {
+      "id": "calc_001",
+      "input": "What's 15% of 1000?",
+      "expected_tool": "calc",
+      "expected_params": {
+        "expression": "1000 * 0.15"
+      },
+      "expected_output": "150",
+      "description": "Basic percentage calculation",
+      "category": "calculations"
+    },
+    {
+      "id": "calc_002", 
+      "input": "Calculate (25 + 30) * 2",
+      "expected_tool": "calc",
+      "expected_params": {
+        "expression": "(25 + 30) * 2"
+      },
+      "expected_output": "110",
+      "description": "Complex arithmetic with parentheses",
+      "category": "calculations"
+    }
+  ],
+  "handbook_queries": [
+    {
+      "id": "handbook_001",
+      "input": "What is Hypha's vacation policy?",
+      "expected_tool": "search_handbook",
+      "expected_params": {
+        "query": "vacation policy"
+      },
+      "description": "Test handbook search for policy information",
+      "category": "handbook_queries"
+    },
+    {
+      "id": "handbook_002",
+      "input": "How do I submit expenses?",
+      "expected_tool": "search_handbook", 
+      "expected_params": {
+        "query": "expenses submission"
+      },
+      "description": "Test handbook search for process information",
+      "category": "handbook_queries"
+    }
+  ],
+  "information_queries": [
+    {
+      "id": "info_001",
+      "input": "When is the next statutory holiday?",
+      "expected_tool": "get_upcoming_holiday",
+      "expected_params": {},
+      "description": "Test holiday information retrieval",
+      "category": "information_queries"
+    },
+    {
+      "id": "info_002",
+      "input": "Who's on vacation next week?",
+      "expected_tool": "get_upcoming_vacations",
+      "expected_params": {},
+      "description": "Test vacation information retrieval",
+      "category": "information_queries"
+    }
+  ],
+  "no_tool_scenarios": [
+    {
+      "id": "no_tool_001",
+      "input": "Hello, how are you?",
+      "expected_tool": null,
+      "expected_output": "Hello! I'm doing well, thank you for asking. How can I help you today?",
+      "description": "Simple greeting that shouldn't require tools",
+      "category": "no_tool_scenarios"
+    },
+    {
+      "id": "no_tool_002",
+      "input": "What are your capabilities?",
+      "expected_tool": null,
+      "description": "General capability question",
+      "category": "no_tool_scenarios"
+    }
+  ]
+} 

@@ -1,0 +1,130 @@
+{
+  "multi_turn_conversations": [
+    {
+      "id": "conv_001",
+      "conversation": [
+        {
+          "turn": 1,
+          "input": "I need to create a new project for tracking our expenses",
+          "expected_tool": "create_github_issue",
+          "expected_params": {
+            "title": "Create expense tracking project"
+          }
+        },
+        {
+          "turn": 2,
+          "input": "Actually, let me first check if we already have something similar",
+          "expected_tool": "search_github_issues",
+          "expected_params": {
+            "query": "expense tracking"
+          }
+        },
+        {
+          "turn": 3,
+          "input": "What's our current expense policy?",
+          "expected_tool": "query",
+          "expected_params": {
+            "query": "expense policy"
+          }
+        }
+      ],
+      "description": "Multi-turn conversation involving project creation and research",
+      "category": "multi_turn_conversations"
+    },
+    {
+      "id": "conv_002",
+      "conversation": [
+        {
+          "turn": 1,
+          "input": "Calculate the budget needed for 5 team members for 3 months at $5000 each",
+          "expected_tool": "calc",
+          "expected_params": {
+            "expression": "5 * 3 * 5000"
+          }
+        },
+        {
+          "turn": 2,
+          "input": "What if we add 20% for overhead costs?",
+          "expected_tool": "calc",
+          "expected_params": {
+            "expression": "75000 * 1.20"
+          }
+        },
+        {
+          "turn": 3,
+          "input": "How does this compare to our historical project budgets?",
+          "expected_tool": "query",
+          "expected_params": {
+            "query": "historical project budgets"
+          }
+        }
+      ],
+      "description": "Budget calculation with iterative refinements and context",
+      "category": "multi_turn_conversations"
+    }
+  ],
+  "context_building": [
+    {
+      "id": "context_001",
+      "conversation": [
+        {
+          "turn": 1, 
+          "input": "I'm working on a governance proposal",
+          "expected_tool": null,
+          "expected_output": "That sounds interesting! I can help you with governance-related work. What specific aspect of the governance proposal are you focusing on?"
+        },
+        {
+          "turn": 2,
+          "input": "I need to understand how similar proposals were structured in the past",
+          "expected_tool": "query",
+          "expected_params": {
+            "query": "governance proposals structure examples"
+          }
+        },
+        {
+          "turn": 3,
+          "input": "Can you help me create an issue to track this work?",
+          "expected_tool": "create_github_issue",
+          "expected_params": {
+            "title": "Governance proposal development"
+          }
+        }
+      ],
+      "description": "Context-building conversation from general to specific",
+      "category": "context_building"
+    }
+  ],
+  "tool_chaining": [
+    {
+      "id": "chain_001",
+      "conversation": [
+        {
+          "turn": 1,
+          "input": "Find issues related to blockchain governance in our repos",
+          "expected_tool": "search_github_issues",
+          "expected_params": {
+            "query": "blockchain governance"
+          }
+        },
+        {
+          "turn": 2,
+          "input": "Now search our knowledge base for related research",
+          "expected_tool": "query",
+          "expected_params": {
+            "query": "blockchain governance research"
+          }
+        },
+        {
+          "turn": 3,
+          "input": "Create a summary issue linking this information together",
+          "expected_tool": "create_github_issue",
+          "expected_params": {
+            "title": "Blockchain governance research summary"
+          }
+        }
+      ],
+      "description": "Tool chaining workflow for research compilation",
+      "category": "tool_chaining"
+    }
+  ]
+} 
