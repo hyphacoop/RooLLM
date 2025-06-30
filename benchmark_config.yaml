@@ -1,0 +1,65 @@
+# Benchmark Configuration for RooLLM
+# This file contains configuration settings for the DeepEval benchmarking system
+
+# Evaluation Thresholds
+thresholds:
+  tool_accuracy: 0.8      # Minimum score for tool calling accuracy
+  response_quality: 0.7   # Minimum score for response quality
+  hallucination: 0.8      # Minimum score for hallucination detection
+
+# Continuous Evaluation Settings
+continuous_eval:
+  enabled: true
+  sampling_rate: 0.1      # Evaluate 10% of responses
+  min_response_length: 10 # Minimum response length to evaluate
+  max_evaluation_time: 5.0 # Maximum time to spend on evaluation (seconds)
+
+# Dataset Configuration
+datasets:
+  default_dataset: "all"
+  test_cases_dir: "benchmarks/datasets"
+  available_datasets:
+    - "tool"
+    - "rag" 
+    - "conversation_flows"
+    - "all"
+
+# Metric Weights (for overall score calculation)
+metric_weights:
+  tool_accuracy: 0.4
+  response_quality: 0.3
+  hallucination: 0.3
+
+# Output Configuration
+output:
+  results_dir: "benchmarks/results"
+  save_detailed_results: true
+  save_summary_only: false
+  report_format: "json"  # json, yaml, or both
+  
+# Performance Settings
+performance:
+  parallel_evaluations: false
+  max_concurrent_evals: 3
+  timeout_per_test: 30.0  # seconds
+
+# Logging Configuration
+logging:
+  level: "INFO"          # DEBUG, INFO, WARNING, ERROR
+  log_to_file: true
+  log_file: "benchmarks/benchmark.log"
+  include_timestamps: true
+
+# Integration Settings
+integration:
+  stats_integration: true
+  continuous_logging: true
+  quality_threshold_alerts: true
+  alert_threshold: 0.5    # Alert if overall score drops below this
+
+# Advanced Settings
+advanced:
+  cache_evaluations: false
+  evaluation_cache_ttl: 3600  # seconds
+  retry_failed_evaluations: true
+  max_retries: 2 
