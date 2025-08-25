@@ -11,6 +11,7 @@ graph TB
     subgraph "User Interfaces"
         UI[Web Interface<br/>Vanilla JS + FastAPI]
         CLI[CLI Interface<br/>REPL]
+        MATRIX[Matrix Bot Plugin<br/>External]
         API[REST API<br/>FastAPI]
     end
     
@@ -27,7 +28,7 @@ graph TB
     
     subgraph "Tool Adapters"
         Local[Local Tools Adapter<br/>Python Tools]
-        Minima[Minima REST Adapter<br/>Document Search]
+        Minima[Minima Adapter<br/>REST/MCP Document Search]
         GitHub[GitHub Tools<br/>Issue/PR Management]
         Calc[Utility Tools<br/>Calculator, Echo]
     end
@@ -35,10 +36,15 @@ graph TB
     subgraph "External Services"
         GH[GitHub API]
         Google[Google Services]
-        Minima[Minima Indexer]
+        subgraph "Minima RAG"
+            MinimaMCP[Minima MCP Server]
+            VectorDB[Vector DB]
+            LocalFiles[Local Files]
+        end
     end
     
     UI --> API
+    MATRIX --> Roo
     CLI --> Roo
     API --> Roo
     
@@ -55,7 +61,9 @@ graph TB
     
     Local --> GitHub
     GitHub --> GH
-    Minima --> Minima
+    Minima --> MinimaMCP
+    MinimaMCP --> VectorDB
+    MinimaMCP --> LocalFiles
 ```
 
 ## Core Components
@@ -170,10 +178,12 @@ async def connect(self, force=False):
 
 ### 2. Minima REST Adapter (`minima_adapter.py`)
 
-Connects to the Minima indexer for local document search capabilities.
+Connects to the Minima indexer/MCP server for local document search capabilities.
+
+- Upstream project: [Minima (on‑premises conversational RAG with MCP)](https://github.com/dmayboroda/minima)
 
 **Key Features:**
-- REST API-based communication with Minima server
+- REST/MCP-based communication with Minima server
 - Connection health monitoring and retry logic
 - Document search with source citation requirements
 - Configurable server endpoints
@@ -294,7 +304,7 @@ Command-line interface for terminal-based interaction and automation.
 - **Interactive Chat Mode**: Real-time conversation with RooLLM
 - **Command-line Arguments**: Direct query execution for scripting
 - **Tool Reaction Callbacks**: Visual feedback for tool execution
-- **Session Persistence**: Conversation history across CLI sessions
+- **Session History**: In-session only; history resets on restart
 - **Error Handling**: Graceful error messages and recovery
 
 **CLI Structure:**
@@ -324,6 +334,17 @@ class MinimaQueryRequest(BaseModel):
     query: str
     session_id: str
 ```
+
+### 4. Matrix Interface (External to this codebase)
+
+An external Matrix bot/plugin integrates with RooLLM.
+
+**Features:**
+- **Room Bridging**: Routes Matrix room messages to RooLLM and returns replies
+- **Tool Access**: Exposes the same toolset
+- **Auth & Safety**: Room restrictions and rate limiting handled in the plugin
+
+Note: The Matrix integration lives outside this repository but is the primary user interface for RooLLM.
 
 ## Performance Characteristics
 
