@@ -50,11 +50,15 @@ google_creds = None
 if creds := os.getenv("GOOGLE_CREDENTIALS"):
     google_creds = json.loads(base64.b64decode(creds).decode())
 
+# Claude Setup
+claude_api_key = os.getenv("CLAUDE_API_KEY")
+
 # Initialize config dictionary
 config = {
     "gh_token": github_token,
     "gh_auth_object": auth_object,
-    "google_creds": google_creds
+    "google_creds": google_creds,
+    "CLAUDE_API_KEY": claude_api_key
 }
 
 # Update config with MCP settings
