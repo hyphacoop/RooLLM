@@ -1,6 +1,6 @@
 import anthropic
 import logging
-import os
+import re
 from typing import Dict, Any, Optional
 
 # Configure logging
@@ -51,10 +51,7 @@ async def tool(roo, arguments: Dict[str, Any], user: str) -> Dict[str, Any]:
         # Extract query from arguments
         query = arguments.get("query")
         if not query:
-            return {
-                "error": "No search query provided",
-                "message": "Please provide a search query to search the internet."
-            }
+            return "Please provide a search query to search the internet."
         
         # Get max_tokens with default and bounds
         max_tokens = arguments.get("max_tokens", 1024)
@@ -64,10 +61,7 @@ async def tool(roo, arguments: Dict[str, Any], user: str) -> Dict[str, Any]:
         api_key = roo.config.get("CLAUDE_API_KEY")
         if not api_key:
             logger.error("CLAUDE_API_KEY not found in configuration")
-            return {
-                "error": "Claude API key not configured",
-                "message": "Web search is not available - Claude API key is not configured."
-            }
+            return "Web search is not available - Claude API key is not configured."
         
         # Initialize Claude client
         client = anthropic.Anthropic(api_key=api_key)
@@ -138,74 +132,71 @@ Keep responses focused, concise, and avoid unnecessary elaboration. If no releva
             # Combine all text parts
             full_response = ' '.join(text_parts)
             
+            # Clean citation markers from the response
+            cleaned_response = full_response
+            # Remove citation markers but be more specific
+            cleaned_response = re.sub(r'【[^】]*citations[^】]*】', '', cleaned_response)
+            cleaned_response = re.sub(r'【[^】]*web_search[^】]*】', '', cleaned_response)
+            # Clean up any extra whitespace and normalize
+            cleaned_response = re.sub(r'\s+', ' ', cleaned_response).strip()
+            
             # Format the response with search results and citations
-            formatted_response = full_response
+            formatted_response = cleaned_response
             
             # Add sources section with clickable links
+            logger.debug(f"Citations found: {len(citations)}, Search results found: {len(search_results)}")
+            
             if search_results or citations:
                 formatted_response += "\n\n**Sources:**\n"
                 
-                # Combine search results and citations, prioritizing citations
-                all_sources = []
+                # Collect unique sources, prioritizing citations
+                sources = []
+                seen_urls = set()
                 
                 # Add citations first (they're more specific)
-                for i, citation in enumerate(citations[:3], 1):
-                    all_sources.append({
-                        'index': i,
-                        'title': citation['title'],
-                        'url': citation['url'],
-                        'type': 'citation'
-                    })
+                for citation in citations[:3]:
+                    url = citation.get('url', '').strip()
+                    title = citation.get('title', 'Source').strip()
+                    if url and url.startswith('http') and url not in seen_urls:
+                        sources.append({
+                            'title': title or 'Source',
+                            'url': url
+                        })
+                        seen_urls.add(url)
+                        logger.debug(f"Added citation: {title} - {url}")
                 
                 # Add search results (avoiding duplicates)
-                existing_urls = {citation['url'] for citation in citations}
-                for i, result in enumerate(search_results[:3], len(citations) + 1):
-                    if result['url'] not in existing_urls:
-                        all_sources.append({
-                            'index': i,
-                            'title': result['title'],
-                            'url': result['url'],
-                            'type': 'search_result'
+                for result in search_results[:3]:
+                    url = result.get('url', '').strip()
+                    title = result.get('title', 'Source').strip()
+                    if url and url.startswith('http') and url not in seen_urls:
+                        sources.append({
+                            'title': title or 'Source',
+                            'url': url
                         })
+                        seen_urls.add(url)
+                        logger.debug(f"Added search result: {title} - {url}")
                 
-                # Format the sources
-                for source in all_sources[:5]:  # Limit to 5 sources max
-                    formatted_response += f"[{source['index']}] [{source['title']}]({source['url']})\n"
+                # Format the sources with simple numbering
+                for i, source in enumerate(sources[:5], 1):
+                    formatted_response += f"[{i}] [{source['title']}]({source['url']})\n"
                 
-                if len(search_results) + len(citations) > 5:
-                    formatted_response += f"... and {len(search_results) + len(citations) - 5} more sources\n"
+                logger.debug(f"Final sources count: {len(sources)}")
+            else:
+                logger.debug("No sources found to add")
             
             logger.info(f"Web search completed successfully for query: {query}")
             logger.info(f"Found {len(search_results)} search results and {len(citations)} citations")
+            logger.debug(f"Final formatted response: {formatted_response}")
             
-            return {
-                "query": query,
-                "response": full_response,
-                "formatted_response": formatted_response,
-                "search_results": search_results,
-                "citations": citations,
-                "message": formatted_response,
-                "tool_used": "claude_web_search",
-                "max_tokens_used": max_tokens,
-                "sources_count": len(search_results),
-                "citations_count": len(citations)
-            }
+            return formatted_response
         else:
             logger.warning(f"No content returned from Claude for query: {query}")
-            return {
-                "error": "No response from Claude",
-                "message": "I was unable to get a response from the web search. Please try again with a different query."
-            }
+            return "I was unable to get a response from the web search. Please try again with a different query."
             
     except anthropic.APIError as e:
         logger.error(f"Claude API error during web search: {e}")
-        return {
-            "error": f"Claude API error: {str(e)}",
-            "message": "I encountered an API error while searching. Please try again later."
-        }
+        return "I encountered an API error while searching. Please try again later."
     except Exception as e:
         logger.error(f"Unexpected error during web search: {str(e)}", exc_info=True)
-        return {
-            "error": f"Search failed: {str(e)}",
-            "message": "I encountered an unexpected error while searching. Please try again or rephrase your query."
-        }
+        return "I encountered an unexpected error while searching. Please try again or rephrase your query."
