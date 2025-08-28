@@ -40,6 +40,7 @@ emojiToolMap = {
     "🌴": "`get_upcoming_vacations`: Get information about our colleague's upcoming vacations",
     "🗄️": "`get_archive_categories`: List archivable categories with links",
     "🔢": "`calc`: Perform calculations",
+    "🌐": "`web_search`: Search the internet for current information using Claude with web search",
     "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
     "💻": "`github_dispatcher`: GitHub operations dispatcher"
 }
@@ -124,6 +125,14 @@ if ENCODED_GOOGLE_CREDENTIALS:
         logger.debug("Successfully loaded Google credentials")
     except Exception as e:
         logger.error(f"Error decoding Google credentials: {e}")
+
+# Load Claude API key
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
+if CLAUDE_API_KEY:
+    config["CLAUDE_API_KEY"] = CLAUDE_API_KEY
+    logger.debug("Successfully loaded Claude API key")
+else:
+    logger.warning("⚠️ Claude API key not found in environment variables")
 
 # --- LLM & Bridge Setup ---
 
