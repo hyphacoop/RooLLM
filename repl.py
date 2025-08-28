@@ -22,7 +22,7 @@ emojiToolMap = {
     "👤": "`assign_github_item`: Assign users to issues or PRs",
     "🏷️": "`add_labels_to_github_item`: Add labels to issues or PRs",
     "🔖": "`search_repo_labels`: Get available labels in a repository",
-    "🔧": "`github_issues_operations`: Dispatcher for issue operations",
+    "💻": "`github_dispatcher`: Dispatcher for GitHub operations",
     "📝": "`create_github_issue`: Create new issues",
     "🔒": "`close_github_issue`: Close an issue",
     "🔑": "`reopen_github_issue`: Reopen a closed issue",
@@ -42,7 +42,7 @@ emojiToolMap = {
     "🔢": "`calc`: Perform calculations",
     "🌐": "`web_search`: Search the internet for current information using Claude with web search",
     "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
-    "💻": "`github_dispatcher`: GitHub operations dispatcher"
+    "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps."
 }
 
 # Exit message constant
@@ -260,11 +260,16 @@ async def main():
                 print(f"{BOLD}{YELLOW}/username <new_name>{RESET} - Change your username")
                 print(f"{BOLD}{YELLOW}/tools{RESET} - List all available tools")
                 print(f"{BOLD}{YELLOW}/details :emoji:{RESET} - See tool details")
+                print(f"{BOLD}{YELLOW}/models{RESET} - List available Ollama models")
+                print(f"{BOLD}{YELLOW}/model <model_name>{RESET} - Change the current LLM model")
+                print(f"{BOLD}{YELLOW}/current-model{RESET} - Show the current LLM model")
+                print(f"{BOLD}{YELLOW}/benchmark [dataset]{RESET} - Run benchmark evaluation")
+                print(f"{BOLD}{YELLOW}/analytics [days]{RESET} - Show quality analytics")
                 print(f"{BOLD}{YELLOW}/exit{RESET} or {BOLD}{YELLOW}/quit{RESET} - Exit the chat\n")
                 continue
 
             # Handle exit/quit commands
-            if query.lower() in ['/exit', '/quit']:
+            if query.lower() in ['/exit', '/quit', '/bye']:
                 print(EXIT_MESSAGE)
                 break
 
@@ -301,6 +306,36 @@ async def main():
                 else:
                     print(f"{YELLOW}Tool with emoji {emoji} not found. Use /tools to see available tools{RESET}\n")
                 continue
+
+            # Handle models command
+            if query.lower() == '/models':
+                await handle_models_command(roo)
+                continue
+
+            # Handle model change command
+            if query.startswith('/model '):
+                new_model = query[7:].strip()
+                if new_model:
+                    await handle_model_change_command(roo, new_model)
+                    continue
+                else:
+                    print(f"{YELLOW}Please provide a model name after /model{RESET}\n")
+                    continue
+
+            # Handle current model command
+            if query.lower() == '/current-model':
+                await handle_current_model_command(roo)
+                continue
+
+            # Handle benchmark commands
+            if query.lower().startswith('/benchmark'):
+                await handle_benchmark_command(query, roo)
+                continue
+
+            # Handle quality analytics command
+            if query.lower().startswith('/analytics'):
+                await handle_analytics_command(query)
+                continue
                 
             await refresh_token_if_needed()
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
@@ -313,6 +348,237 @@ async def main():
         except Exception as e:
             logger.error(f"Error during chat: {e}")
             print(f"❌ Error: {str(e)}")
+
+async def handle_benchmark_command(query: str, roo_instance):
+    """Handle benchmark-related commands."""
+    parts = query.split()
+    
+    if len(parts) == 1:
+        # Just '/benchmark' - run default benchmark
+        dataset = "all"
+    else:
+        dataset = parts[1]
+    
+    print(f"\n{BOLD}{CYAN}🧪 Running Benchmark:{RESET}")
+    print(f"{LIME}Dataset: {dataset}{RESET}")
+    print(f"{YELLOW}This may take a few minutes...{RESET}\n")
+    
+    try:
+        # Import benchmark runner
+        from benchmarks.runners.benchmark_runner import RooLLMBenchmarkRunner
+        
+        # Create runner
+        runner = RooLLMBenchmarkRunner(roo_instance)
+        
+        # Run benchmark
+        results = await runner.run_benchmark(dataset)
+        
+        if "error" in results:
+            print(f"{BOLD}❌ Error: {results['error']}{RESET}\n")
+            return
+        
+        # Display results
+        summary = results.get("summary", {})
+        print(f"{BOLD}{CYAN}📊 Benchmark Results:{RESET}")
+        print(f"{LIME}Total test cases: {summary.get('total_test_cases', 0)}{RESET}")
+        print(f"{LIME}Successful evaluations: {summary.get('successful_evaluations', 0)}{RESET}")
+        print(f"{LIME}Failed evaluations: {summary.get('failed_evaluations', 0)}{RESET}")
+        
+        overall_score = summary.get("overall_score", {})
+        print(f"{BOLD}{YELLOW}Overall Score: {overall_score.get('mean', 0.0):.2f}{RESET}")
+        print(f"{YELLOW}Score Range: {overall_score.get('min', 0.0):.2f} - {overall_score.get('max', 0.0):.2f}{RESET}")
+        
+        # Show metric breakdown
+        metric_stats = summary.get("metric_stats", {})
+        if metric_stats:
+            print(f"\n{BOLD}{CYAN}Metric Breakdown:{RESET}")
+            for metric, stats in metric_stats.items():
+                print(f"{LIME}{metric}: {stats.get('mean_score', 0.0):.2f} "
+                      f"(success rate: {stats.get('success_rate', 0.0):.1%}){RESET}")
+        
+        print(f"\n{BOLD}{CYAN}Execution Time: {results.get('execution_time', 0.0):.2f} seconds{RESET}\n")
+        
+    except ImportError:
+        print(f"{BOLD}❌ Error: Benchmarking system not available{RESET}")
+        print(f"{YELLOW}Please install deepeval: pip install deepeval{RESET}\n")
+    except Exception as e:
+        print(f"{BOLD}❌ Error running benchmark: {str(e)}{RESET}\n")
+        logger.error(f"Benchmark error: {e}", exc_info=True)
+
+async def handle_analytics_command(query: str):
+    """Handle analytics-related commands."""
+    parts = query.split()
+    
+    if len(parts) == 1:
+        # Just '/analytics' - show default analytics
+        days = 30
+    else:
+        try:
+            days = int(parts[1])
+        except ValueError:
+            days = 30
+    
+    print(f"\n{BOLD}{CYAN}📈 Quality Analytics (Last {days} days):{RESET}")
+    
+    try:
+        from stats import get_quality_analytics, get_tool_usage_analytics
+        
+        # Get quality analytics
+        quality_data = get_quality_analytics(days)
+        
+        if "error" in quality_data:
+            print(f"{BOLD}❌ Error: {quality_data['error']}{RESET}\n")
+            return
+        
+        # Display quality analytics
+        print(f"{LIME}Total interactions: {quality_data.get('total_interactions', 0)}{RESET}")
+        
+        manual_feedback = quality_data.get("manual_feedback", {})
+        print(f"{LIME}Manual feedback: {manual_feedback.get('positive', 0)}👍 / "
+              f"{manual_feedback.get('negative', 0)}👎 ({manual_feedback.get('feedback_rate', 0.0):.1%} response rate){RESET}")
+        
+        automated_scores = quality_data.get("automated_scores", {})
+        if automated_scores.get("count", 0) > 0:
+            print(f"{LIME}Automated evaluations: {automated_scores.get('count', 0)}{RESET}")
+            print(f"{LIME}Average quality score: {automated_scores.get('average', 0.0):.2f}{RESET}")
+            
+            # Show distribution
+            distribution = automated_scores.get("distribution", {})
+            if distribution:
+                print(f"{YELLOW}Score distribution:{RESET}")
+                for range_key, count in distribution.items():
+                    print(f"  {range_key}: {count} responses")
+        
+        # Get tool usage analytics
+        tool_data = get_tool_usage_analytics(days)
+        
+        if "error" not in tool_data:
+            print(f"\n{BOLD}{CYAN}🛠️ Tool Usage Analytics:{RESET}")
+            print(f"{LIME}Total tool interactions: {tool_data.get('total_tool_interactions', 0)}{RESET}")
+            print(f"{LIME}Unique tools used: {tool_data.get('unique_tools_used', 0)}{RESET}")
+            
+            # Show top tools
+            tool_usage = tool_data.get("tool_usage", {})
+            if tool_usage:
+                print(f"{YELLOW}Top 5 tools:{RESET}")
+                for i, (tool_name, stats) in enumerate(list(tool_usage.items())[:5]):
+                    print(f"  {i+1}. {tool_name}: {stats.get('count', 0)} uses "
+                          f"({stats.get('usage_percentage', 0.0):.1f}%)")
+        
+        print()
+        
+    except ImportError:
+        print(f"{BOLD}❌ Error: Analytics not available{RESET}\n")
+    except Exception as e:
+        print(f"{BOLD}❌ Error getting analytics: {str(e)}{RESET}\n")
+        logger.error(f"Analytics error: {e}", exc_info=True)
+
+async def handle_models_command(roo_instance):
+    """Handle the /models command to list available Ollama models."""
+    print(f"\n{BOLD}{CYAN}🤖 Available Ollama Models:{RESET}")
+    
+    try:
+        # Get the LLM client from RooLLM instance
+        llm_client = getattr(roo_instance, "inference", None)
+        if llm_client is None:
+            print(f"{BOLD}❌ Error: RooLLM is missing an LLM client instance.{RESET}\n")
+            return
+
+        base_url = getattr(llm_client, "base_url", None)
+        if not base_url:
+            print(f"{BOLD}❌ Error: LLM client base URL not configured.{RESET}\n")
+            return
+
+        # call the ollama api to get the models
+        import aiohttp
+        tags_url = f"{base_url.rstrip('/')}/api/tags"
+
+        async with aiohttp.ClientSession(auth=llm_client.auth) as session:
+            async with session.get(tags_url) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    models = [m.get("name") if isinstance(m, dict) else m for m in data.get("models", [])]
+                    
+                    if models:
+                        print(f"{LIME}Found {len(models)} model(s):{RESET}")
+                        for i, model in enumerate(models, 1):
+                            # Highlight current model
+                            if model == llm_client.model:
+                                print(f"  {BOLD}{YELLOW}{i}. {model} (current){RESET}")
+                            else:
+                                print(f"  {LIME}{i}. {model}{RESET}")
+                    else:
+                        print(f"{YELLOW}No models found on the Ollama server.{RESET}")
+                else:
+                    body = await resp.text()
+                    print(f"{BOLD}❌ Error: Failed to fetch models: {resp.status}{RESET}")
+                    print(f"{YELLOW}Response: {body}{RESET}")
+                    
+    except Exception as e:
+        print(f"{BOLD}❌ Error listing models: {str(e)}{RESET}")
+        logger.error(f"Models command error: {e}", exc_info=True)
+    
+    print()
+
+async def handle_model_change_command(roo_instance, new_model: str):
+    """Handle the /model command to change the current LLM model."""
+    print(f"\n{BOLD}{CYAN}🔄 Changing LLM Model:{RESET}")
+    
+    try:
+        # get the LLM client from RooLLM instance
+        llm_client = getattr(roo_instance, "inference", None)
+        if llm_client is None:
+            print(f"{BOLD}❌ Error: RooLLM is missing an LLM client instance.{RESET}\n")
+            return
+
+        old_model = llm_client.model
+        print(f"{LIME}Current model: {BOLD}{old_model}{RESET}")
+        print(f"{LIME}Changing to: {BOLD}{new_model}{RESET}")
+        
+        # Change the model
+        llm_client.model = new_model
+        print(f"{BOLD}{YELLOW}✅ Model changed successfully from {old_model} to {new_model}{RESET}")
+        
+        # Verify the change
+        if llm_client.model == new_model:
+            print(f"{LIME}Verification: Current model is now {llm_client.model}{RESET}")
+        else:
+            print(f"{BOLD}⚠️ Warning: Model change may not have taken effect{RESET}")
+            
+    except Exception as e:
+        print(f"{BOLD}❌ Error changing model: {str(e)}{RESET}")
+        logger.error(f"Model change error: {e}", exc_info=True)
+    
+    print()
+
+async def handle_current_model_command(roo_instance):
+    """Handle the /current-model command to show the current LLM model."""
+    print(f"\n{BOLD}{CYAN}🤖 Current LLM Model:{RESET}")
+    
+    try:
+        # Get the LLM client from RooLLM instance
+        llm_client = getattr(roo_instance, "inference", None)
+        if llm_client is None:
+            print(f"{BOLD}❌ Error: RooLLM is missing an LLM client instance.{RESET}\n")
+            return
+
+        current_model = llm_client.model
+        base_url = llm_client.base_url
+        
+        print(f"{LIME}Model: {BOLD}{YELLOW}{current_model}{RESET}")
+        print(f"{LIME}Server: {CYAN}{base_url}{RESET}")
+        
+        # Show if it's a local or remote endpoint
+        if "localhost" in base_url or "127.0.0.1" in base_url:
+            print(f"{LIME}Type: {CYAN}Local Ollama instance{RESET}")
+        else:
+            print(f"{LIME}Type: {CYAN}Remote Ollama endpoint{RESET}")
+            
+    except Exception as e:
+        print(f"{BOLD}❌ Error getting current model: {str(e)}{RESET}")
+        logger.error(f"Current model command error: {e}", exc_info=True)
+    
+    print()
 
 if __name__ == "__main__":
     try:
