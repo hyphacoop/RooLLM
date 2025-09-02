@@ -1,0 +1,12 @@
+{
+  "enable_react_loop": true,
+  "react_max_iterations": 10,
+  "mcp_adapters": {
+    "local_tools": {
+      "mode": "inline",
+      "env": {
+        "MCP_ADAPTER": "tools.local_tools_adapter.LocalToolsAdapter"
+      }
+    }
+  }
+}
