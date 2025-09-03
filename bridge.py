@@ -116,67 +116,88 @@ class MCPLLMBridge:
         messages = history + [{"role": "user", "content": f"{user}: {content}"}]
         tools = self.tool_registry.openai_descriptions()
 
-        # Get initial response from LLM
-        raw_response = await self.llm_client.invoke(messages, tools=tools)
-        message = raw_response.get("message", {})
+        # ReAct Loop - Continue until no more tool calls or max iterations reached
+        max_iterations = self.config.get("react_max_iterations", 10)  # Configurable max iterations
+        enable_react = self.config.get("enable_react_loop", True)  # Option to disable ReAct loop
+        iteration = 0
+        
+        while iteration < max_iterations:
+            iteration += 1
+            logger.debug(f"ReAct iteration {iteration}")
+            
+            # Get response from LLM
+            raw_response = await self.llm_client.invoke(messages, tools=tools)
+            message = raw_response.get("message", {})
 
-        # If no tool calls, just return the response
-        if "tool_calls" not in message:
-            return message
+            # If no tool calls, we're done - return the response
+            if "tool_calls" not in message:
+                logger.debug(f"ReAct loop completed after {iteration} iterations - no more tool calls")
+                return message
 
-        # Add LLM response to messages
-        messages.append(message)
+            # Add LLM response to messages for context
+            messages.append(message)
 
-        # Process tool calls
-        tool_outputs = []
-        for call in message["tool_calls"]:
-            func = call.get("function", {})
-            name = func.get("name")
-            args = func.get("arguments", {})
-            tool_call_id = call.get("id", name)
+            # Process tool calls sequentially
+            tool_outputs = []
+            for call in message["tool_calls"]:
+                func = call.get("function", {})
+                name = func.get("name")
+                args = func.get("arguments", {})
+                tool_call_id = call.get("id", name)
 
-            # Get the tool from registry
-            tool = self.tool_registry.get_tool(name)
-            if not tool:
-                logger.warning(f"Tool {name} not found in registry")
-                tool_outputs.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call_id,
-                    "content": json.dumps({"error": f"Tool {name} not found"})
-                })
-                continue
+                # Get the tool from registry
+                tool = self.tool_registry.get_tool(name)
+                if not tool:
+                    logger.warning(f"Tool {name} not found in registry")
+                    tool_outputs.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "content": json.dumps({"error": f"Tool {name} not found"})
+                    })
+                    continue
 
-            # Indicate tool usage if callback provided
-            if react_callback:
-                await react_callback(tool.emoji or tool.name)
+                # Indicate tool usage if callback provided
+                if react_callback:
+                    await react_callback(tool.emoji or tool.name)
 
-            try:
-                # Call through the appropriate adapter
-                adapter = self.mcp_clients.get(tool.adapter_name)
-                if not adapter:
-                    raise ValueError(f"Adapter {tool.adapter_name} not found for tool {name}")
+                try:
+                    # Call through the appropriate adapter
+                    adapter = self.mcp_clients.get(tool.adapter_name)
+                    if not adapter:
+                        raise ValueError(f"Adapter {tool.adapter_name} not found for tool {name}")
+                        
+                    logger.debug(f"Executing tool {name} with args: {args}")
+                    result = await adapter.call_tool(name, args)
+                    logger.debug(f"Tool {name} result: {result}")
+
+                    # Add tool output to messages
+                    tool_outputs.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "content": json.dumps(result)
+                    })
                     
-                result = await adapter.call_tool(name, args)
+                except Exception as e:
+                    logger.error(f"Error calling tool {name}: {e}", exc_info=True)
+                    # Add error output
+                    tool_outputs.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "content": json.dumps({"error": f"Tool execution failed: {str(e)}"})
+                    })
 
-                # Add tool output to messages
-                tool_outputs.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call_id,
-                    "content": json.dumps(result)
-                })
-                
-            except Exception as e:
-                logger.error(f"Error calling tool {name}: {e}", exc_info=True)
-                # Add error output
-                tool_outputs.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call_id,
-                    "content": json.dumps({"error": f"Tool execution failed: {str(e)}"})
-                })
-
-        # Add tool outputs to messages
-        messages.extend(tool_outputs)
-
-        # Get final response from LLM
-        final = await self.llm_client.invoke(messages, tools=tools)
-        return final.get("message", {})
+            # Add tool outputs to messages
+            messages.extend(tool_outputs)
+            
+            # If ReAct is disabled, get final response and break
+            if not enable_react:
+                logger.debug("ReAct loop disabled - getting final response after tool execution")
+                final_response = await self.llm_client.invoke(messages, tools=[])
+                return final_response.get("message", {})
+            
+            # Continue loop to allow LLM to reason about results and potentially call more tools
+            
+        # If we've reached max iterations, get a final response
+        logger.warning(f"ReAct loop reached max iterations ({max_iterations}), getting final response")
+        final_response = await self.llm_client.invoke(messages, tools=[])  # No tools to prevent more calls
+        return final_response.get("message", {})

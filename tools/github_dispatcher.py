@@ -13,7 +13,7 @@ logger.debug(f"github_dispatcher: Module loading. __name__ = '{__name__}', __pac
 # --- End initial logging ---
 
 name = "github_dispatcher"
-description = """Perform GitHub actions like creating, updating, commenting on issues or PRs. 
+description = """Perform GitHub actions like creating, updating, commenting on issues or PRs, or searching for content. 
 
 Available actions:
 - Issues: create_issue, update_issue, close_issue, reopen_issue, comment (on issues)
@@ -21,7 +21,10 @@ Available actions:
 - Search: search_issues, list_issues, search_prs, search_labels
 - Management: add_labels, assign
 
-Use specific action names (e.g., 'close_issue' not 'close', 'create_issue' not 'create')."""
+For searching issues by title, use action 'search_issues' with query parameter like 'title:Quests' or 'RooLLM Quests in:title'.
+Defaults to searching 'hyphacoop/organizing-private' repository unless specified otherwise.
+
+Use specific action names (e.g., 'search_issues' for searching, 'create_issue' for creating)."""
 emoji = "💻"
 
 parameters = {
@@ -95,7 +98,7 @@ Always use the specific action name (e.g., 'close_issue' for closing an issue, n
         },
         "query": {
             "type": "string",
-            "description": "A specific GitHub search query string for search_issues."
+            "description": "A specific GitHub search query string for search_issues. Examples: 'title:Quests', 'RooLLM Quests in:title', 'Quests' (searches title and body)."
         },
         "labels": {
             "type": "array",

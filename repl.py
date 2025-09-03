@@ -39,6 +39,7 @@ emojiToolMap = {
     "🌴": "`get_upcoming_vacations`: Get information about our colleague's upcoming vacations",
     "🗄️": "`get_archive_categories`: List archivable categories with links",
     "🔢": "`calc`: Perform calculations",
+    "🌐": "`web_search`: Search the internet for current information using Claude with web search",
     "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
     "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps."
 }
@@ -123,6 +124,14 @@ if ENCODED_GOOGLE_CREDENTIALS:
         logger.debug("Successfully loaded Google credentials")
     except Exception as e:
         logger.error(f"Error decoding Google credentials: {e}")
+
+# Load Claude API key
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
+if CLAUDE_API_KEY:
+    config["CLAUDE_API_KEY"] = CLAUDE_API_KEY
+    logger.debug("Successfully loaded Claude API key")
+else:
+    logger.warning("⚠️ Claude API key not found in environment variables")
 
 # --- LLM & Bridge Setup ---
 
@@ -250,13 +259,16 @@ async def main():
                 print(f"{BOLD}{YELLOW}/username <new_name>{RESET} - Change your username")
                 print(f"{BOLD}{YELLOW}/tools{RESET} - List all available tools")
                 print(f"{BOLD}{YELLOW}/details :emoji:{RESET} - See tool details")
+                print(f"{BOLD}{YELLOW}/models{RESET} - List available Ollama models")
+                print(f"{BOLD}{YELLOW}/model <model_name>{RESET} - Change the current LLM model")
+                print(f"{BOLD}{YELLOW}/current-model{RESET} - Show the current LLM model")
                 print(f"{BOLD}{YELLOW}/benchmark [dataset]{RESET} - Run benchmark evaluation")
                 print(f"{BOLD}{YELLOW}/analytics [days]{RESET} - Show quality analytics")
                 print(f"{BOLD}{YELLOW}/exit{RESET} or {BOLD}{YELLOW}/quit{RESET} - Exit the chat\n")
                 continue
 
             # Handle exit/quit commands
-            if query.lower() in ['/exit', '/quit']:
+            if query.lower() in ['/exit', '/quit', '/bye']:
                 print(EXIT_MESSAGE)
                 break
 
@@ -292,6 +304,26 @@ async def main():
                     print(f"{LIME}└─ {tool_desc}{RESET}\n")
                 else:
                     print(f"{YELLOW}Tool with emoji {emoji} not found. Use /tools to see available tools{RESET}\n")
+                continue
+
+            # Handle models command
+            if query.lower() == '/models':
+                await handle_models_command(roo)
+                continue
+
+            # Handle model change command
+            if query.startswith('/model '):
+                new_model = query[7:].strip()
+                if new_model:
+                    await handle_model_change_command(roo, new_model)
+                    continue
+                else:
+                    print(f"{YELLOW}Please provide a model name after /model{RESET}\n")
+                    continue
+
+            # Handle current model command
+            if query.lower() == '/current-model':
+                await handle_current_model_command(roo)
                 continue
 
             # Handle benchmark commands
@@ -439,6 +471,113 @@ async def handle_analytics_command(query: str):
     except Exception as e:
         print(f"{BOLD}❌ Error getting analytics: {str(e)}{RESET}\n")
         logger.error(f"Analytics error: {e}", exc_info=True)
+
+async def handle_models_command(roo_instance):
+    """Handle the /models command to list available Ollama models."""
+    print(f"\n{BOLD}{CYAN}🤖 Available Ollama Models:{RESET}")
+    
+    try:
+        # Get the LLM client from RooLLM instance
+        llm_client = getattr(roo_instance, "inference", None)
+        if llm_client is None:
+            print(f"{BOLD}❌ Error: RooLLM is missing an LLM client instance.{RESET}\n")
+            return
+
+        base_url = getattr(llm_client, "base_url", None)
+        if not base_url:
+            print(f"{BOLD}❌ Error: LLM client base URL not configured.{RESET}\n")
+            return
+
+        # call the ollama api to get the models
+        import aiohttp
+        tags_url = f"{base_url.rstrip('/')}/api/tags"
+
+        async with aiohttp.ClientSession(auth=llm_client.auth) as session:
+            async with session.get(tags_url) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    models = [m.get("name") if isinstance(m, dict) else m for m in data.get("models", [])]
+                    
+                    if models:
+                        print(f"{LIME}Found {len(models)} model(s):{RESET}")
+                        for i, model in enumerate(models, 1):
+                            # Highlight current model
+                            if model == llm_client.model:
+                                print(f"  {BOLD}{YELLOW}{i}. {model} (current){RESET}")
+                            else:
+                                print(f"  {LIME}{i}. {model}{RESET}")
+                    else:
+                        print(f"{YELLOW}No models found on the Ollama server.{RESET}")
+                else:
+                    body = await resp.text()
+                    print(f"{BOLD}❌ Error: Failed to fetch models: {resp.status}{RESET}")
+                    print(f"{YELLOW}Response: {body}{RESET}")
+                    
+    except Exception as e:
+        print(f"{BOLD}❌ Error listing models: {str(e)}{RESET}")
+        logger.error(f"Models command error: {e}", exc_info=True)
+    
+    print()
+
+async def handle_model_change_command(roo_instance, new_model: str):
+    """Handle the /model command to change the current LLM model."""
+    print(f"\n{BOLD}{CYAN}🔄 Changing LLM Model:{RESET}")
+    
+    try:
+        # get the LLM client from RooLLM instance
+        llm_client = getattr(roo_instance, "inference", None)
+        if llm_client is None:
+            print(f"{BOLD}❌ Error: RooLLM is missing an LLM client instance.{RESET}\n")
+            return
+
+        old_model = llm_client.model
+        print(f"{LIME}Current model: {BOLD}{old_model}{RESET}")
+        print(f"{LIME}Changing to: {BOLD}{new_model}{RESET}")
+        
+        # Change the model
+        llm_client.model = new_model
+        print(f"{BOLD}{YELLOW}✅ Model changed successfully from {old_model} to {new_model}{RESET}")
+        
+        # Verify the change
+        if llm_client.model == new_model:
+            print(f"{LIME}Verification: Current model is now {llm_client.model}{RESET}")
+        else:
+            print(f"{BOLD}⚠️ Warning: Model change may not have taken effect{RESET}")
+            
+    except Exception as e:
+        print(f"{BOLD}❌ Error changing model: {str(e)}{RESET}")
+        logger.error(f"Model change error: {e}", exc_info=True)
+    
+    print()
+
+async def handle_current_model_command(roo_instance):
+    """Handle the /current-model command to show the current LLM model."""
+    print(f"\n{BOLD}{CYAN}🤖 Current LLM Model:{RESET}")
+    
+    try:
+        # Get the LLM client from RooLLM instance
+        llm_client = getattr(roo_instance, "inference", None)
+        if llm_client is None:
+            print(f"{BOLD}❌ Error: RooLLM is missing an LLM client instance.{RESET}\n")
+            return
+
+        current_model = llm_client.model
+        base_url = llm_client.base_url
+        
+        print(f"{LIME}Model: {BOLD}{YELLOW}{current_model}{RESET}")
+        print(f"{LIME}Server: {CYAN}{base_url}{RESET}")
+        
+        # Show if it's a local or remote endpoint
+        if "localhost" in base_url or "127.0.0.1" in base_url:
+            print(f"{LIME}Type: {CYAN}Local Ollama instance{RESET}")
+        else:
+            print(f"{LIME}Type: {CYAN}Remote Ollama endpoint{RESET}")
+            
+    except Exception as e:
+        print(f"{BOLD}❌ Error getting current model: {str(e)}{RESET}")
+        logger.error(f"Current model command error: {e}", exc_info=True)
+    
+    print()
 
 if __name__ == "__main__":
     try:
