@@ -1,0 +1,27 @@
+{
+  "name": "roollm-static-dashboard",
+  "version": "1.0.0",
+  "description": "Static dashboard for RooLLM benchmark results - GitHub Pages compatible",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "npx http-server -c-1 -p 4173 -o",
+    "serve": "npx http-server -c-1 -p 8080 -o",
+    "snapshot": "node tools/snapshot.mjs",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "echo 'Deploy to GitHub Pages by pushing to gh-pages branch'"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": [
+    "benchmark",
+    "dashboard",
+    "static",
+    "github-pages",
+    "llm",
+    "ai"
+  ],
+  "author": "RooLLM",
+  "license": "MIT"
+}

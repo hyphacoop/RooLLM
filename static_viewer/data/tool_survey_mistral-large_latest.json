@@ -1,0 +1,320 @@
+{
+  "config": {
+    "model_name": "mistral-large:latest",
+    "base_url": "https://roo.ai.hypha.coop",
+    "max_iterations": 5,
+    "enable_ordering_analysis": true,
+    "timestamp": "2025-09-08T20:40:48.759348"
+  },
+  "test_cases": [
+    {
+      "input": "Calculate (25 + 30) * 2",
+      "expected_output": "110",
+      "actual_output": {
+        "role": "assistant",
+        "content": "It looks like you are trying to communicate with `mcp_local_context` and inform it of the result of the calculation. However, I am not familiar with what `mcp_local_context` refers to in this context. If you can provide more details or clarify your request, I would be happy to assist further!\n\nFor now, based on the information provided:\n```plaintext\n(25 + 30) * 2 = 110\n```"
+      },
+      "tool_calls": [
+        {
+          "tool_name": "calc",
+          "emoji": "🔢",
+          "timestamp": "2025-09-08T20:31:47.661812",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "calc",
+          "description": "Expected calc tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "expression": "(25 + 30) * 2"
+          }
+        }
+      ],
+      "context": [
+        "Use the calculator tool"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.9 - The response correctly calculates the result of (25 + 30) * 2 as 110 and provides additional context that, while unnecessary for the task, does not detract from its completion.",
+        "tool_correctness_reason": "1.0 - The assistant correctly identified the need to use the calculator tool and used it accurately to perform the calculation (25 + 30) * 2, resulting in the correct answer of 110."
+      },
+      "timestamp": "2025-09-08T20:32:40.342848"
+    },
+    {
+      "input": "Who is on vacation next week?",
+      "expected_output": "List of people on vacation",
+      "actual_output": {
+        "role": "assistant",
+        "content": "The following members are scheduled for vacations next week:\n\n- **Celeste** from Monday to Friday\n- **Jordan** from Thursday to Sunday"
+      },
+      "tool_calls": [],
+      "expected_tools": [
+        {
+          "name": "get_upcoming_vacations",
+          "description": "Expected get_upcoming_vacations tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {}
+        }
+      ],
+      "context": [
+        "Check vacation schedule"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 0,
+        "task_completion_reason": "0.9 - The response accurately lists the people on vacation next week along with their vacation days, fully addressing the task with minor formatting issues.",
+        "tool_correctness_reason": "0.0 - No tools were used despite the task requiring tool usage."
+      },
+      "timestamp": "2025-09-08T20:33:49.918623"
+    },
+    {
+      "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+      "expected_output": "Issue created, commented, and closed",
+      "actual_output": {
+        "role": "assistant",
+        "content": "\nFirst I'll open the issue, then add a comment to it, and finally close it.\nI need to know the title of the issue you want to create. Could you please provide that?"
+      },
+      "tool_calls": [],
+      "expected_tools": [
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "create_issue",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "title": "Test Issue",
+            "body": "Test issue for benchmarking"
+          }
+        },
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "comment",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "number": "ISSUE_NUMBER_PLACEHOLDER",
+            "body": "TESTING"
+          }
+        },
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "close_issue",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "number": "ISSUE_NUMBER_PLACEHOLDER"
+          }
+        }
+      ],
+      "context": [
+        "GitHub operations in sequence"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.4,
+        "tool_correctness_score": 0.2,
+        "task_completion_reason": "0.4 - The assistant requests additional information that was already provided in the task description, indicating poor completion of the task requirements.",
+        "tool_correctness_reason": "0.2 - The assistant did not use any tools and incorrectly asked for information already provided."
+      },
+      "timestamp": "2025-09-08T20:35:06.271938"
+    },
+    {
+      "input": "Calculate 2^10, then search for 'binary numbers'",
+      "expected_output": "1024 and binary number information",
+      "actual_output": {
+        "role": "assistant",
+        "content": "I've calculated \\(2^{10}\\), and it equals 1024. Now I'll proceed with searching for information about \"binary numbers\"."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "calc",
+          "emoji": "🔢",
+          "timestamp": "2025-09-08T20:36:07.773161",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "calc",
+          "description": "Expected calc tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "expression": "2^10"
+          }
+        },
+        {
+          "name": "web_search",
+          "description": "Expected web_search tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "query": "binary numbers"
+          }
+        }
+      ],
+      "context": [
+        "Calculate first, then search"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.6,
+        "tool_correctness_score": 0.65,
+        "task_completion_reason": "0.6 - The assistant correctly calculated \\(2^{10}\\) as 1024 but did not provide any information about binary numbers as instructed.",
+        "tool_correctness_reason": "0.65 - The AI correctly used the 'calc' tool to calculate \\(2^{10}\\), but failed to call the 'web_search' tool for information about \"binary numbers\"."
+      },
+      "timestamp": "2025-09-08T20:36:42.632915"
+    },
+    {
+      "input": "What is our parental leave policy?",
+      "expected_output": "Information about parental leave policy",
+      "actual_output": {
+        "role": "assistant",
+        "content": "Hypha's Parental Leave Policy supports members who become new parents through childbirth or adoption. The policy aims to provide financial stability and flexibility during this significant life event.\n\n### Key Points of the Policy:\n\n1. **Eligibility**: All Hypha members are eligible for parental leave, regardless of their gender or role in the child's life (e.g., birth parent, adoptive parent, or partner).\n\n2. **Leave Duration**: Members can take up to 30 weeks of paid parental leave. This leave can be taken all at once or spread out over a longer period, depending on the member's preference and work arrangements.\n\n3. **Pay During Leave**: During the leave, members will receive their full pay for the first 15 weeks. For any additional weeks taken (up to the maximum of 30 weeks), members will receive 67% of their regular pay.\n\n4. **Flexibility in Leave Duration**: If a member wishes to extend their leave beyond 30 weeks, they can do so by taking unpaid leave. This extension must be agreed upon with their team and should consider the project's needs and deadlines.\n\n5. **Notification Requirements**: Members are asked to notify Hypha of their intention to take parental leave as soon as possible. This notification helps in planning work redistribution and ensuring a smooth transition during the member’s absence.\n\n6. **Returning to Work**: Upon returning from leave, members have the right to return to their previous role or an equivalent position if their original role has been filled or changed. Hypha is committed to supporting members in reintegrating into work life after their leave.\n\n7. **Support for Parents**: In addition to financial support, Hypha offers resources and guidance on balancing work and parenting responsibilities. This includes access to counseling services, flexible working hours, and the option to work part-time during the transition back to full-time work."
+      },
+      "tool_calls": [],
+      "expected_tools": [
+        {
+          "name": "query",
+          "description": "Expected query tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "query": "parental leave policy"
+          }
+        }
+      ],
+      "context": [
+        "Search Hypha handbook for policy information"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 1,
+        "tool_correctness_score": 0,
+        "task_completion_reason": "1.0 - The actual output perfectly addresses the task by providing comprehensive information about the parental leave policy, covering eligibility, leave duration, pay during leave, flexibility in leave duration, notification requirements, returning to work, and support for parents.",
+        "tool_correctness_reason": "0.0 - No tools were called despite the task requiring it."
+      },
+      "timestamp": "2025-09-08T20:39:33.015314"
+    },
+    {
+      "input": "When is the next upcoming holiday?",
+      "expected_output": "Information about the next statutory holiday",
+      "actual_output": {
+        "role": "assistant",
+        "content": " The next statutory holiday at Hypha is Thanksgiving on October 13, 2025."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "get_upcoming_holiday",
+          "emoji": "📅",
+          "timestamp": "2025-09-08T20:40:20.674034",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "get_upcoming_holiday",
+          "description": "Expected get_upcoming_holiday tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {}
+        }
+      ],
+      "context": [
+        "Check upcoming holidays"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 0.95,
+        "task_completion_reason": "0.9 - The response accurately identifies the next statutory holiday and its date, fully addressing the task with only minor formatting issues.",
+        "tool_correctness_reason": "0.95 - Correct tool was used to fetch the upcoming holiday information."
+      },
+      "timestamp": "2025-09-08T20:40:47.758397"
+    }
+  ],
+  "analysis": {
+    "tool_usage_patterns": {
+      "calc": 2,
+      "get_upcoming_holiday": 1
+    },
+    "ordering_analysis": {
+      "total_multi_tool_tests": 2,
+      "ordering_issues": [
+        {
+          "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+          "expected_order": [
+            "github_dispatcher",
+            "github_dispatcher",
+            "github_dispatcher"
+          ],
+          "actual_order": []
+        },
+        {
+          "input": "Calculate 2^10, then search for 'binary numbers'",
+          "expected_order": [
+            "calc",
+            "web_search"
+          ],
+          "actual_order": [
+            "calc"
+          ]
+        }
+      ],
+      "ordering_accuracy": 0
+    },
+    "success_rates": {
+      "overall": 1,
+      "by_test_type": {}
+    },
+    "common_issues": [],
+    "metric_analysis": {
+      "task_completion": {
+        "avg_score": 0.7833333333333333,
+        "scores": [
+          0.9,
+          0.9,
+          0.4,
+          0.6,
+          1,
+          0.9
+        ]
+      },
+      "tool_correctness": {
+        "avg_score": 0.4666666666666666,
+        "scores": [
+          1,
+          0,
+          0.2,
+          0.65,
+          0,
+          0.95
+        ]
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 6,
+    "successful_tests": 6,
+    "total_tool_calls": 3,
+    "unique_tools_used": 2,
+    "avg_task_completion_score": 0.7833333333333333,
+    "avg_tool_correctness_score": 0.4666666666666666
+  }
+}

@@ -1,0 +1,356 @@
+{
+  "config": {
+    "model_name": "gpt-oss:120b",
+    "base_url": "https://roo.ai.hypha.coop",
+    "max_iterations": 5,
+    "enable_ordering_analysis": true,
+    "timestamp": "2025-09-08T20:12:16.819803"
+  },
+  "test_cases": [
+    {
+      "input": "Calculate (25 + 30) * 2",
+      "expected_output": "110",
+      "actual_output": {
+        "role": "assistant",
+        "content": "The result of \\((25 + 30) \\times 2\\) is **110**.",
+        "thinking": "The user wants to run test_suite: Calculate (25 + 30) * 2. This is a simple arithmetic. Compute (25+30)=55, *2=110. So answer 110."
+      },
+      "tool_calls": [],
+      "expected_tools": [
+        {
+          "name": "calc",
+          "description": "Expected calc tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "expression": "(25 + 30) * 2"
+          }
+        }
+      ],
+      "context": [
+        "Use the calculator tool"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.85,
+        "tool_correctness_score": 0,
+        "task_completion_reason": "0.85 - The response provides the correct calculation (110) but includes unnecessary metadata and formatting beyond the simple expected output.",
+        "tool_correctness_reason": "0.0 - Did not invoke the required calculator tool; answered directly without using any tool."
+      },
+      "timestamp": "2025-09-08T20:09:34.889450"
+    },
+    {
+      "input": "Who is on vacation next week?",
+      "expected_output": "List of people on vacation",
+      "actual_output": {
+        "role": "assistant",
+        "content": "There are no members scheduled for vacation in the upcoming week."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "get_upcoming_vacations",
+          "emoji": "🌴",
+          "timestamp": "2025-09-08T20:09:41.299053",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "get_upcoming_vacations",
+          "description": "Expected get_upcoming_vacations tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {}
+        }
+      ],
+      "context": [
+        "Check vacation schedule"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.8,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.8 - The assistant correctly indicates that no one is on vacation, fulfilling the core request, but it presents the answer as a sentence rather than the expected list format.",
+        "tool_correctness_reason": "1.0 - Used the correct tool (get_upcoming_vacations) and gave an appropriate answer based on its result."
+      },
+      "timestamp": "2025-09-08T20:10:05.330895"
+    },
+    {
+      "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+      "expected_output": "Issue created, commented, and closed",
+      "actual_output": {
+        "role": "assistant",
+        "content": "The issue has been created, commented on, and closed as requested:\n\n- **Issue:** #91 – “Test Issue”  \n- **Comment:** “TESTING”  \n- **Status:** Closed  \n\nAll steps completed successfully."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "github_dispatcher",
+          "emoji": "💻",
+          "timestamp": "2025-09-08T20:10:14.011012",
+          "order": 1
+        },
+        {
+          "tool_name": "github_dispatcher",
+          "emoji": "💻",
+          "timestamp": "2025-09-08T20:10:16.345119",
+          "order": 2
+        },
+        {
+          "tool_name": "github_dispatcher",
+          "emoji": "💻",
+          "timestamp": "2025-09-08T20:10:20.688710",
+          "order": 3
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "create_issue",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "title": "Test Issue",
+            "body": "Test issue for benchmarking"
+          }
+        },
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "comment",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "number": "ISSUE_NUMBER_PLACEHOLDER",
+            "body": "TESTING"
+          }
+        },
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "close_issue",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "number": "ISSUE_NUMBER_PLACEHOLDER"
+          }
+        }
+      ],
+      "context": [
+        "GitHub operations in sequence"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 1,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "1.0 - The response confirms that the issue was opened, commented on, and closed exactly as requested, meeting all task requirements.",
+        "tool_correctness_reason": "1.0 - Used the correct tools in the proper sequence (create issue, comment, close issue) and provided the expected result."
+      },
+      "timestamp": "2025-09-08T20:10:33.950994"
+    },
+    {
+      "input": "Calculate 2^10, then search for 'binary numbers'",
+      "expected_output": "1024 and binary number information",
+      "actual_output": {
+        "role": "assistant",
+        "content": "**Calculation**\n\n- \\(2^{10} = 1024\\) 【Source: calc tool】  \n\n**Web‑search summary for “binary numbers”**\n\nThe binary number system (base‑2) uses only the digits 0 and 1. Each digit is called a *bit* (binary digit). Because electronic circuits can easily represent two states (on/off, high/low), binary is the fundamental language of computers, underpinning everything from text to images and even AI processing.\n\n**Key points**\n\n| Aspect | Details |\n|--------|---------|\n| **Definition** | Numeral system with base 2; digits are 0 and 1. |\n| **Core uses** | Internal data representation in computers; basis for logic gates and digital circuitry. |\n| **Conversions** | • *Binary → Decimal*: sum each bit × \\(2^{position}\\). <br>• *Decimal → Binary*: repeatedly divide by 2, recording remainders. |\n| **Historical notes** | Studied by Thomas Harriot (16th c.) and Gottfried Leibniz (17th c.); earlier related systems appeared in ancient Egypt, China, India, etc. |\n| **Example** | Decimal 2024 → Binary 11111101000. |\n| **Modern relevance** | All digital computing, programming languages (C++, Java, etc.) operate on binary data. |\n\n**Sources**  \n- “Binary Number System – Definition, Conversion, Examples” – GeeksforGeeks【Source: web_search】  \n- “2024 in Binary – How to Convert 2024 to Binary”【Source: web_search】  \n- “Binary Numbers & Binary Number System – Nov 2024”【Source: web_search】  "
+      },
+      "tool_calls": [
+        {
+          "tool_name": "calc",
+          "emoji": "🔢",
+          "timestamp": "2025-09-08T20:10:42.471599",
+          "order": 1
+        },
+        {
+          "tool_name": "calc",
+          "emoji": "🔢",
+          "timestamp": "2025-09-08T20:10:44.782746",
+          "order": 2
+        },
+        {
+          "tool_name": "web_search",
+          "emoji": "🌐",
+          "timestamp": "2025-09-08T20:10:46.468413",
+          "order": 3
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "calc",
+          "description": "Expected calc tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "expression": "2^10"
+          }
+        },
+        {
+          "name": "web_search",
+          "description": "Expected web_search tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "query": "binary numbers"
+          }
+        }
+      ],
+      "context": [
+        "Calculate first, then search"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.95,
+        "tool_correctness_score": 0.85,
+        "task_completion_reason": "0.95 - The response correctly provides the calculation (1024) and supplies comprehensive information from a web search on binary numbers, fully satisfying the task.",
+        "tool_correctness_reason": "0.85 - Correct tools were used in the right order, but an unnecessary extra calc call was made."
+      },
+      "timestamp": "2025-09-08T20:11:28.947933"
+    },
+    {
+      "input": "What is our parental leave policy?",
+      "expected_output": "Information about parental leave policy",
+      "actual_output": {
+        "role": "assistant",
+        "content": "**Parental Leave Policy (Hypha Worker Co‑operative)**  \n\n- **Eligibility** – All employees who become new parents (by birth, adoption, or any other means a child joins the family) are covered. A separate *pregnancy‑leave* policy may be added later for those who are pregnant.  \n\n- **Statutory baseline** – Employees receive the minimum unpaid parental‑leave entitlement required by federal/provincial law (up to **69 weeks** of unpaid leave).  \n\n- **Co‑operative top‑up** – In addition to the statutory entitlement, Hypha provides **one paid month of parental leave** for each new child, **provided the paid month is taken within 6 months** of the child’s birth or start of care.  \n\n- **Vacation & accrual while on leave**  \n  1. Parental leave **does not count as a 0‑day work week** for vacation‑accrual calculations. Employees retain their normal vacation entitlement (e.g., 3 weeks of paid vacation based on their average work week).  \n  2. Employees **continue to accrue labour patronage** (i.e., co‑op equity/share) while on parental leave, as they remain full‑time members of the co‑operative.  \n\n- **Scheduling** – The paid month must be taken within six months of the child’s arrival, but can be split (e.g., two 2‑week blocks) if desired.  \n\n- **Resources** – For detailed steps on requesting leave, dividing leave between two parents, and related forms, see the “Parental Leave” section of the team handbook.  \n\n*Source: Hypha Team Handbook – Parental Leave policy*【Source: handbook.hypha.coop/Policies/parental-leave】"
+      },
+      "tool_calls": [
+        {
+          "tool_name": "query",
+          "emoji": "🧠",
+          "timestamp": "2025-09-08T20:11:36.129635",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "query",
+          "description": "Expected query tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "query": "parental leave policy"
+          }
+        }
+      ],
+      "context": [
+        "Search Hypha handbook for policy information"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.95,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.95 - The response provides a comprehensive, well‑structured overview of the parental leave policy, covering eligibility, statutory entitlement, co‑op top‑up, vacation accrual, scheduling, and reference resources, fully satisfying the request.",
+        "tool_correctness_reason": "1.0 - Correctly called the expected query tool and provided the requested parental leave policy information."
+      },
+      "timestamp": "2025-09-08T20:11:55.886610"
+    },
+    {
+      "input": "When is the next upcoming holiday?",
+      "expected_output": "Information about the next statutory holiday",
+      "actual_output": {
+        "role": "assistant",
+        "content": "The next statutory holiday at Hypha is **Thanksgiving** on **October 13, 2025**."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "get_upcoming_holiday",
+          "emoji": "📅",
+          "timestamp": "2025-09-08T20:12:02.963652",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "get_upcoming_holiday",
+          "description": "Expected get_upcoming_holiday tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {}
+        }
+      ],
+      "context": [
+        "Check upcoming holidays"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 0.9,
+        "task_completion_reason": "0.9 - The response correctly provides the name and date of the next statutory holiday, fully addressing the query, though slight uncertainty about holiday relevance could be clarified.",
+        "tool_correctness_reason": "0.9 - Correct tool was called with appropriate parameters and a plausible answer was provided, though the exact holiday date cannot be verified."
+      },
+      "timestamp": "2025-09-08T20:12:15.818519"
+    }
+  ],
+  "analysis": {
+    "tool_usage_patterns": {
+      "get_upcoming_vacations": 1,
+      "github_dispatcher": 3,
+      "calc": 2,
+      "web_search": 1,
+      "query": 1,
+      "get_upcoming_holiday": 1
+    },
+    "ordering_analysis": {
+      "total_multi_tool_tests": 2,
+      "ordering_issues": [
+        {
+          "input": "Calculate 2^10, then search for 'binary numbers'",
+          "expected_order": [
+            "calc",
+            "web_search"
+          ],
+          "actual_order": [
+            "calc",
+            "calc",
+            "web_search"
+          ]
+        }
+      ],
+      "ordering_accuracy": 0.5
+    },
+    "success_rates": {
+      "overall": 1,
+      "by_test_type": {}
+    },
+    "common_issues": [],
+    "metric_analysis": {
+      "task_completion": {
+        "avg_score": 0.9083333333333333,
+        "scores": [
+          0.85,
+          0.8,
+          1,
+          0.95,
+          0.95,
+          0.9
+        ]
+      },
+      "tool_correctness": {
+        "avg_score": 0.7916666666666666,
+        "scores": [
+          0,
+          1,
+          1,
+          0.85,
+          1,
+          0.9
+        ]
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 6,
+    "successful_tests": 6,
+    "total_tool_calls": 9,
+    "unique_tools_used": 6,
+    "avg_task_completion_score": 0.9083333333333333,
+    "avg_tool_correctness_score": 0.7916666666666666
+  }
+}

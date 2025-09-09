@@ -1,0 +1,343 @@
+{
+  "config": {
+    "model_name": "llama3.3:latest",
+    "base_url": "https://roo.ai.hypha.coop",
+    "max_iterations": 5,
+    "enable_ordering_analysis": true,
+    "timestamp": "2025-09-08T20:29:42.441476"
+  },
+  "test_cases": [
+    {
+      "input": "Calculate (25 + 30) * 2",
+      "expected_output": "110",
+      "actual_output": {
+        "role": "assistant",
+        "content": "The result of the calculation (25 + 30) * 2 is 110."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "calc",
+          "emoji": "🔢",
+          "timestamp": "2025-09-08T20:23:28.447530",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "calc",
+          "description": "Expected calc tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "expression": "(25 + 30) * 2"
+          }
+        }
+      ],
+      "context": [
+        "Use the calculator tool"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.9 - The actual output correctly calculates the result, but includes unnecessary additional information in its format.",
+        "tool_correctness_reason": "1.0 - Correctly used the calc tool as expected to evaluate the mathematical expression."
+      },
+      "timestamp": "2025-09-08T20:23:41.887279"
+    },
+    {
+      "input": "Who is on vacation next week?",
+      "expected_output": "List of people on vacation",
+      "actual_output": {
+        "role": "assistant",
+        "content": "No one from Hypha Worker Co-operative is scheduled to be on vacation next week. If you need to confirm or have any further questions, feel free to ask!"
+      },
+      "tool_calls": [
+        {
+          "tool_name": "get_upcoming_vacations",
+          "emoji": "🌴",
+          "timestamp": "2025-09-08T20:24:06.514240",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "get_upcoming_vacations",
+          "description": "Expected get_upcoming_vacations tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {}
+        }
+      ],
+      "context": [
+        "Check vacation schedule"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.9 - The actual output fully addresses the task by stating that no one is scheduled to be on vacation, providing a direct answer to the question and offering further assistance if needed.",
+        "tool_correctness_reason": "1.0 - The expected tool 'get_upcoming_vacations' was called correctly to determine who is on vacation next week, matching the task's requirements and context."
+      },
+      "timestamp": "2025-09-08T20:24:38.578589"
+    },
+    {
+      "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+      "expected_output": "Issue created, commented, and closed",
+      "actual_output": {
+        "role": "assistant",
+        "content": "An issue titled 'Test Issue' was created in the hyphacoop/roollm repository, commented on with 'TESTING', and then closed. The issue can be found at https://github.com/hyphacoop/RooLLM/issues/93."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "github_dispatcher",
+          "emoji": "💻",
+          "timestamp": "2025-09-08T20:25:19.808146",
+          "order": 1
+        },
+        {
+          "tool_name": "github_dispatcher",
+          "emoji": "💻",
+          "timestamp": "2025-09-08T20:25:20.302445",
+          "order": 2
+        },
+        {
+          "tool_name": "github_dispatcher",
+          "emoji": "💻",
+          "timestamp": "2025-09-08T20:25:21.469580",
+          "order": 3
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "create_issue",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "title": "Test Issue",
+            "body": "Test issue for benchmarking"
+          }
+        },
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "comment",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "number": "ISSUE_NUMBER_PLACEHOLDER",
+            "body": "TESTING"
+          }
+        },
+        {
+          "name": "github_dispatcher",
+          "description": "Expected github_dispatcher tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "action": "close_issue",
+            "org": "hyphacoop",
+            "repo": "roollm",
+            "number": "ISSUE_NUMBER_PLACEHOLDER"
+          }
+        }
+      ],
+      "context": [
+        "GitHub operations in sequence"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 1,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "1.0 - The actual output confirms that all steps of the task were completed as expected, including creating the issue, commenting on it, and closing it, providing a link to the issue for verification.",
+        "tool_correctness_reason": "1.0 - Correct tools were used in the correct sequence to create, comment on, and close the issue as specified in the task."
+      },
+      "timestamp": "2025-09-08T20:25:48.464083"
+    },
+    {
+      "input": "Calculate 2^10, then search for 'binary numbers'",
+      "expected_output": "1024 and binary number information",
+      "actual_output": {
+        "role": "assistant",
+        "content": "2^10 equals 1024. \n\nBinary numbers are a base-2 number system that uses only two digits: 0 and 1. They are the fundamental basis for how computers process and store data. The binary system operates in \"base 2\" using digits 0-1 to represent numbers, whereas the decimal system operates in \"base 10\" using digits 0-9. \n\nA single binary digit (like \"0\" or \"1\") is called a \"bit\" - short for binary digit. The word binary comes from \"Bi-\" meaning two. Each digit of a binary number counts a power of 2, with place values being powers of 2 (e.g., 2⁰, 2¹, 2²). \n\nFor example, the decimal number 2024 equals 11111101000 in binary. This can be verified as: 1×2⁹ + 1×2⁸ + 1×2⁷ + 1×2⁶ + 1×2⁵ + 1×2⁴ + 0×2³ + 1×2² + 0×2¹ + 0×2⁰ = 2024. \n\nBinary numbers have various applications, including computer programming, data storage, and digital communication. They are used internally by almost all modern computers and computer-based devices because of their direct implementation in electronic circuits using logic gates."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "calc",
+          "emoji": "🔢",
+          "timestamp": "2025-09-08T20:26:17.008362",
+          "order": 1
+        },
+        {
+          "tool_name": "web_search",
+          "emoji": "🌐",
+          "timestamp": "2025-09-08T20:26:17.008517",
+          "order": 2
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "calc",
+          "description": "Expected calc tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "expression": "2^10"
+          }
+        },
+        {
+          "name": "web_search",
+          "description": "Expected web_search tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "query": "binary numbers"
+          }
+        }
+      ],
+      "context": [
+        "Calculate first, then search"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 1,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "1.0 - The actual output perfectly completes the task by accurately calculating 2^10 as 1024 and providing comprehensive information about binary numbers.",
+        "tool_correctness_reason": "1.0 - The actual output shows that the 'calc' tool was used first to calculate 2^10, and then the 'web_search' tool was used to search for 'binary numbers', following the specified sequence correctly."
+      },
+      "timestamp": "2025-09-08T20:27:54.685456"
+    },
+    {
+      "input": "What is our parental leave policy?",
+      "expected_output": "Information about parental leave policy",
+      "actual_output": {
+        "role": "assistant",
+        "content": "Our parental leave policy provides one paid month of parental leave to all employees when a child is born or first comes into their permanent care, provided the paid month is taken within 6 months of the birth or start of care of the child. Employees are also entitled to schedule regular vacation time in addition to this month in line with vacation policies outlined in our handbook.\n\nNew parents are entitled to up to 69 weeks of unpaid parental leave. Information about dividing parental leave between two parents is available in the linked resources above.\n\nFor more information, please refer to our handbook at [handbook.hypha.coop/Policies/parental-leave](http://handbook.hypha.coop/Policies/parental-leave)."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "query",
+          "emoji": "🧠",
+          "timestamp": "2025-09-08T20:28:20.562113",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "query",
+          "description": "Expected query tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {
+            "query": "parental leave policy"
+          }
+        }
+      ],
+      "context": [
+        "Search Hypha handbook for policy information"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.95,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.95 - The actual output thoroughly addresses the task by providing detailed information about the parental leave policy, including paid and unpaid leave, eligibility criteria, and additional resources for more information.",
+        "tool_correctness_reason": "1.0 - The query tool was used correctly to retrieve the parental leave policy information, following the context of searching the Hypha handbook for policy information."
+      },
+      "timestamp": "2025-09-08T20:28:58.906596"
+    },
+    {
+      "input": "When is the next upcoming holiday?",
+      "expected_output": "Information about the next statutory holiday",
+      "actual_output": {
+        "role": "assistant",
+        "content": "The next statutory holiday at Hypha is Thanksgiving on October 13, 2025."
+      },
+      "tool_calls": [
+        {
+          "tool_name": "get_upcoming_holiday",
+          "emoji": "📅",
+          "timestamp": "2025-09-08T20:29:23.685076",
+          "order": 1
+        }
+      ],
+      "expected_tools": [
+        {
+          "name": "get_upcoming_holiday",
+          "description": "Expected get_upcoming_holiday tool call",
+          "reasoning": null,
+          "output": null,
+          "input_parameters": {}
+        }
+      ],
+      "context": [
+        "Check upcoming holidays"
+      ],
+      "success": true,
+      "metrics": {
+        "task_completion_score": 0.9,
+        "tool_correctness_score": 1,
+        "task_completion_reason": "0.9 - The response accurately provides the next statutory holiday, including the date, which fully addresses the task, but the mention of \"at Hypha\" might imply a specific organizational or regional context not requested in the task.",
+        "tool_correctness_reason": "1.0 - Correctly used the get_upcoming_holiday tool as expected to provide the next upcoming holiday."
+      },
+      "timestamp": "2025-09-08T20:29:41.440862"
+    }
+  ],
+  "analysis": {
+    "tool_usage_patterns": {
+      "calc": 2,
+      "get_upcoming_vacations": 1,
+      "github_dispatcher": 3,
+      "web_search": 1,
+      "query": 1,
+      "get_upcoming_holiday": 1
+    },
+    "ordering_analysis": {
+      "total_multi_tool_tests": 2,
+      "ordering_issues": [],
+      "ordering_accuracy": 1
+    },
+    "success_rates": {
+      "overall": 1,
+      "by_test_type": {}
+    },
+    "common_issues": [],
+    "metric_analysis": {
+      "task_completion": {
+        "avg_score": 0.9416666666666668,
+        "scores": [
+          0.9,
+          0.9,
+          1,
+          1,
+          0.95,
+          0.9
+        ]
+      },
+      "tool_correctness": {
+        "avg_score": 1,
+        "scores": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 6,
+    "successful_tests": 6,
+    "total_tool_calls": 9,
+    "unique_tools_used": 6,
+    "avg_task_completion_score": 0.9416666666666668,
+    "avg_tool_correctness_score": 1
+  }
+}

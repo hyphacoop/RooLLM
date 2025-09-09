@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RooLLM Multi-Model Benchmark Results - Advanced Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1d1d1f;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #6e6e73;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .model-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .model-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        
+        .model-rank {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .metrics-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 122, 255, 0.1);
+            border-radius: 12px;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6e6e73;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        
+        .metric-value.excellent { color: #30d158; }
+        .metric-value.good { color: #ff9f0a; }
+        .metric-value.poor { color: #ff3b30; }
+        
+        .test-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .test-stat {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .test-stat-value {
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        
+        .test-stat-label {
+            color: #6e6e73;
+            font-size: 0.8rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .close {
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 30px;
+            max-height: calc(90vh - 100px);
+            overflow-y: auto;
+        }
+        
+        .test-case {
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .test-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        
+        .test-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1d1d1f;
+        }
+        
+        .test-input {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .test-body {
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 20px;
+        }
+        
+        .test-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1d1d1f;
+        }
+        
+        .test-output {
+            background: #f0f8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .tool-calls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .tool-call {
+            background: #e8f0ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .metric-reason {
+            font-size: 0.8rem;
+            color: #6e6e73;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .error {
+            background: rgba(255, 59, 48, 0.1);
+            color: #ff3b30;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .performance-chart {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 98%;
+                margin: 1% auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 RooLLM Multi-Model Benchmark</h1>
+            <p>Advanced Interactive Results Viewer with Comprehensive Analytics</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn active" onclick="showView('overview', event)">📊 Overview</button>
+            <button class="btn" onclick="showView('executive', event)">🎯 Executive</button>
+            <button class="btn" onclick="showView('models', event)">🤖 Models</button>
+            <button class="btn" onclick="showView('performance', event)">📈 Performance</button>
+            <button class="btn" onclick="showView('heatmaps', event)">🔥 Heatmaps</button>
+            <button class="btn" onclick="showView('analytics', event)">📊 Analytics</button>
+            <button class="btn" onclick="showView('categories', event)">📋 Categories</button>
+            <button class="btn" onclick="showView('testcases', event)">🧪 Test Cases</button>
+        </div>
+        
+        <div id="content">
+            <div class="loading">
+                <p>🔄 Loading comprehensive benchmark results...</p>
+            </div>
+        </div>
+        
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <!-- Modal for detailed test view -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Test Details</div>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Test details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Script starting...');
+        
+        // Simple data loader functions
+        async function loadJSON(path) {
+            const response = await fetch(path);
+            if (!response.ok) {
+                throw new Error(`Failed to load ${path}: ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function getLatestResults() {
+            return await loadJSON('./data/multi_model_summary.json');
+        }
+
+        async function getModelDetails(modelName) {
+            const filename = `tool_survey_${modelName.replace(':', '_')}.json`;
+            return await loadJSON(`./data/${filename}`);
+        }
+
+        async function getTestDetails(modelName, testCaseIndex) {
+            const modelData = await getModelDetails(modelName);
+            const testCase = modelData.test_cases[testCaseIndex];
+            return {
+                model_name: modelName,
+                test_case_index: testCaseIndex,
+                input: testCase.input || '',
+                expected_output: testCase.expected_output || '',
+                actual_output: testCase.actual_output || {},
+                tool_calls: testCase.tool_calls || [],
+                expected_tools: testCase.expected_tools || [],
+                success: testCase.success || false,
+                metrics: testCase.metrics || {},
+                context: testCase.context || []
+            };
+        }
+
+        let benchmarkData = null;
+        let currentView = 'overview';
+
+        async function loadResults() {
+            const content = document.getElementById('content');
+            const timestamp = document.getElementById('timestamp');
+
+            try {
+                benchmarkData = await getLatestResults();
+                renderCurrentView();
+                timestamp.textContent = `Last updated: ${new Date(benchmarkData.timestamp).toLocaleString()}`;
+                
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="error">
+                        <h3>❌ No Results Found</h3>
+                        <p>No benchmark results found. Make sure the benchmark has completed running.</p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+                timestamp.textContent = '';
+            }
+        }
+        
+        function showView(view, event) {
+            currentView = view;
+            
+            // Update button states
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Fallback: find the button with the matching text
+                const buttons = document.querySelectorAll('.btn');
+                buttons.forEach(btn => {
+                    if (btn.textContent.includes(view.charAt(0).toUpperCase() + view.slice(1))) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            renderCurrentView();
+        }
+        
+        function renderCurrentView() {
+            if (!benchmarkData) {
+                return;
+            }
+            
+            switch(currentView) {
+                case 'overview':
+                    renderOverview();
+                    break;
+                case 'models':
+                    renderModels();
+                    break;
+                case 'performance':
+                    renderPerformance();
+                    break;
+                case 'heatmaps':
+                    renderHeatmaps();
+                    break;
+                case 'analytics':
+                    renderAnalytics();
+                    break;
+                case 'executive':
+                    renderExecutive();
+                    break;
+                case 'categories':
+                    renderCategories();
+                    break;
+                case 'testcases':
+                    renderTestCases();
+                    break;
+            }
+        }
+        
+        function renderOverview() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            const avgTaskCompletion = successfulResults.length > 0 ? successfulResults.reduce((sum, r) => sum + r.average_task_completion, 0) / successfulResults.length : 0;
+            const avgToolCorrectness = successfulResults.length > 0 ? successfulResults.reduce((sum, r) => sum + r.average_tool_correctness, 0) / successfulResults.length : 0;
+            
+            document.getElementById('content').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${benchmarkData.total_models}</div>
+                        <div class="stat-label">Models Tested</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${successfulResults.length}</div>
+                        <div class="stat-label">Successful Runs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgTaskCompletion.toFixed(2)}</div>
+                        <div class="stat-label">Avg Task Completion</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgToolCorrectness.toFixed(2)}</div>
+                        <div class="stat-label">Avg Tool Correctness</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="card">
+                        <h2>📊 Performance Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>🏆 Top Performers</h2>
+                        <div id="topPerformers"></div>
+                    </div>
+                </div>
+                
+                <div class="models-grid">
+                    ${successfulResults.sort((a, b) => b.average_task_completion - a.average_task_completion)
+                        .map((result, index) => renderModelCard(result, index + 1)).join('')}
+                </div>
+            `;
+            
+            // Render charts after DOM is updated
+            setTimeout(() => {
+                renderPerformanceChart();
+                renderTopPerformers();
+            }, 100);
+        }
+        
+        function renderModels() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="models-grid">
+                    ${successfulResults.sort((a, b) => b.average_task_completion - a.average_task_completion)
+                        .map((result, index) => renderModelCard(result, index + 1)).join('')}
+                </div>
+            `;
+        }
+        
+        function renderPerformance() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="performance-chart">
+                    <h2>📈 Detailed Performance Analysis</h2>
+                    <div class="chart-container">
+                        <canvas id="detailedChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="card">
+                        <h2>🔧 Tool Usage Patterns</h2>
+                        <div class="chart-container">
+                            <canvas id="toolUsageChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>⚡ Response Time Analysis</h2>
+                        <div class="chart-container">
+                            <canvas id="responseTimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                renderDetailedChart();
+                renderToolUsageChart();
+                renderResponseTimeChart();
+            }, 100);
+        }
+        
+        function renderModelCard(result, rank) {
+            const taskClass = getScoreClass(result.average_task_completion);
+            const toolClass = getScoreClass(result.average_tool_correctness);
+            
+            return `
+                <div class="model-card" onclick="showModelDetails('${result.model}')">
+                    <div class="model-header">
+                        <div class="model-name">${result.model}</div>
+                        <div class="model-rank">#${rank}</div>
+                    </div>
+                    <div class="metrics-row">
+                        <div class="metric">
+                            <div class="metric-label">Task Completion</div>
+                            <div class="metric-value ${taskClass}">${result.average_task_completion.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Tool Correctness</div>
+                            <div class="metric-value ${toolClass}">${result.average_tool_correctness.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="test-summary">
+                        <div class="test-stat">
+                            <div class="test-stat-value">${result.total_tests}</div>
+                            <div class="test-stat-label">Tests</div>
+                        </div>
+                        <div class="test-stat">
+                            <div class="test-stat-value">${(result.success_rate * 100).toFixed(1)}%</div>
+                            <div class="test-stat-label">Success</div>
+                        </div>
+                        <div class="test-stat">
+                            <div class="test-stat-value">${result.ordering_issues}</div>
+                            <div class="test-stat-label">Issues</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getScoreClass(score) {
+            if (score >= 0.8) return 'excellent';
+            if (score >= 0.6) return 'good';
+            return 'poor';
+        }
+        
+        async function showModelDetails(modelName) {
+            try {
+                // Load detailed model results
+                const modelData = await getModelDetails(modelName);
+                
+                document.getElementById('modalTitle').textContent = `Detailed Results: ${modelName}`;
+                document.getElementById('modalBody').innerHTML = renderModelDetails(modelData);
+                document.getElementById('testModal').style.display = 'block';
+                
+            } catch (error) {
+                alert(`Error loading model details: ${error.message}`);
+            }
+        }
+        
+        function renderModelDetails(modelData) {
+            return `
+                <div style="margin-bottom: 30px;">
+                    <h3>📊 Model Performance Summary</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-score">${modelData.average_task_completion?.toFixed(2) || 'N/A'}</div>
+                            <div class="metric-reason">Task Completion Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-score">${modelData.average_tool_correctness?.toFixed(2) || 'N/A'}</div>
+                            <div class="metric-reason">Tool Correctness Score</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3>🧪 Individual Test Cases</h3>
+                    ${modelData.test_cases?.map((testCase, index) => renderTestCase(testCase, index + 1)).join('') || '<p>No test case details available.</p>'}
+                </div>
+            `;
+        }
+        
+        function renderTestCase(testCase, index) {
+            const taskScore = testCase.metrics?.task_completion_score || 0;
+            const toolScore = testCase.metrics?.tool_correctness_score || 0;
+            
+            return `
+                <div class="test-case">
+                    <div class="test-header">
+                        <div class="test-title">Test ${index}: ${testCase.input}</div>
+                        <div class="test-input">${testCase.input}</div>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-section">
+                            <h4>Expected Output:</h4>
+                            <div class="test-output">${testCase.expected_output}</div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h4>Actual Output:</h4>
+                            <div class="test-output">${JSON.stringify(testCase.actual_output, null, 2)}</div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h4>Tools Used:</h4>
+                            <div class="tool-calls">
+                                ${testCase.tool_calls?.map(tc => `<span class="tool-call">${tc.tool_name}</span>`).join('') || '<span class="tool-call">None</span>'}
+                            </div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h4>Performance Metrics:</h4>
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-score">${taskScore.toFixed(2)}</div>
+                                    <div class="metric-reason">${testCase.metrics?.task_completion_reason || 'No reason provided'}</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-score">${toolScore.toFixed(2)}</div>
+                                    <div class="metric-reason">${testCase.metrics?.tool_correctness_reason || 'No reason provided'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function closeModal() {
+            document.getElementById('testModal').style.display = 'none';
+        }
+        
+        function renderPerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Create color palette for models
+            const colors = [
+                'rgba(102, 126, 234, 0.8)',   // Blue
+                'rgba(48, 209, 88, 0.8)',    // Green
+                'rgba(255, 159, 10, 0.8)',   // Orange
+                'rgba(255, 59, 48, 0.8)',    // Red
+                'rgba(175, 82, 222, 0.8)',   // Purple
+                'rgba(90, 200, 250, 0.8)',   // Light Blue
+                'rgba(255, 204, 0, 0.8)',    // Yellow
+                'rgba(52, 199, 89, 0.8)',    // Light Green
+                'rgba(255, 149, 0, 0.8)'     // Dark Orange
+            ];
+            
+            const datasets = successfulResults.map((result, index) => ({
+                label: result.model,
+                data: [{
+                    x: result.average_task_completion,
+                    y: result.average_tool_correctness,
+                    model: result.model
+                }],
+                backgroundColor: colors[index % colors.length],
+                borderColor: colors[index % colors.length].replace('0.8', '1'),
+                borderWidth: 3,
+                pointRadius: 8,
+                pointHoverRadius: 12
+            }));
+            
+            new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Model Performance Distribution',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].raw.model;
+                                },
+                                label: function(context) {
+                                    return [
+                                        `Task Completion: ${context.raw.x.toFixed(3)}`,
+                                        `Tool Correctness: ${context.raw.y.toFixed(3)}`,
+                                        `Overall Score: ${((context.raw.x + context.raw.y) / 2).toFixed(3)}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Task Completion Score',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            min: -0.05,
+                            max: 1.05,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                stepSize: 0.2
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Tool Correctness Score',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            min: -0.05,
+                            max: 1.05,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                stepSize: 0.2
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderTopPerformers() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            const top3 = successfulResults.sort((a, b) => b.average_task_completion - a.average_task_completion).slice(0, 3);
+            
+            document.getElementById('topPerformers').innerHTML = `
+                ${top3.map((result, index) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(0, 122, 255, 0.1); border-radius: 8px; margin-bottom: 10px;">
+                        <div>
+                            <strong>${index + 1}. ${result.model}</strong>
+                            <div style="font-size: 0.9rem; color: #6e6e73;">
+                                Task: ${result.average_task_completion.toFixed(2)} | Tools: ${result.average_tool_correctness.toFixed(2)}
+                            </div>
+                        </div>
+                        <div style="font-size: 1.2rem; font-weight: 700; color: #30d158;">
+                            ${((result.average_task_completion + result.average_tool_correctness) / 2).toFixed(2)}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function renderDetailedChart() {
+            const ctx = document.getElementById('detailedChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: successfulResults.map(r => r.model),
+                    datasets: [{
+                        label: 'Task Completion',
+                        data: successfulResults.map(r => r.average_task_completion),
+                        backgroundColor: 'rgba(48, 209, 88, 0.6)',
+                        borderColor: 'rgba(48, 209, 88, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Tool Correctness',
+                        data: successfulResults.map(r => r.average_tool_correctness),
+                        backgroundColor: 'rgba(0, 122, 255, 0.6)',
+                        borderColor: 'rgba(0, 122, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Detailed Performance Comparison'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderToolUsageChart() {
+            const ctx = document.getElementById('toolUsageChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Aggregate tool usage across all models
+            const toolUsage = {};
+            successfulResults.forEach(result => {
+                Object.entries(result.tool_usage_patterns || {}).forEach(([tool, count]) => {
+                    toolUsage[tool] = (toolUsage[tool] || 0) + count;
+                });
+            });
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(toolUsage),
+                    datasets: [{
+                        data: Object.values(toolUsage),
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(48, 209, 88, 0.8)',
+                            'rgba(255, 159, 10, 0.8)',
+                            'rgba(255, 59, 48, 0.8)',
+                            'rgba(175, 82, 222, 0.8)',
+                            'rgba(90, 200, 250, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Tool Usage Distribution'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderResponseTimeChart() {
+            const ctx = document.getElementById('responseTimeChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Use real response times from benchmark results
+            const responseTimes = successfulResults.map(r => ({
+                model: r.model,
+                time: r.average_response_time || 5.0 // Use actual response time or default
+            }));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: responseTimes.map(r => r.model),
+                    datasets: [{
+                        label: 'Response Time (seconds)',
+                        data: responseTimes.map(r => r.time),
+                        borderColor: 'rgba(255, 159, 10, 1)',
+                        backgroundColor: 'rgba(255, 159, 10, 0.2)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Response Time Analysis'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Time (seconds)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderHeatmaps() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="performance-chart">
+                    <h2>🔥 Performance Heatmap</h2>
+                    <div class="chart-container">
+                        <canvas id="performanceHeatmap"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="card">
+                        <h2>🧪 Test Case Performance Heatmap</h2>
+                        <div class="chart-container">
+                            <canvas id="testCaseHeatmap"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>🔧 Tool Usage Heatmap</h2>
+                        <div class="chart-container">
+                            <canvas id="toolUsageHeatmap"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="performance-chart">
+                    <h2>📊 Correlation Matrix</h2>
+                    <div class="chart-container">
+                        <canvas id="correlationMatrix"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(async () => {
+                renderPerformanceHeatmap();
+                await renderTestCaseHeatmap();
+                renderToolUsageHeatmap();
+                renderCorrelationMatrix();
+            }, 100);
+        }
+        
+        function renderExecutive() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            const avgTaskCompletion = successfulResults.reduce((sum, r) => sum + r.average_task_completion, 0) / successfulResults.length;
+            const avgToolCorrectness = successfulResults.reduce((sum, r) => sum + r.average_tool_correctness, 0) / successfulResults.length;
+            
+            // Find best performers
+            const bestOverall = successfulResults.reduce((best, current) => 
+                (current.average_task_completion + current.average_tool_correctness) / 2 > 
+                (best.average_task_completion + best.average_tool_correctness) / 2 ? current : best
+            );
+            
+            const bestTaskCompletion = successfulResults.reduce((best, current) => 
+                current.average_task_completion > best.average_task_completion ? current : best
+            );
+            
+            const bestToolCorrectness = successfulResults.reduce((best, current) => 
+                current.average_tool_correctness > best.average_tool_correctness ? current : best
+            );
+            
+            // Calculate ranges and variance
+            const taskScores = successfulResults.map(r => r.average_task_completion);
+            const toolScores = successfulResults.map(r => r.average_tool_correctness);
+            const taskRange = Math.max(...taskScores) - Math.min(...taskScores);
+            const toolRange = Math.max(...toolScores) - Math.min(...toolScores);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${benchmarkData.total_models}</div>
+                        <div class="stat-label">Models Tested</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgTaskCompletion.toFixed(3)}</div>
+                        <div class="stat-label">Avg Task Completion</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgToolCorrectness.toFixed(3)}</div>
+                        <div class="stat-label">Avg Tool Correctness</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${taskRange.toFixed(3)}</div>
+                        <div class="stat-label">Task Score Range</div>
+                    </div>
+                </div>
+                
+                <div class="performance-chart">
+                    <h2>🏆 Top Performers</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                        <div style="background: rgba(48, 209, 88, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #30d158;">
+                            <h3 style="color: #30d158; margin-bottom: 10px;">🥇 Best Overall</h3>
+                            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${bestOverall.model}</div>
+                            <div style="color: #6e6e73;">Score: ${((bestOverall.average_task_completion + bestOverall.average_tool_correctness) / 2).toFixed(3)}</div>
+                        </div>
+                        <div style="background: rgba(0, 122, 255, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #007aff;">
+                            <h3 style="color: #007aff; margin-bottom: 10px;">🎯 Best Task Completion</h3>
+                            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${bestTaskCompletion.model}</div>
+                            <div style="color: #6e6e73;">Score: ${bestTaskCompletion.average_task_completion.toFixed(3)}</div>
+                        </div>
+                        <div style="background: rgba(255, 159, 10, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #ff9f0a;">
+                            <h3 style="color: #ff9f0a; margin-bottom: 10px;">🔧 Best Tool Correctness</h3>
+                            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${bestToolCorrectness.model}</div>
+                            <div style="color: #6e6e73;">Score: ${bestToolCorrectness.average_tool_correctness.toFixed(3)}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="card">
+                        <h2>📊 Performance Summary</h2>
+                        <div style="margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Task Completion Range:</span>
+                                <span style="font-weight: bold;">${Math.min(...taskScores).toFixed(3)} - ${Math.max(...taskScores).toFixed(3)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Tool Correctness Range:</span>
+                                <span style="font-weight: bold;">${Math.min(...toolScores).toFixed(3)} - ${Math.max(...toolScores).toFixed(3)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Success Rate:</span>
+                                <span style="font-weight: bold;">${(successfulResults.reduce((sum, r) => sum + r.success_rate, 0) / successfulResults.length * 100).toFixed(1)}%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Total Ordering Issues:</span>
+                                <span style="font-weight: bold;">${successfulResults.reduce((sum, r) => sum + r.ordering_issues, 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>💡 Key Insights</h2>
+                        <div style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px; padding: 10px; background: rgba(48, 209, 88, 0.1); border-radius: 8px;">
+                                <strong>🏆 Performance Leaders:</strong> ${bestOverall.model} leads overall performance
+                            </div>
+                            <div style="margin-bottom: 15px; padding: 10px; background: rgba(0, 122, 255, 0.1); border-radius: 8px;">
+                                <strong>📈 Consistency:</strong> ${taskRange < 0.2 ? 'High' : taskRange < 0.4 ? 'Medium' : 'Low'} performance consistency
+                            </div>
+                            <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 159, 10, 0.1); border-radius: 8px;">
+                                <strong>🔧 Tool Usage:</strong> ${successfulResults.reduce((sum, r) => sum + r.ordering_issues, 0) === 0 ? 'Perfect' : 'Needs improvement'} tool ordering
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function renderCategories() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Load real category data from detailed results
+            const categories = await loadRealCategoryData(successfulResults);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="performance-chart">
+                    <h2>📋 Category Performance Analysis</h2>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="card">
+                        <h2>📊 Category Breakdown</h2>
+                        <div style="margin-top: 20px;">
+                            ${categories.map(category => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 10px; background: rgba(0, 0, 0, 0.05); border-radius: 8px;">
+                                    <div>
+                                        <div style="font-weight: bold;">${category.name}</div>
+                                        <div style="font-size: 0.9rem; color: #6e6e73;">${category.tests} test(s)</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: bold; color: ${category.avgScore >= 0.9 ? '#30d158' : category.avgScore >= 0.7 ? '#ff9f0a' : '#ff3b30'};">${category.avgScore.toFixed(2)}</div>
+                                        <div style="font-size: 0.9rem; color: #6e6e73;">${category.successRate}% success</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>🎯 Category Insights</h2>
+                        <div style="margin-top: 20px;">
+                            <div style="margin-bottom: 15px; padding: 10px; background: rgba(48, 209, 88, 0.1); border-radius: 8px;">
+                                <strong>🏆 Best Category:</strong> ${categories.reduce((best, current) => current.avgScore > best.avgScore ? current : best).name}
+                            </div>
+                            <div style="margin-bottom: 15px; padding: 10px; background: rgba(0, 122, 255, 0.1); border-radius: 8px;">
+                                <strong>📈 Average Score:</strong> ${(categories.reduce((sum, c) => sum + c.avgScore, 0) / categories.length).toFixed(2)}
+                            </div>
+                            <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 159, 10, 0.1); border-radius: 8px;">
+                                <strong>🔧 Total Tests:</strong> ${categories.reduce((sum, c) => sum + c.tests, 0)} across ${categories.length} categories
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                renderCategoryChart(categories);
+            }, 100);
+        }
+        
+        function renderAnalytics() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="performance-chart">
+                    <h2>📈 Performance Trends</h2>
+                    <div class="chart-container">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="card">
+                        <h2>🎯 Performance Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>⚡ Speed vs Accuracy</h2>
+                        <div class="chart-container">
+                            <canvas id="speedAccuracyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="performance-chart">
+                    <h2>🔍 Detailed Metrics Breakdown</h2>
+                    <div class="chart-container">
+                        <canvas id="metricsBreakdown"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(async () => {
+                await renderTrendsChart();
+                renderDistributionChart();
+                renderSpeedAccuracyChart();
+                renderMetricsBreakdown();
+            }, 100);
+        }
+        
+        function renderCategoryChart(categories) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            if (!categories || categories.length === 0) {
+                console.log('No category data available for chart');
+                return;
+            }
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories.map(c => c.name),
+                    datasets: [{
+                        label: 'Average Score',
+                        data: categories.map(c => c.avgScore),
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Success Rate (%)',
+                        data: categories.map(c => c.successRate / 100),
+                        backgroundColor: 'rgba(48, 209, 88, 0.7)',
+                        borderColor: 'rgba(48, 209, 88, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Category Performance Comparison',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderTestCases() {
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Load real test case data from the first model's results
+            loadRealTestCasesData(successfulResults);
+        }
+        
+        async function loadRealTestCasesData(successfulResults) {
+            // Load all model data in parallel
+            const modelPromises = successfulResults.map(async (model) => {
+                try {
+                    const data = await getModelDetails(model.model);
+                    return { model: model.model, data: data };
+                } catch (error) {
+                    console.error(`Error loading data for ${model.model}:`, error);
+                    return { model: model.model, data: null };
+                }
+            });
+            
+            Promise.all(modelPromises)
+                .then(modelDataArray => {
+                    // Filter out failed loads
+                    const validModelData = modelDataArray.filter(md => md.data !== null);
+                    
+                    if (validModelData.length === 0) {
+                        console.error('No valid model data loaded');
+                        renderTestCasesWithRealData([]);
+                        return;
+                    }
+                    
+                    // Use the first model's test cases as the structure
+                    const firstModelData = validModelData[0].data;
+                    const testCases = firstModelData.test_cases || [];
+                    
+                    const testCasesWithRealData = testCases.map((testCase, index) => ({
+                        id: index + 1,
+                        name: getTestCaseName(testCase.input),
+                        prompt: testCase.input,
+                        category: getTestCaseCategory(testCase.input),
+                        expectedTools: testCase.expected_tools?.map(t => t.name) || [],
+                        description: testCase.description || "",
+                        models: validModelData.map(modelData => {
+                            const testCaseData = modelData.data.test_cases[index];
+                            return {
+                                name: modelData.model,
+                                taskCompletion: testCaseData?.metrics?.task_completion_score || 0,
+                                toolCorrectness: testCaseData?.metrics?.tool_correctness_score || 0,
+                                responseTime: 0, // Not available in current data structure
+                                success: testCaseData?.success || false
+                            };
+                        })
+                    }));
+                    
+                    renderTestCasesWithRealData(testCasesWithRealData);
+                })
+                .catch(error => {
+                    console.error('Error loading real test case data:', error);
+                    renderTestCasesWithRealData([]);
+                });
+        }
+        
+        function getTestCaseName(input) {
+            if (input.includes('Calculate')) return 'Complex Arithmetic';
+            if (input.includes('vacation')) return 'Vacation Lookup';
+            if (input.includes('issue in hyphacoop')) return 'GitHub Operations Sequence';
+            if (input.includes('2^10')) return 'Calculation + Search';
+            if (input.includes('parental leave')) return 'Parental Leave Policy';
+            if (input.includes('holiday')) return 'Upcoming Holiday';
+            return 'Test Case';
+        }
+        
+        async function loadRealCategoryData(successfulResults) {
+            // Load all model data in parallel to get category performance
+            const modelPromises = successfulResults.map(async (model) => {
+                try {
+                    const data = await getModelDetails(model.model);
+                    return { model: model.model, data: data };
+                } catch (error) {
+                    console.error(`Error loading data for ${model.model}:`, error);
+                    return { model: model.model, data: null };
+                }
+            });
+            
+            const modelDataArray = await Promise.all(modelPromises);
+            const validModelData = modelDataArray.filter(md => md.data !== null);
+            
+            if (validModelData.length === 0) {
+                console.error('No valid model data loaded for categories');
+                return [];
+            }
+            
+            // Group test cases by category
+            const categoryMap = new Map();
+            
+            validModelData.forEach(({ model, data }) => {
+                if (data.test_cases) {
+                    data.test_cases.forEach((testCase, index) => {
+                        const category = getTestCaseCategory(testCase.input);
+                        const taskScore = testCase.metrics?.task_completion_score || 0;
+                        const toolScore = testCase.metrics?.tool_correctness_score || 0;
+                        const success = testCase.success || false;
+                        
+                        if (!categoryMap.has(category)) {
+                            categoryMap.set(category, {
+                                name: category,
+                                tests: 0,
+                                totalTaskScore: 0,
+                                totalToolScore: 0,
+                                totalSuccess: 0,
+                                modelCount: 0
+                            });
+                        }
+                        
+                        const cat = categoryMap.get(category);
+                        cat.tests++;
+                        cat.totalTaskScore += taskScore;
+                        cat.totalToolScore += toolScore;
+                        cat.totalSuccess += success ? 1 : 0;
+                        cat.modelCount++;
+                    });
+                }
+            });
+            
+            // Convert to array and calculate averages
+            return Array.from(categoryMap.values()).map(cat => ({
+                name: cat.name,
+                tests: cat.tests / cat.modelCount, // Average tests per model
+                avgScore: (cat.totalTaskScore + cat.totalToolScore) / (2 * cat.modelCount),
+                successRate: (cat.totalSuccess / cat.modelCount) * 100
+            }));
+        }
+        
+        function getTestCaseCategory(input) {
+            if (input.includes('Calculate')) return 'Basic Tools';
+            if (input.includes('vacation')) return 'Basic Tools';
+            if (input.includes('issue in hyphacoop')) return 'GitHub Operations';
+            if (input.includes('2^10')) return 'Multi-step';
+            if (input.includes('parental leave')) return 'Handbook Queries';
+            if (input.includes('holiday')) return 'Handbook Queries';
+            return 'Other';
+        }
+        
+        
+        function renderTestCasesWithRealData(testCasesWithData) {
+            
+            document.getElementById('content').innerHTML = `
+                <div class="performance-chart">
+                    <h2>🧪 Test Cases Across Models</h2>
+                    <div class="chart-container">
+                        <canvas id="testCasesChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard">
+                    ${testCasesWithData.map(testCase => `
+                        <div class="card">
+                            <h2>${testCase.name}</h2>
+                            <div style="margin-bottom: 15px;">
+                                <div style="background: rgba(0, 0, 0, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                    <div style="font-weight: bold; margin-bottom: 8px;">📝 Prompt:</div>
+                                    <div style="font-style: italic; color: #6e6e73;">"${testCase.prompt}"</div>
+                                </div>
+                                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                                    <div style="background: rgba(0, 122, 255, 0.1); padding: 8px 12px; border-radius: 6px;">
+                                        <span style="font-weight: bold; color: #007aff;">Category:</span> ${testCase.category}
+                                    </div>
+                                    <div style="background: rgba(48, 209, 88, 0.1); padding: 8px 12px; border-radius: 6px;">
+                                        <span style="font-weight: bold; color: #30d158;">Expected Tools:</span> ${testCase.expectedTools.join(', ')}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h3 style="margin-bottom: 15px;">📊 Performance Across Models</h3>
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: rgba(0, 0, 0, 0.05);">
+                                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e5e7;">Model</th>
+                                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e5e7;">Task Completion</th>
+                                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e5e7;">Tool Correctness</th>
+                                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e5e7;">Response Time</th>
+                                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e5e7;">Success</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${testCase.models.map(model => `
+                                            <tr style="border-bottom: 1px solid #e5e5e7; cursor: pointer;" onclick="showTestDetails('${testCase.id}', '${model.name}')">
+                                                <td style="padding: 12px; font-weight: bold;">${model.name}</td>
+                                                <td style="padding: 12px; text-align: center;">
+                                                    <span style="color: ${model.taskCompletion >= 0.9 ? '#30d158' : model.taskCompletion >= 0.7 ? '#ff9f0a' : '#ff3b30'}; font-weight: bold;">
+                                                        ${model.taskCompletion.toFixed(3)}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 12px; text-align: center;">
+                                                    <span style="color: ${model.toolCorrectness >= 0.9 ? '#30d158' : model.toolCorrectness >= 0.7 ? '#ff9f0a' : '#ff3b30'}; font-weight: bold;">
+                                                        ${model.toolCorrectness.toFixed(3)}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 12px; text-align: center;">
+                                                    <span style="color: ${model.responseTime <= 3 ? '#30d158' : model.responseTime <= 5 ? '#ff9f0a' : '#ff3b30'}; font-weight: bold;">
+                                                        ${model.responseTime.toFixed(1)}s
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 12px; text-align: center;">
+                                                    <span style="color: ${model.success ? '#30d158' : '#ff3b30'}; font-weight: bold;">
+                                                        ${model.success ? '✅' : '❌'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="background: rgba(0, 122, 255, 0.1); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: bold; color: #007aff; margin-bottom: 5px;">🏆 Best Performer</div>
+                                    <div>${testCase.models.reduce((best, current) => 
+                                        (current.taskCompletion + current.toolCorrectness) / 2 > 
+                                        (best.taskCompletion + best.toolCorrectness) / 2 ? current : best
+                                    ).name}</div>
+                                </div>
+                                <div style="background: rgba(48, 209, 88, 0.1); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: bold; color: #30d158; margin-bottom: 5px;">⚡ Fastest</div>
+                                    <div>${testCase.models.reduce((fastest, current) => 
+                                        current.responseTime < fastest.responseTime ? current : fastest
+                                    ).name}</div>
+                                </div>
+                                <div style="background: rgba(255, 159, 10, 0.1); padding: 15px; border-radius: 8px;">
+                                    <div style="font-weight: bold; color: #ff9f0a; margin-bottom: 5px;">📊 Success Rate</div>
+                                    <div>${(testCase.models.filter(m => m.success).length / testCase.models.length * 100).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                renderTestCasesChart(testCasesWithData);
+            }, 100);
+        }
+        
+        function renderTestCasesChart(testCasesWithData) {
+            const ctx = document.getElementById('testCasesChart').getContext('2d');
+            
+            if (!testCasesWithData || testCasesWithData.length === 0) {
+                console.log('No test case data available for chart');
+                return;
+            }
+            
+            // Extract test case names and model data
+            const testCaseNames = testCasesWithData.map(tc => tc.name);
+            const models = testCasesWithData[0].models.map(m => m.name);
+            
+            const datasets = models.map((modelName, index) => ({
+                label: modelName,
+                data: testCasesWithData.map(testCase => {
+                    const modelData = testCase.models.find(m => m.name === modelName);
+                    return modelData ? (modelData.taskCompletion + modelData.toolCorrectness) / 2 : 0;
+                }),
+                backgroundColor: `rgba(${102 + index * 30}, ${126 + index * 20}, ${234 - index * 20}, 0.7)`,
+                borderColor: `rgba(${102 + index * 30}, ${126 + index * 20}, ${234 - index * 20}, 1)`,
+                borderWidth: 1
+            }));
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: testCaseNames,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Test Case Performance Across Models',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            usePointStyle: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Performance Score'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Test Cases'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function showTestDetails(testCaseId, modelName) {
+            // Load real data from local files
+            const testCaseIndex = parseInt(testCaseId) - 1; // Convert to 0-based index
+
+            try {
+                const testDetails = await getTestDetails(modelName, testCaseIndex);
+                displayTestDetailsModal(testDetails);
+            } catch (error) {
+                console.error('Error loading test details:', error);
+                alert('Error loading test details. Please try again.');
+            }
+        }
+        
+        function displayTestDetailsModal(testDetails) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                padding: 30px;
+                max-width: 90%;
+                max-height: 90%;
+                overflow-y: auto;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            `;
+            
+            // Extract response content
+            const responseContent = testDetails.actual_output?.content || testDetails.actual_output || 'No response available';
+            
+            // Format tool calls
+            const toolCallsHtml = testDetails.tool_calls?.map(call => `
+                <div style="margin-bottom: 10px; padding: 10px; background: rgba(255, 255, 255, 0.7); border-radius: 6px;">
+                    <div style="font-weight: bold; color: #ff9f0a;">${call.tool_name || call.tool}</div>
+                    <div style="font-size: 0.9rem; color: #6e6e73; margin-top: 4px;">Order: ${call.order || 'N/A'}</div>
+                    <div style="font-size: 0.9rem; color: #6e6e73; margin-top: 4px;">Timestamp: ${call.timestamp || 'N/A'}</div>
+                    ${call.emoji ? `<div style="font-size: 0.9rem; color: #6e6e73; margin-top: 4px;">Emoji: ${call.emoji}</div>` : ''}
+                </div>
+            `).join('') || 'No tool calls recorded';
+            
+            // Extract metrics
+            const metrics = testDetails.metrics || {};
+            const taskCompletion = metrics.task_completion_score || 0;
+            const toolCorrectness = metrics.tool_correctness_score || 0;
+            const taskCompletionReason = metrics.task_completion_reason || 'No analysis available';
+            const toolCorrectnessReason = metrics.tool_correctness_reason || 'No analysis available';
+            
+            modalContent.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2 style="margin: 0; color: #2c3e50;">🧪 Test Case Details</h2>
+                    <button onclick="this.closest('.modal').remove()" style="background: #ff3b30; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">✕ Close</button>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #007aff; margin-bottom: 10px;">📝 Original Prompt</h3>
+                    <div style="background: rgba(0, 0, 0, 0.05); padding: 15px; border-radius: 8px; font-style: italic;">
+                        "${testDetails.input}"
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #30d158; margin-bottom: 10px;">🤖 Model Response</h3>
+                    <div style="background: rgba(48, 209, 88, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #30d158;">
+                        <div style="font-weight: bold; margin-bottom: 8px;">${testDetails.model_name}</div>
+                        <div style="white-space: pre-wrap;">${responseContent}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #ff9f0a; margin-bottom: 10px;">🔧 Tool Calls</h3>
+                    <div style="background: rgba(255, 159, 10, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #ff9f0a;">
+                        ${toolCallsHtml}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #007aff; margin-bottom: 10px;">🧠 LLM Analysis</h3>
+                    <div style="background: rgba(0, 122, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #007aff;">
+                        <div style="margin-bottom: 15px;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">Task Completion Score: ${taskCompletion.toFixed(3)}</div>
+                            <div style="font-size: 0.9rem; color: #6e6e73; white-space: pre-wrap;">${taskCompletionReason}</div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">Tool Correctness Score: ${toolCorrectness.toFixed(3)}</div>
+                            <div style="font-size: 0.9rem; color: #6e6e73; white-space: pre-wrap;">${toolCorrectnessReason}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #8e44ad; margin-bottom: 10px;">📊 Performance Metrics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #8e44ad;">${taskCompletion.toFixed(3)}</div>
+                            <div style="color: #6e6e73;">Task Completion</div>
+                        </div>
+                        <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #8e44ad;">${toolCorrectness.toFixed(3)}</div>
+                            <div style="color: #6e6e73;">Tool Correctness</div>
+                        </div>
+                        <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: ${testDetails.success ? '#30d158' : '#ff3b30'};">${testDetails.success ? '✅' : '❌'}</div>
+                            <div style="color: #6e6e73;">Success</div>
+                        </div>
+                        <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #8e44ad;">${testDetails.tool_calls?.length || 0}</div>
+                            <div style="color: #6e6e73;">Tool Calls</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.className = 'modal';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Close on outside click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+        
+        function getTestCasePrompt(testCaseId) {
+            const prompts = {
+                '1': "Calculate (25 + 30) * 2",
+                '2': "Who is on vacation next week?",
+                '3': "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                '4': "Calculate 2^10, then search for 'binary numbers'",
+                '5': "What is our parental leave policy?",
+                '6': "When is the next upcoming holiday?"
+            };
+            return prompts[testCaseId] || "Unknown test case";
+        }
+        
+        
+        function renderPerformanceHeatmap() {
+            const ctx = document.getElementById('performanceHeatmap').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Create heatmap data
+            const models = successfulResults.map(r => r.model);
+            const metrics = ['Task Completion', 'Tool Correctness', 'Success Rate', 'Ordering Issues'];
+            
+            const data = models.map(model => {
+                const result = successfulResults.find(r => r.model === model);
+                return [
+                    result.average_task_completion,
+                    result.average_tool_correctness,
+                    result.success_rate,
+                    1 - (result.ordering_issues / 10) // Normalize ordering issues
+                ];
+            });
+            
+            // Create heatmap using Chart.js with custom plugin
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: models,
+                    datasets: metrics.map((metric, index) => ({
+                        label: metric,
+                        data: data.map(row => row[index]),
+                        backgroundColor: `hsla(${index * 90}, 70%, 50%, 0.7)`,
+                        borderColor: `hsla(${index * 90}, 70%, 50%, 1)`,
+                        borderWidth: 1
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Model Performance Heatmap',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: 'Models'
+                            }
+                        },
+                        y: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            },
+                            min: 0,
+                            max: 1
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function renderTestCaseHeatmap() {
+            const ctx = document.getElementById('testCaseHeatmap').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Load real test case data from detailed results
+            const testCasesWithData = await loadRealTestCasesData(successfulResults);
+            
+            if (!testCasesWithData || testCasesWithData.length === 0) {
+                console.log('No test case data available for heatmap');
+                return;
+            }
+            
+            const models = successfulResults.map(r => r.model);
+            
+            // Use real performance data for each test case
+            const heatmapData = testCasesWithData.map((testCase, testIndex) => ({
+                label: testCase.name,
+                data: models.map((model, modelIndex) => {
+                    const modelData = testCase.models.find(m => m.name === model);
+                    const score = modelData ? (modelData.taskCompletion + modelData.toolCorrectness) / 2 : 0;
+                    return {
+                        x: modelIndex,
+                        y: testIndex,
+                        v: score
+                    };
+                })
+            }));
+            
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: heatmapData.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        backgroundColor: `hsla(${index * 60}, 70%, 50%, 0.7)`,
+                        borderColor: `hsla(${index * 60}, 70%, 50%, 1)`,
+                        pointRadius: 15
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Test Case Performance by Model',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Models'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return models[value] || '';
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Test Cases'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return testCases[value] || '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderToolUsageHeatmap() {
+            const ctx = document.getElementById('toolUsageHeatmap').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Aggregate tool usage data
+            const tools = ['calc', 'github_dispatcher', 'get_upcoming_vacations', 'web_search', 'query', 'get_upcoming_holiday'];
+            const models = successfulResults.map(r => r.model);
+            
+            const toolUsageData = tools.map(tool => ({
+                label: tool,
+                data: models.map(model => {
+                    const result = successfulResults.find(r => r.model === model);
+                    return result.tool_usage_patterns[tool] || 0;
+                })
+            }));
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: models,
+                    datasets: toolUsageData.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        backgroundColor: `hsla(${index * 60}, 70%, 50%, 0.7)`,
+                        borderColor: `hsla(${index * 60}, 70%, 50%, 1)`,
+                        borderWidth: 1
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Tool Usage Frequency by Model',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Models'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Usage Count'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderCorrelationMatrix() {
+            const ctx = document.getElementById('correlationMatrix').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Create correlation data
+            const metrics = ['Task Completion', 'Tool Correctness', 'Success Rate', 'Avg Score'];
+            const correlationData = [];
+            
+            for (let i = 0; i < metrics.length; i++) {
+                for (let j = 0; j < metrics.length; j++) {
+                    if (i === j) {
+                        correlationData.push({ x: i, y: j, v: 1.0 });
+                    } else {
+                        // Calculate correlation between metrics
+                        const values1 = successfulResults.map(r => {
+                            if (i === 0) return r.average_task_completion;
+                            if (i === 1) return r.average_tool_correctness;
+                            if (i === 2) return r.success_rate;
+                            return (r.average_task_completion + r.average_tool_correctness) / 2;
+                        });
+                        const values2 = successfulResults.map(r => {
+                            if (j === 0) return r.average_task_completion;
+                            if (j === 1) return r.average_tool_correctness;
+                            if (j === 2) return r.success_rate;
+                            return (r.average_task_completion + r.average_tool_correctness) / 2;
+                        });
+                        
+                        const correlation = calculateCorrelation(values1, values2);
+                        correlationData.push({ x: i, y: j, v: correlation });
+                    }
+                }
+            }
+            
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Correlation',
+                        data: correlationData,
+                        backgroundColor: function(context) {
+                            const value = context.parsed.v;
+                            const alpha = Math.abs(value);
+                            const hue = value > 0 ? 120 : 0; // Green for positive, red for negative
+                            return `hsla(${hue}, 70%, 50%, ${alpha})`;
+                        },
+                        pointRadius: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Metrics Correlation Matrix',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Metrics'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return metrics[value] || '';
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Metrics'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return metrics[value] || '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function calculateCorrelation(x, y) {
+            const n = x.length;
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.map((xi, i) => xi * y[i]).reduce((a, b) => a + b, 0);
+            const sumXX = x.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const sumYY = y.map(yi => yi * yi).reduce((a, b) => a + b, 0);
+            
+            return (n * sumXY - sumX * sumY) / Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+        }
+        
+        async function renderTrendsChart() {
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Load real test case data to show trends across test cases
+            const testCasesWithData = await loadRealTestCasesData(successfulResults);
+            
+            if (!testCasesWithData || testCasesWithData.length === 0) {
+                console.log('No test case data available for trends');
+                return;
+            }
+            
+            const timePoints = testCasesWithData.map(tc => tc.name);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timePoints,
+                    datasets: successfulResults.map((result, index) => ({
+                        label: result.model,
+                        data: testCasesWithData.map(testCase => {
+                            const modelData = testCase.models.find(m => m.name === result.model);
+                            return modelData ? (modelData.taskCompletion + modelData.toolCorrectness) / 2 : 0;
+                        }),
+                        borderColor: `hsla(${index * 40}, 70%, 50%, 1)`,
+                        backgroundColor: `hsla(${index * 40}, 70%, 50%, 0.1)`,
+                        tension: 0.4,
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Performance Trends Across Tests',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Performance Score'
+                            },
+                            min: 0,
+                            max: 1
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderDistributionChart() {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            const taskScores = successfulResults.map(r => r.average_task_completion);
+            const toolScores = successfulResults.map(r => r.average_tool_correctness);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0.0-0.2', '0.2-0.4', '0.4-0.6', '0.6-0.8', '0.8-1.0'],
+                    datasets: [{
+                        label: 'Task Completion',
+                        data: [0, 0, 0, 0, taskScores.filter(s => s >= 0.8).length],
+                        backgroundColor: 'rgba(48, 209, 88, 0.7)',
+                        borderColor: 'rgba(48, 209, 88, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Tool Correctness',
+                        data: [0, 0, 0, toolScores.filter(s => s >= 0.6 && s < 0.8).length, toolScores.filter(s => s >= 0.8).length],
+                        backgroundColor: 'rgba(0, 122, 255, 0.7)',
+                        borderColor: 'rgba(0, 122, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Score Distribution',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Models'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderSpeedAccuracyChart() {
+            const ctx = document.getElementById('speedAccuracyChart').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            // Use real speed data from benchmark results
+            const speedData = successfulResults.map((result, index) => ({
+                x: result.average_response_time || 5.0, // Use actual response time or default
+                y: (result.average_task_completion + result.average_tool_correctness) / 2,
+                model: result.model
+            }));
+            
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Models',
+                        data: speedData,
+                        backgroundColor: 'rgba(255, 159, 10, 0.7)',
+                        borderColor: 'rgba(255, 159, 10, 1)',
+                        pointRadius: 8,
+                        pointHoverRadius: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Speed vs Accuracy Trade-off',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].raw.model;
+                                },
+                                label: function(context) {
+                                    return [
+                                        `Response Time: ${context.raw.x.toFixed(2)}s`,
+                                        `Accuracy: ${context.raw.y.toFixed(3)}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Response Time (seconds)',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                stepSize: 2
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Accuracy Score',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            min: -0.05,
+                            max: 1.05,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                stepSize: 0.2
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderMetricsBreakdown() {
+            const ctx = document.getElementById('metricsBreakdown').getContext('2d');
+            const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
+            
+            const models = successfulResults.map(r => r.model);
+            const metrics = ['Task Completion', 'Tool Correctness', 'Success Rate', 'Ordering Quality'];
+            
+            const data = models.map(model => {
+                const result = successfulResults.find(r => r.model === model);
+                return [
+                    result.average_task_completion,
+                    result.average_tool_correctness,
+                    result.success_rate,
+                    1 - (result.ordering_issues / 10) // Normalize ordering issues
+                ];
+            });
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: metrics,
+                    datasets: models.map((model, index) => ({
+                        label: model,
+                        data: data[index],
+                        borderColor: `hsla(${index * 40}, 70%, 50%, 1)`,
+                        backgroundColor: `hsla(${index * 40}, 70%, 50%, 0.2)`,
+                        pointBackgroundColor: `hsla(${index * 40}, 70%, 50%, 1)`,
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: `hsla(${index * 40}, 70%, 50%, 1)`
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comprehensive Metrics Breakdown',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 0.2
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('testModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Load results on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadResults();
+        });
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadResults, 30000);
+    </script>
+</body>
+</html>

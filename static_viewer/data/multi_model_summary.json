@@ -1,0 +1,3371 @@
+{
+  "timestamp": "2025-09-08T20:48:27.908842",
+  "total_models": 9,
+  "models_tested": [
+    "qwen3:32b",
+    "qwen3:8b",
+    "gpt-oss:120b",
+    "gpt-oss:20b",
+    "cogito:70b",
+    "llama3.3:latest",
+    "mistral-large:latest",
+    "hermes3:70b",
+    "hermes3:latest"
+  ],
+  "results": [
+    {
+      "model": "qwen3:32b",
+      "timestamp": "2025-09-08T20:02:09.891577",
+      "total_tests": 6,
+      "average_task_completion": 1,
+      "average_tool_correctness": 1,
+      "tool_usage_patterns": {
+        "calc": 3,
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "web_search": 1,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 0,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_qwen3_32b.json"
+    },
+    {
+      "model": "qwen3:8b",
+      "timestamp": "2025-09-08T20:08:36.932530",
+      "total_tests": 6,
+      "average_task_completion": 1,
+      "average_tool_correctness": 1,
+      "tool_usage_patterns": {
+        "calc": 3,
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "web_search": 1,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 0,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_qwen3_8b.json"
+    },
+    {
+      "model": "gpt-oss:120b",
+      "timestamp": "2025-09-08T20:12:16.820356",
+      "total_tests": 6,
+      "average_task_completion": 0.9083333333333333,
+      "average_tool_correctness": 0.7916666666666666,
+      "tool_usage_patterns": {
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "calc": 2,
+        "web_search": 1,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 1,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_gpt-oss_120b.json"
+    },
+    {
+      "model": "gpt-oss:20b",
+      "timestamp": "2025-09-08T20:14:43.106737",
+      "total_tests": 6,
+      "average_task_completion": 0.8166666666666668,
+      "average_tool_correctness": 0.6166666666666667,
+      "tool_usage_patterns": {
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 1,
+        "web_search": 3,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 2,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_gpt-oss_20b.json"
+    },
+    {
+      "model": "cogito:70b",
+      "timestamp": "2025-09-08T20:22:25.375878",
+      "total_tests": 6,
+      "average_task_completion": 0.9833333333333334,
+      "average_tool_correctness": 0.8250000000000001,
+      "tool_usage_patterns": {
+        "calc": 2,
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "web_search": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 0,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_cogito_70b.json"
+    },
+    {
+      "model": "llama3.3:latest",
+      "timestamp": "2025-09-08T20:29:42.442543",
+      "total_tests": 6,
+      "average_task_completion": 0.9416666666666668,
+      "average_tool_correctness": 1,
+      "tool_usage_patterns": {
+        "calc": 2,
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "web_search": 1,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 0,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_llama3.3_latest.json"
+    },
+    {
+      "model": "mistral-large:latest",
+      "timestamp": "2025-09-08T20:40:48.759917",
+      "total_tests": 6,
+      "average_task_completion": 0.7833333333333333,
+      "average_tool_correctness": 0.4666666666666666,
+      "tool_usage_patterns": {
+        "calc": 2,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 2,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_mistral-large_latest.json"
+    },
+    {
+      "model": "hermes3:70b",
+      "timestamp": "2025-09-08T20:47:22.053388",
+      "total_tests": 6,
+      "average_task_completion": 0.8583333333333334,
+      "average_tool_correctness": 0.8166666666666668,
+      "tool_usage_patterns": {
+        "calc": 2,
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 1,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_hermes3_70b.json"
+    },
+    {
+      "model": "hermes3:latest",
+      "timestamp": "2025-09-08T20:48:27.908687",
+      "total_tests": 6,
+      "average_task_completion": 0.6749999999999999,
+      "average_tool_correctness": 0.5499999999999999,
+      "tool_usage_patterns": {
+        "calc": 2,
+        "get_upcoming_vacations": 1,
+        "github_dispatcher": 3,
+        "query": 1,
+        "get_upcoming_holiday": 1
+      },
+      "ordering_issues": 1,
+      "success_rate": 1,
+      "output_file": "comprehensive_model_results/tool_survey_hermes3_latest.json"
+    }
+  ],
+  "single_test_results": [
+    {
+      "timestamp": "2025-09-08T22:06:49.060503",
+      "test_case": {
+        "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+        "expected_output": "Issue created, commented on, and closed successfully",
+        "context": [
+          "Custom test case"
+        ],
+        "expected_tools": [],
+        "description": "Improved GitHub operations sequence with clearer org/repo format"
+      },
+      "results": [
+        {
+          "model": "qwen3:32b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060197",
+          "success": false
+        },
+        {
+          "model": "qwen3:8b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060253",
+          "success": false
+        },
+        {
+          "model": "gpt-oss:120b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060290",
+          "success": false
+        },
+        {
+          "model": "gpt-oss:20b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060321",
+          "success": false
+        },
+        {
+          "model": "cogito:70b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060348",
+          "success": false
+        },
+        {
+          "model": "llama3.3:latest",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060376",
+          "success": false
+        },
+        {
+          "model": "mistral-large:latest",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060401",
+          "success": false
+        },
+        {
+          "model": "hermes3:70b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060428",
+          "success": false
+        },
+        {
+          "model": "hermes3:latest",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "error": "ToolCallSurvey.__init__() got an unexpected keyword argument 'model_name'",
+          "timestamp": "2025-09-08T22:06:49.060453",
+          "success": false
+        }
+      ],
+      "summary": {
+        "average_task_completion": 0,
+        "average_tool_correctness": 0,
+        "success_rate": 0,
+        "total_tests": 9
+      }
+    },
+    {
+      "timestamp": "2025-09-08T23:20:42.428840",
+      "test_case": {
+        "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+        "expected_output": "Issue created, commented on, and closed successfully",
+        "context": [
+          "Custom test case"
+        ],
+        "expected_tools": [],
+        "description": "Improved GitHub operations sequence with clearer org/repo format"
+      },
+      "results": [
+        {
+          "model": "qwen3:32b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "qwen3:32b",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:41.427222"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:18:13.371080"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "calc",
+                    "emoji": "🔢",
+                    "timestamp": "2025-09-08T22:08:23.879606",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 1,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "<think>\nOkay, let's see. The task was to calculate (25 + 30) * 2. The expected answer is 110. But the actual output from the AI assistant is an error message. So the assistant didn't provide the correct result at all. The error message says there was a problem processing the request.\n\nHmm, so the user is asking for a straightforward arithmetic problem. The assistant should be able to handle that. If it's giving an error, maybe there's a bug in the system. But from the evaluator's perspective, the task wasn't completed. The user wanted the calculation done, but the assistant failed to do so. The output doesn't even mention the correct answer or attempt to explain the steps. It just says there was an error. That means the task wasn't addressed at all. So according to the scale, a failed completion would be a score between 0.0 and 0.3. Since the assistant didn't even try to answer the question, just gave an error, I think the score should be 0.0. But maybe there's a slight chance of 0.1 if there was some partial attempt. Wait, no. The error message is the only thing there. The user's task wasn't addressed in any way. So definitely 0.0.\n</think>\n\n0.0 - The response failed to address the task entirely, providing an error message instead of calculating the correct result.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The user asked to calculate (25 + 30) * 2. The expected tool is calc with that expression. The actual output shows an error message from the assistant, mentioning a problem processing the request. The actual tools called were calc, which is correct, but the result was an error.\n\nSo, the assistant did use the right tool, but there was an error in processing. The error might be due to a typo in the expression or a backend issue. Since the tool was called correctly but failed, the correctness is partial. The user's context said to use the calculator tool, so the assistant followed that. However, the error led to no result. So, the tool was used but with an issue. Maybe a minor mistake in the expression formatting? If the error is the assistant's fault, like a typo, then it's a minor issue. If it's a server error, maybe beyond their control. But the user's evaluation is about the correctness of tool usage. Since the tool was used correctly but there was an error, maybe it's a 0.8. But the example in the instructions shows that if the tool is called but fails, it's considered partial. So perhaps 0.7 or 0.6. Wait, the example given is \"0.85 - Used correct tools but called them in wrong order.\" So maybe in this case, the tool was correct but the execution had an error. So perhaps 0.7. But the error message is from the assistant, indicating that the tool call failed. So the assistant tried to use the tool but it didn't work. Since the tool was used correctly, but the result was an error, that's a partial success. So maybe 0.7. The assistant did the right thing but the tool didn't respond correctly. So the score is 0.7.\n</think>\n\n0.7 - The correct tool (calc) was used for the task, but the execution resulted in an error, indicating a partial failure in processing the calculation."
+                },
+                "timestamp": "2025-09-08T22:19:17.955177"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:26:40.128531"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 1,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "<think>\nOkay, let's see. The user asked, \"Who is on vacation next week?\" and the expected output is a list of people. The actual output from the AI was an error message saying it encountered an error while processing the request. \n\nFirst, I need to rate how well the actual output completes the task. The task is to provide a list of people on vacation, but the AI didn't do that. Instead, it gave an error. So, it didn't address the task at all.\n\nLooking at the scale, 1.0 is perfect, but here it's a failure. The error message doesn't provide any information about vacationers. The user probably needs to be informed that the system can't retrieve that data, but even then, the response should be a proper error message without the placeholder. The example given in the error has a period after \"error\" with nothing else, which might be a formatting issue. However, the main problem is that the task wasn't completed. \n\nSince the AI didn't provide any relevant information and just returned an error, this would be a failed completion. The score should be low, maybe 0.0 or 0.1. But the example explanation for 0.0-0.3 says \"Failed completion, doesn't address the task.\" So, since the actual output is an error and not even a partial answer, it's a failure. Therefore, the rating should be 0.0.\n</think>\n\n0.0 - The actual output is an error message and does not provide the requested list of people on vacation, completely failing to address the task.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The user is asking who is on vacation next week. The expected tool is get_upcoming_vacations, which should be called with an empty parameter. The actual output is an error message saying the assistant encountered an error, and no tools were called. The context is to check the vacation schedule.\n\nHmm, the assistant didn't call any tools. The correct tool here is get_upcoming_vacations, but it wasn't used. Instead, the response was an error without any tool invocation. That means the assistant failed to use the necessary tool to answer the query. Since there's no tool call, the information can't be retrieved, leading to an error. The correct approach would have been to call the get_upcoming_vacations function. So, the tool usage is completely wrong here. The score should be low, probably in the 0.0-0.3 range. Maybe 0.3 because there was an attempt (the error message) but no actual tool use. Wait, but the example given for 0.0 is \"Failed tool usage, completely wrong approach.\" Since no tools were called at all, that's a complete failure. So maybe 0.0? But the example says 0.0-0.3. Let me check the scale again. The user says 0.0-0.3 is failed tool usage, completely wrong. Since no tools were called, that's a complete failure. So the correct score is 0.0. The explanation would be that the assistant didn't call any tools, leading to an error.\n</think>\n\n0.0 - Failed to call the required 'get_upcoming_vacations' tool, resulting in an error response without any vacation data retrieval."
+                },
+                "timestamp": "2025-09-08T22:27:40.061098"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:44:44.386662"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.5,
+                  "tool_correctness_score": 0.85,
+                  "task_completion_reason": "Error: Connection timeout to host https://roo.ai.hypha.coop/api/chat",
+                  "tool_correctness_reason": "<think>\nOkay, let's break this down. The user wants the AI assistant to perform three actions on GitHub: create an issue, comment on it, and then close it. The expected tools are the github_dispatcher with specific actions in order. The actual output shows an error message, and no tools were called.\n\nFirst, the assistant didn't call any of the required tools. The create_issue, comment, and close_issue actions were all supposed to be used in sequence. But since there's an error and no tool calls, that means none of the steps were executed. The error message is generic, so maybe there was a problem with the tool's execution, but the main issue here is that the tools weren't called at all. \n\nSince the correct tools weren't used and the order isn't applicable because nothing was called, this is a complete failure. The score should be at the lower end. The example given for 0.85 was when tools were correct but order was wrong. Here, the tools weren't even called. So the correct rating is probably 0.0. But maybe there's a slight chance if the system tried but failed. However, the actual output says \"No tools called,\" so it's a complete failure. Therefore, 0.0 is appropriate.\n</think>\n\n0.0 - No tools were called, and the task was completely failed. The assistant encountered an error and did not execute any of the required GitHub operations (create issue, comment, close issue) in the specified sequence."
+                },
+                "timestamp": "2025-09-08T22:46:07.724000"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:55:16.184738"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 1,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "<think>\nOkay, let's see. The user asked to calculate 2^10 and then search for 'binary numbers'. The expected output was 1024 and some information on binary numbers. The actual output was an error message.\n\nHmm, so the AI assistant didn't manage to do either part of the task. Calculating 2^10 is straightforward math, but maybe there was a technical issue. Then the search part also failed. Since both parts of the task weren't completed, the output is just an error message. \n\nI need to rate this. The scale is from 0.0 to 1.0. The user provided examples where 0.0 is failure. Since the assistant didn't address either part, just an error, that's a complete failure. So probably 0.0. But wait, maybe there's a chance that the error was due to a temporary glitch? But the user's example says 0.0 is when it doesn't address the task. The assistant didn't calculate anything or provide any info, so it's a total failure. I think 0.0 is the right rating here.\n</think>\n\n0.0 - The response failed to address the task, as it did not calculate 2^10 or provide any information about binary numbers. The error message indicates a complete failure in task execution.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The task was to calculate 2^10 and then search for 'binary numbers'. The expected tools are calc for the calculation and web_search for the search. The actual output shows an error message, and no tools were called. The context mentions the order: calculate first, then search.\n\nHmm, the assistant didn't use any tools. So even though the tools are correct, they weren't invoked at all. The error message might be because the assistant tried to handle it without using the tools. Since the tools weren't called in any order, that's a major issue. The correct approach would have been to first call calc with 2^10, get 1024, then do a web search. But here, no tools were used, leading to failure. So the rating should be low. Probably 0.0 because it completely failed to use the tools as instructed.\n</think>\n\n0.0 - Failed to use any tools as specified. The assistant did not call the required calculation or search tools, resulting in an error. The tools were neither used nor called in the correct sequence."
+                },
+                "timestamp": "2025-09-08T22:56:06.866259"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:09:01.341583"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "query",
+                    "emoji": "🧠",
+                    "timestamp": "2025-09-08T23:02:16.257126",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.9,
+                  "task_completion_reason": "<think>\nOkay, let's tackle this evaluation. The user asked about the parental leave policy, so the expected output should be information on that policy. The actual output is an error message indicating a problem processing the request.\n\nFirst, the error message doesn't provide any relevant information about the policy. It just tells the user there was an error and to try again or contact support. That means the task wasn't addressed at all. The AI failed to retrieve or present the required information. \n\nSince the main goal was to answer the question about the policy, and the response didn't even attempt to provide any details, this is a complete failure. The user is left without the information they needed, and the AI didn't handle the error gracefully by offering an alternative or a partial response. There's no mention of the policy, so it's a total miss. Therefore, the rating should be the lowest possible, which is 0.0.\n</think>\n\n0.0 - The response completely fails to address the task by providing an error message instead of the requested parental leave policy information. No relevant content was delivered.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The user asked about the parental leave policy and the expected tool is the query function with the parameter 'parental leave policy'. The actual output was an error message, but the tool called was query. So the assistant tried to use the correct tool, but it resulted in an error. The context says to search the Hypha handbook, which the query tool is supposed to do. Since the tool was called correctly but there was an error in processing, the usage is correct but there's a problem with the execution. The error might be on the system's side, not the tool selection. So the score should be high, maybe 0.9, because the right tool was used but there was an error in processing.\n</think>\n\n0.9 - Used the correct 'query' tool with the right parameter, but encountered an error in processing the request, likely due to a system issue rather than incorrect tool usage."
+                },
+                "timestamp": "2025-09-08T23:09:30.076677"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:17:52.533487"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "<think>\nOkay, let's break this down. The user asked for the next upcoming holiday, expecting information about the next statutory holiday. The actual output was an error message indicating a problem with the request.\n\nFirst, the error message doesn't provide any holiday information. So, the main task of delivering the next holiday's details isn't addressed at all. The error message is just a notification that something went wrong, which doesn't fulfill the user's request. \n\nSince the task requires providing the next statutory holiday, and the response fails to do that, it's a complete failure. The user is left without the needed information, and the error doesn't even hint at the next holiday. Therefore, this should be rated at the lowest possible score, 0.0, because it doesn't address the task at all.\n</think>\n\n0.0 - The response fails to address the task entirely by providing an error message instead of the required information about the next statutory holiday.",
+                  "tool_correctness_reason": "<think>\nOkay, let's break this down. The user asked for the next upcoming holiday. The expected tool is get_upcoming_holiday({}), which should be called without any parameters. The actual output from the AI assistant was an error message, and it didn't call any tools. The context given is that the assistant should check upcoming holidays.\n\nSo, the problem here is that the assistant didn't use the correct tool. The error message suggests there was an issue, but since no tools were called, it's likely that the assistant tried to handle the request internally without using the provided function. The correct approach would have been to call the get_upcoming_holiday tool. Since the tool wasn't called at all, that's a complete failure in tool usage. The scale says 0.0-0.3 is failed tool usage. I think this falls into that range because there's no tool call. The example given in the scale for 0.85 is when correct tools are used but in wrong order. Here, the correct tool wasn't used at all. So the score should be 0.0. The explanation would be that the tool wasn't called, leading to an error.\n</think>\n\n0.0 - Failed to call the required 'get_upcoming_holiday' tool, resulting in an error. No tool usage occurred despite the clear requirement in the task."
+                },
+                "timestamp": "2025-09-08T23:18:39.987890"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "calc": 1,
+                "query": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                    "expected_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ],
+                    "actual_order": []
+                  },
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.5833333333333334,
+                  "scores": [
+                    1,
+                    1,
+                    0.5,
+                    1,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.625,
+                  "scores": [
+                    1,
+                    0,
+                    0.85,
+                    1,
+                    0.9,
+                    0
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 2,
+              "unique_tools_used": 2,
+              "avg_task_completion_score": 0.5833333333333334,
+              "avg_tool_correctness_score": 0.625
+            }
+          },
+          "timestamp": "2025-09-08T23:20:41.427266",
+          "success": true
+        },
+        {
+          "model": "qwen3:8b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "qwen3:8b",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:09:30.077010"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "<think>\nOkay, let me see. The user asked to calculate (25 + 30) * 2. I used the calc function to perform the calculation, and the response came back as 110. Now I need to present this answer clearly.\n\nFirst, I should confirm the calculation steps to make sure it's correct. 25 plus 30 is indeed 55, and multiplying by 2 gives 110. That's straightforward. \n\nThe user might be testing the function or verifying the result. Since the function worked, I should just state the result clearly. Maybe they want to check if the tool is functioning properly. \n\nI should respond in a simple manner, showing the calculation and the result. No need for extra explanations unless there's a follow-up question. Let me format it as a sentence with the equation and the answer.\n</think>\n\nThe result of the calculation $(25 + 30) \\times 2$ is **110**."
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "calc",
+                    "emoji": "🔢",
+                    "timestamp": "2025-09-08T22:07:41.677867",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 1,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "<think>\nOkay, let's evaluate how well the actual output completes the task. The task was to calculate (25 + 30) * 2, and the expected output is 110. The actual output provided by the assistant includes the correct answer, 110, and also explains the steps briefly. The assistant mentions that 25 plus 30 is 55, then multiplied by 2 gives 110. They also formatted the equation properly using LaTeX. \n\nThe response is clear and directly answers the question. The assistant didn't make any mistakes in the calculation, and the explanation is sufficient for someone to understand how the result was obtained. However, the assistant's internal monologue (the thinking part) isn't part of the actual output, but the final answer is correct. \n\nSince the task was just to calculate the expression, and the assistant provided the correct result along with a brief explanation, this seems like a perfect completion. There's no ambiguity, and the answer is presented clearly. So I would rate this as 1.0.\n</think>\n\n1.0 - The response correctly calculates the result and presents it clearly, fully addressing the task with accurate steps and formatting.",
+                  "tool_correctness_reason": "<think>\nOkay, let's evaluate how correctly the tools were used here. The task was to calculate (25 + 30) * 2. The expected tool is the calc function with the expression provided. The assistant used the calc tool correctly by passing the expression as given. The actual output shows the correct result of 110, which matches the expected calculation. The assistant also explained their thought process, confirming the steps are right. Since the tool was called properly and the result is accurate, there's no error in tool usage. The explanation is thorough but the tool call was straightforward. So, the tool usage is perfect here. I'd rate this a 1.0.\n</think>\n\n1.0 - The correct tool 'calc' was used with the exact expression provided, and the result was accurately computed and presented. No errors in tool usage or order."
+                },
+                "timestamp": "2025-09-08T22:08:06.379398"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:19:27.998021"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_vacations",
+                    "emoji": "🌴",
+                    "timestamp": "2025-09-08T22:14:13.582098",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.85,
+                  "task_completion_reason": "<think>\nOkay, let's see. The task is to find out who is on vacation next week. The expected output is a list of people on vacation. The actual output from the AI is an error message saying there was a problem processing the request. \n\nSo, the AI didn't provide any information about who is on vacation. Instead, it just gave an error. That means the task wasn't completed at all. The user probably expected a list, but the system failed to retrieve or generate that data. \n\nLooking at the rating scale, if the response doesn't address the task, it's in the 0.0-0.3 range. Since the error message doesn't provide any useful info and just indicates a problem, it's a failed completion. So the score should be around 0.0 or maybe 0.2. But since the error is clear, maybe 0.0 is more accurate because it doesn't even attempt to answer. \n\nWait, the example given in the prompt says that 0.85 is for correct calculation but less detail. So if the response is completely wrong or fails, it's 0.0. So in this case, the actual output is an error, which means it didn't complete the task. Therefore, the score should be 0.0.\n</think>\n\n0.0 - The response failed to complete the task by returning an error message instead of providing the requested list of people on vacation.",
+                  "tool_correctness_reason": "<think>\nOkay, let's break this down. The user asked, \"Who is on vacation next week?\" The expected tool is get_upcoming_vacations with an empty dictionary as the argument. The actual output shows an error message, and the tool called was get_upcoming_vacations. The context given is \"Check vacation schedule.\"\n\nSo, the AI assistant tried to use the correct tool, get_upcoming_vacations, which matches the expected tool. However, the output indicates an error. The problem might be that the tool was called without the correct parameters. The expected tool call is get_upcoming_vacations({}), but maybe the actual call didn't include the necessary parameters, leading to an error. Since the tool was called correctly in terms of the function name but the parameters might have been missing or incorrect, that's a minor issue. The user's context is relevant, so the tool selection was right. The error might be due to a parameter issue rather than the wrong tool being used. Therefore, the tool usage was correct in terms of selection but had a minor issue with parameters, leading to an error. That would place it around 0.85 or 0.9. But since the output shows an error, maybe the parameters weren't properly formatted. However, the tool was called correctly, so the score should be high. Let me check the example again. The example said 0.85 for wrong order, but here the tool is correct. So maybe 0.95? Wait, but the actual output shows an error, so maybe the parameters were wrong. The expected tool call is get_upcoming_vacations({}) but maybe the actual call didn't include the parameters correctly. If the parameters were missing, that's a minor issue. So the tool was used correctly, but there was an error due to parameters. So the tool usage is correct, but the execution failed. The rating would be 1.0 if the tool was called correctly, but the error might indicate that the parameters were not properly passed. Wait, the expected tool call is get_upcoming_vacations({}) which is an empty dictionary. If the actual call didn't include the parameters, maybe the tool was called without the required arguments, leading to an error. However, the user's context is to check the vacation schedule, which is what the tool is supposed to handle. So the tool was called correctly, but the parameters might have been wrong. Alternatively, maybe the tool was called correctly, but the system returned an error. Since the tool was called correctly, even if the parameters were empty, the error might be due to another reason. But the user's expected tool is get_upcoming_vacations with empty parameters. The actual tool call is get_upcoming_vacations, but the parameters might not have been passed. Wait, the actual tool call is listed as get_upcoming_vacations, but the expected is get_upcoming_vacations({}). So maybe the parameters were missing. If the tool requires parameters and they weren't provided, that's a mistake. However, the expected tool call is with an empty dictionary. Maybe the tool doesn't need parameters, but the system expects it. So the assistant called the correct tool but with incorrect parameters. That's a minor issue. So the tool usage is correct, but the parameters were wrong, leading to an error. Therefore, the rating would be 0.85 or 0.9. But the example says 0.85 for wrong order. Since the tool was called correctly but the parameters were wrong, it's a minor issue. So the score is 0.85. But the actual tool call is listed as get_upcoming_vacations, but the expected is get_upcoming_vacations({}). If the assistant called it without parameters, then it's a minor issue. So the tool was called correctly, but parameters were missing. So the rating is 0.85. But the user's expected tool is get_upcoming_vacations with empty parameters. So the assistant called the tool correctly, but the parameters were not properly formatted. Hence, the tool usage is correct, but execution failed. So the score would be 0.9 or 1.0? Wait, the user's task is to rate how correctly the tools were used. If the tool was called correctly, but the parameters were empty as expected, then it's 1.0. But the error suggests that maybe the parameters were not passed correctly. However, the actual output shows the error, which might be due to the tool's internal issue, not the assistant's tool usage. So the assistant used the correct tool, but the tool failed. In that case, the tool usage is correct, so the score is 1.0. But the user's expected tool call is get_upcoming_vacations({}), which the assistant might have called with empty parameters. However, if the assistant called it without parameters, that's a mistake. The example's explanation was about wrong order. So in this case, the tool was called correctly, but the parameters were wrong. So the score is 0.85. But I'm not sure. The key point is that the tool was called correctly (get_upcoming_vacations), which matches the expected tool. The error might be due to other reasons, not the tool usage. So the tool usage is correct, hence 1.0. However, the error message suggests that the tool call might have been incorrect. But the user's expected tool is get_upcoming_vacations with empty parameters. If the assistant called the tool with empty parameters, then it's correct. If the assistant called it without parameters, that's an issue. The problem is that the actual output shows the error, but the tool was called correctly. So the assistant used the correct tool, but the parameters might have been wrong. Therefore, the tool usage is correct, but the execution failed due to parameters. So the score is 0.9. Alternatively, the tool was called correctly, and the error is not due to the tool usage. So the score is 1.0. I think the main point is that the correct tool was called, so the score is 1.0. However, the error might indicate that the parameters were not passed correctly. But the expected tool call is with empty parameters. So the assistant might have passed the parameters correctly. Therefore, the score is 1.0. But the actual output shows an error, which could be due to the tool's internal error. Therefore, the tool usage is correct, hence 1.0. But the user's example says that if the tool is called correctly but in the wrong order, it's 0.85. Here, the tool is called correctly, so the score is 1.0. But the error might be due to the parameters. However, the expected tool is get_upcoming_vacations({}), which the assistant might have called correctly. Therefore, the score is 1.0. Wait, but the actual output shows that the assistant encountered an error. So maybe the parameters were not passed correctly. For example, if the tool requires parameters and the assistant didn't pass them, leading to an error. But the expected tool is get_upcoming_vacations({}), which is an empty dictionary. So the assistant called the tool with empty parameters, which is correct. Therefore, the tool usage is correct, and the error is not due to the tool usage. Hence, the score is 1.0. But the error message is from the system, not the assistant's tool usage. So the assistant used the correct tool, so the score is 1.0. But the user's expected tool is get_upcoming_vacations({}), and the assistant called it with empty parameters. So the tool usage is correct. Therefore, the score is 1.0.\n</think>\n\n1.0 - Correct tool called with proper parameters, error likely due to external factors, not tool usage."
+                },
+                "timestamp": "2025-09-08T22:20:08.445510"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:30:14.135692"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:40.357735",
+                    "order": 1
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:41.256869",
+                    "order": 2
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:42.638185",
+                    "order": 3
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.6,
+                  "task_completion_reason": "<think>\nOkay, let's evaluate how well the actual output completes the task. The task was to open an issue in hyphacoop/roollm titled 'Test Issue', comment with 'TESTING', and then close the issue. The expected output is that all three actions are done successfully.\n\nLooking at the actual output, the response from the AI is an error message stating that there was an issue processing the request. The user is told to try again or contact support. There's no indication that any of the steps were completed. The error message doesn't provide details on what went wrong, so the user doesn't know if it's a temporary issue or a persistent problem. \n\nSince the actual output doesn't show any successful completion of the task steps, it's a failure. The AI didn't manage to create the issue, add a comment, or close it. The error message is a generic one, which doesn't help in understanding the problem. Therefore, the completion is way below the required threshold. The correct score here would be in the 0.0-0.3 range because the task wasn't addressed at all. The response doesn't even attempt to perform the actions, just informs of an error without any action taken.\n</think>\n\n0.0 - The response indicates an error without attempting to perform any of the required actions (create issue, comment, close issue), failing to address the task entirely.",
+                  "tool_correctness_reason": "<think>\nOkay, let's break this down. The user wants the AI assistant to open an issue, comment on it, and then close it. The expected tools are three GitHub dispatcher calls in sequence: create_issue, comment, and close_issue.\n\nLooking at the actual output, the assistant encountered an error. But the tools called are all github_dispatcher, which matches the expected tools. However, the order might be important. The expected sequence is create, then comment, then close. The actual tools called are three github_dispatcher instances, but the problem is that the comment and close actions use ISSUE_NUMBER_PLACEHOLDER, which isn't a real number. The create_issue would generate the issue number, but since the placeholder is used in the comment and close steps, those tools can't execute properly. \n\nWait, the actual tools called are three github_dispatcher calls, but the parameters for comment and close have the issue number as a placeholder. The create_issue would have a body, but the placeholder is used in the comment and close. The error message suggests that the assistant tried to use these tools but failed. However, the tools themselves are called correctly in terms of the action types. The issue is that the placeholder isn't replaced with the actual issue number. \n\nBut the user's task says that the tools should be called in the specified sequence. The actual output shows that the tools were called, but with incorrect parameters. However, the user's main point is whether the tools were used correctly. The create_issue is correct, but the comment and close use a placeholder for the issue number. Since the create_issue would generate the number, but the comment and close actions need that number, the placeholder is incorrect. So the tools are called, but with wrong parameters. \n\nIn terms of the order, the create, comment, close are in the correct sequence. The problem is the parameters. So the assistant called the correct tools in the right order, but with incorrect parameters (using placeholder instead of the actual number). So the tool usage is correct in terms of order and types, but the parameters are wrong. \n\nBut the user's expected tools have the comment and close with the number as a placeholder. Wait, the expected tools in the problem description have the comment and close with 'ISSUE_NUMBER_PLACEHOLDER' as the number parameter. So maybe the user expects that the assistant should use the placeholder, but in reality, the actual issue number would be generated by the create_issue action. So the comment and close actions should have the actual number, not a placeholder. Therefore, the actual tools called have incorrect parameters. \n\nTherefore, the tools were called in the correct order (create, comment, close), but the parameters for comment and close are wrong (using placeholder instead of the actual number). So the tool usage is correct in terms of order and types, but the parameters are incorrect. However, the user's task says that the actual output is an error message, which suggests that the tools couldn't be executed. But the user is asking to rate how correctly the tools were used, not whether they succeeded. So even if the parameters are wrong, the tools were called correctly in order. \n\nWait, the user's actual output shows that the assistant tried to call the tools, but there was an error. The problem is that the comment and close actions have the placeholder for the issue number. Since the create_issue would generate the number, but the comment and close actions are called before that, the placeholder is invalid. Therefore, the tools were called in the correct order, but with incorrect parameters. So the tool usage is partially correct. \n\nIn the rating scale, if the tools are called in the correct order but with incorrect parameters, that's a partial tool usage. So maybe a 0.6-0.7. But the user's expected tools have the comment and close with the placeholder, which is incorrect. So the actual tools called are using the placeholder, which is not correct. Therefore, the assistant didn't use the tools correctly. \n\nAlternatively, maybe the user expects that the assistant should use the placeholder, but that's not how GitHub works. So the tools were called with incorrect parameters. Thus, the correct tools were used in the right order, but with wrong parameters. Therefore, the rating would be 0.8 because the order is correct, but the parameters are wrong. \n\nWait, the user's expected tools are the three github_dispatcher calls with the correct parameters. The actual output shows that the tools were called, but the parameters for the comment and close have the placeholder. The correct parameters would have the issue number from the create_issue. Therefore, the tools were called but with wrong parameters. \n\nIn the rating, the user is checking if the tools were used correctly. If the parameters are wrong, then the tool usage is incorrect. But the order is correct. So maybe the rating is 0.8 because the order is correct, but the parameters are wrong. However, the user's example says that if the order is wrong, it's 0.8. If the order is correct but parameters are wrong, maybe it's 0.8. \n\nAlternatively, since the parameters are incorrect, but the tools are called in the correct order, the rating is 0.8. So the answer would be 0.8 because the order is correct but parameters are wrong.\n</think>\n\n0.85 - Correct tools called in the right order, but parameters like ISSUE_NUMBER_PLACEHOLDER were used instead of actual issue numbers, leading to execution errors."
+                },
+                "timestamp": "2025-09-08T22:30:46.213972"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:46:07.724840"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 1,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "<think>\nOkay, let's evaluate this. The task was to calculate 2^10 and then search for 'binary numbers'. The expected output is 1024 and some info on binary numbers.\n\nLooking at the actual output, it's an error message from the AI. The assistant couldn't process the request, so it didn't calculate 2^10 or search for binary numbers. The error might be due to a technical issue, like a system problem or a miscommunication in the query. \n\nSince the response doesn't provide the correct calculation or the search results, it's not completing the task. The error message doesn't address the task at all. So, the completion is zero. The user expected two things, but the assistant failed to do either. Therefore, the score should be 0.0.\n</think>\n\n0.0 - The response failed to complete either part of the task, instead returning an error message that does not provide the calculated result or any information about binary numbers.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The user wants me to evaluate how correctly the AI assistant used the tools for the given task. The task is to calculate 2^10 first and then search for 'binary numbers'. The expected tools are calc with the expression '2^10' and then a web_search with the query 'binary numbers'. \n\nLooking at the actual output, the assistant returned an error message and didn't call any tools. The context says that the tools should be called in the specified sequence. So, the correct approach would be to first use the calc tool to compute 2^10, then use the web_search tool for 'binary numbers'. \n\nBut in the actual output, no tools were called. The error message might indicate that there was a problem with the tool calls, but the main issue here is that the tools weren't used at all. The user's instruction was to first calculate and then search, but the assistant didn't perform either step. \n\nSo, since the tools weren't called, the usage is completely wrong. The error might be due to the assistant failing to execute the tool calls, but regardless, the correct tools in the right order weren't used. Therefore, the score should be low. According to the scale, 0.0-0.3 is for completely wrong approach. Since the assistant didn't use any tools, that's a complete failure. So the rating would be 0.0.\n</think>\n\n0.0 - No tools were called, completely failing to perform the required calculations and search as instructed."
+                },
+                "timestamp": "2025-09-08T22:46:22.339468"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:56:06.867106"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.4,
+                  "task_completion_reason": "<think>\nOkay, let's see. The user asked about the parental leave policy. The expected output is information on that policy. The actual output from the AI is an error message saying there was a problem processing the request. So the AI didn't provide any information about the policy. The error message doesn't address the task at all. Since the task was to retrieve policy info and the response failed to do that, it's a complete failure. The score should be 0.0 because it didn't address the task. The error message is irrelevant here. No details provided, so definitely not even partial completion. The user needs the policy info, but the AI couldn't provide it. So the rating is 0.0.\n</think>\n\n0.0 - The response failed to address the task entirely by returning an error message instead of providing information about the parental leave policy.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The user asked about the parental leave policy. The expected tool is to use the query function with 'parental leave policy' as the query. But the actual output shows an error, and no tools were called. The context mentions searching the Hypha handbook, which might be the intended tool.\n\nWait, the expected tool is query, but maybe the actual tool should have been something else? The assistant didn't call any tool, so they didn't attempt to retrieve the information. The error message is a bit unclear, but the main issue is that no tool was used. The correct approach would have been to call the query tool. Since they didn't call any tool, even if there was an error, the tool usage is incorrect. So the rating should be low. Maybe 0.4 because they didn't use the correct tool at all. But the context says to search Hypha handbook, which might be a different tool. If the query tool wasn't the right one, but the assistant didn't use any tool, then maybe it's even worse. But the expected tool was query. So the assistant failed to use the correct tool. So the score is 0.4 or lower. But the example says 0.85 for wrong order. So maybe 0.4-0.5 is poor usage. So the answer is 0.4 or 0.5. Let me check the scale again. The user didn't use any tool, so it's completely wrong approach. So 0.0-0.3. But the actual output shows an error, maybe the tool was called but failed. Wait, the actual tools called says no tools called. So the assistant didn't attempt to use any tool. Therefore, it's a complete failure. So the rating should be 0.0-0.3. But the example in the query says \"failed tool usage, completely wrong approach\". So the answer is 0.0. But the actual output shows an error, but maybe the assistant didn't call the tool. So the correct answer is 0.0 because they didn't use any tool. So the final answer is 0.0.\n</think>\n\n0.0 - Failed to call any tool despite the clear need to retrieve policy information."
+                },
+                "timestamp": "2025-09-08T22:56:24.179810"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:08:42.510877"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_holiday",
+                    "emoji": "📅",
+                    "timestamp": "2025-09-08T23:01:19.679395",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "<think>\nOkay, let's evaluate how well the actual output completes the task. The task was to find the next upcoming holiday. The expected output is information about the next statutory holiday.\n\nLooking at the actual output, it's an error message from the AI assistant. The content says, \"I encountered an error while processing your request: . Please try again or contact support if the issue persists.\" There's a timestamp, but that's probably not relevant here. \n\nSo, the AI didn't provide any information about the next holiday. Instead, it's informing the user of an error. That means the task wasn't completed at all. The user's question wasn't answered; instead, they got an error message. \n\nNow, looking at the rating scale. A 0.0-0.3 is failed completion, meaning it doesn't address the task. Since the response is an error, it's not even attempting to answer the question. The user might need to try again, but the task wasn't fulfilled. \n\nI don't see any partial completion here. The response doesn't give any holiday info, so it's definitely not in the 0.6-0.7 range. It's also not a good completion with minor issues because the main point was not addressed. Therefore, the correct rating should be 0.0-0.3. The exact number might be 0.0 if it's a complete failure, but the example given in the query shows that even if there's some partial info, it's rated. However, in this case, there's no info provided. So, the best fit is 0.0.\n</think>\n\n0.0 - The response failed to address the task entirely by returning an error message instead of providing information about the next statutory holiday.",
+                  "tool_correctness_reason": "<think>\nOkay, let's see. The user asked, \"When is the next upcoming holiday?\" The expected tool is get_upcoming_holiday with an empty parameter. The actual output shows an error message, and the tool called was get_upcoming_holiday. The context was to check upcoming holidays.\n\nSo, the assistant tried to use the correct tool, but there was an error. The error might be due to the tool not being properly implemented or a missing parameter. Wait, the expected tool call is get_upcoming_holiday({}), which is an empty object. Maybe the actual call didn't include necessary parameters, but the tool name is correct. The user's context was correct, so the tool was called as expected. However, the error suggests that the tool didn't work. But the question is about how correctly the tools were used, not whether they worked. Since the correct tool was called, even if it failed, the tool usage is correct. The error might be on the tool's side, not the assistant's. So the tool was used correctly, hence 1.0. Wait, but the output is an error. Maybe the assistant didn't handle the error properly, but the task is about tool usage correctness. So if the tool was called correctly, even if it failed, the rating is 1.0. But the example given in the prompt says that if the tool is called correctly but in the wrong order, it's 0.85. So here, the tool was called correctly, but the result was an error. But the problem is whether the tool was used correctly. The assistant did call the correct tool with the right parameters. The error might be due to the tool's implementation, not the assistant's usage. So the tool usage is correct, hence 1.0. But maybe the parameters were missing? Wait, the expected tool is get_upcoming_holiday({}) which is empty. The actual tool call was get_upcoming_holiday, but maybe the parameters were not properly formatted. Wait, the actual output shows that the tool was called, but the error occurred. However, the user's context was correct, and the tool was called as expected. So the assistant used the correct tool correctly. Therefore, the score should be 1.0. But the example in the prompt says that if the tool is called in the wrong order, it's 0.85. So if the tool was called correctly, even if it failed, the rating is 1.0. So the answer is 1.0. But maybe the error is because the tool wasn't called correctly. Wait, the actual tools called is get_upcoming_holiday, which matches the expected tool. So the tool was called correctly. Therefore, the rating is 1.0. But the output shows an error. However, the task is to evaluate tool usage correctness, not whether the tool worked. So the answer is 1.0.\n</think>\n\n1.0 - Correct tool called with proper parameters, error likely due to external factors, not tool usage mistake."
+                },
+                "timestamp": "2025-09-08T23:09:01.339166"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "calc": 1,
+                "get_upcoming_vacations": 1,
+                "github_dispatcher": 3,
+                "get_upcoming_holiday": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0.5
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.3333333333333333,
+                  "scores": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.8083333333333332,
+                  "scores": [
+                    1,
+                    0.85,
+                    0.6,
+                    1,
+                    0.4,
+                    1
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 6,
+              "unique_tools_used": 4,
+              "avg_task_completion_score": 0.3333333333333333,
+              "avg_tool_correctness_score": 0.8083333333333332
+            }
+          },
+          "timestamp": "2025-09-08T23:09:30.077147",
+          "success": true
+        },
+        {
+          "model": "gpt-oss:120b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "gpt-oss:120b",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:41.427327"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "The result of the calculation is:\n\n\\[\n(25 + 30) \\times 2 = 55 \\times 2 = 110\n\\]\n\nSo the answer is **110**.",
+                  "thinking": "The user wants to calculate (25+30)*2 = 55*2 = 110. Provide answer. No need for tools."
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.5,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "Error:",
+                  "tool_correctness_reason": "0.0 - The assistant did not call the required calculator tool at all, providing the answer directly instead of using the specified tool."
+                },
+                "timestamp": "2025-09-08T22:14:13.581897"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:25:47.396198"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The response is an error message and does not provide any list of people on vacation, thus completely fails to address the task.",
+                  "tool_correctness_reason": "0.0 - The assistant did not call the required get_upcoming_vacations tool and returned an error message instead."
+                },
+                "timestamp": "2025-09-08T22:26:40.127628"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:35:59.830835"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.5,
+                  "tool_correctness_score": 0.5,
+                  "task_completion_reason": "Error:",
+                  "tool_correctness_reason": "Error: Server disconnected"
+                },
+                "timestamp": "2025-09-08T22:43:13.644669"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:51:46.206629"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The assistant returned an error message and did not provide the calculation or any information about binary numbers, completely failing to meet the task requirements.",
+                  "tool_correctness_reason": "0.0 - No tools were invoked; the assistant failed to perform the required calculation and web search."
+                },
+                "timestamp": "2025-09-08T22:55:16.182946"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:02:16.542127"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The response is an error message and provides no information about the parental leave policy, failing to address the task at all.",
+                  "tool_correctness_reason": "0.0 - The assistant did not invoke the required query tool at all and returned an error instead, failing to retrieve the parental leave policy."
+                },
+                "timestamp": "2025-09-08T23:06:30.818303"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:19:22.715825"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_holiday",
+                    "emoji": "📅",
+                    "timestamp": "2025-09-08T23:10:20.957583",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.85,
+                  "task_completion_reason": "0.0 - The assistant returned an error message and provided no information about the next statutory holiday, failing to address the request.",
+                  "tool_correctness_reason": "0.85 - Called the correct tool with the proper parameters, but failed to handle the tool's response and returned an error instead of the holiday information."
+                },
+                "timestamp": "2025-09-08T23:19:56.096680"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "get_upcoming_holiday": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                    "expected_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ],
+                    "actual_order": []
+                  },
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.16666666666666666,
+                  "scores": [
+                    0.5,
+                    0,
+                    0.5,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.225,
+                  "scores": [
+                    0,
+                    0,
+                    0.5,
+                    0,
+                    0,
+                    0.85
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 1,
+              "unique_tools_used": 1,
+              "avg_task_completion_score": 0.16666666666666666,
+              "avg_tool_correctness_score": 0.225
+            }
+          },
+          "timestamp": "2025-09-08T23:20:41.427352",
+          "success": true
+        },
+        {
+          "model": "gpt-oss:20b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "gpt-oss:20b",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T22:57:16.462094"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "(25 + 30) × 2 = 110"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "calc",
+                    "emoji": "🔢",
+                    "timestamp": "2025-09-08T22:08:06.418288",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.85,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "0.85 - The response correctly calculates and displays the result (110), but includes unnecessary dictionary formatting and special Unicode spaces, slightly deviating from the expected plain output.",
+                  "tool_correctness_reason": "1.0 - Called the correct tool with the correct expression and produced the accurate result."
+                },
+                "timestamp": "2025-09-08T22:08:23.835078"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:19:17.957619"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_vacations",
+                    "emoji": "🌴",
+                    "timestamp": "2025-09-08T22:08:29.303803",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.7,
+                  "task_completion_reason": "0.0 - The response does not provide any list of people and instead returns an error message, failing to address the task.",
+                  "tool_correctness_reason": "0.7 - Correct tool called, but error handling failed and the user didn't receive the expected answer."
+                },
+                "timestamp": "2025-09-08T22:19:27.995952"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "✅ Issue **#95** “Test Issue” has been opened, commented with **“TESTING”**, and then closed successfully. If you need anything else, just let me know!"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:17.807360",
+                    "order": 1
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:21.805482",
+                    "order": 2
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:24.529969",
+                    "order": 3
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:20:27.713703",
+                    "order": 4
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 1,
+                  "tool_correctness_score": 0.7,
+                  "task_completion_reason": "1.0 - The response correctly reports that the issue was opened, commented, and closed as requested.",
+                  "tool_correctness_reason": "0.7 - Correct tools were used and the basic sequence was followed, but an extra, unnecessary fourth tool call was made, making the overall usage incomplete."
+                },
+                "timestamp": "2025-09-08T22:20:40.256655"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:29:11.411751"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The response failed to calculate 2^10 or provide any information on binary numbers; it returned an error instead.",
+                  "tool_correctness_reason": "0.0 - No tools were invoked; the assistant failed to perform either calculation or web search."
+                },
+                "timestamp": "2025-09-08T22:29:22.569579"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:43:13.645319"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.5,
+                  "tool_correctness_score": 0.1,
+                  "task_completion_reason": "Error: Server disconnected",
+                  "tool_correctness_reason": "0.1 - No tools were invoked despite a tool being expected, leading to an error response."
+                },
+                "timestamp": "2025-09-08T22:44:44.385364"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:56:24.180955"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.1,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.1 - The assistant failed to provide any holiday information and instead returned an error message, not addressing the task at all.",
+                  "tool_correctness_reason": "0.0 - No tools were called; the assistant failed to use the required get_upcoming_holiday tool."
+                },
+                "timestamp": "2025-09-08T22:56:32.287911"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "calc": 1,
+                "get_upcoming_vacations": 1,
+                "github_dispatcher": 4
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                    "expected_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ],
+                    "actual_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ]
+                  },
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.4083333333333334,
+                  "scores": [
+                    0.85,
+                    0,
+                    1,
+                    0,
+                    0.5,
+                    0.1
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.4166666666666667,
+                  "scores": [
+                    1,
+                    0.7,
+                    0.7,
+                    0,
+                    0.1,
+                    0
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 6,
+              "unique_tools_used": 3,
+              "avg_task_completion_score": 0.4083333333333334,
+              "avg_tool_correctness_score": 0.4166666666666667
+            }
+          },
+          "timestamp": "2025-09-08T22:57:16.462168",
+          "success": true
+        },
+        {
+          "model": "cogito:70b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "cogito:70b",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:41.427285"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:14:15.087820"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The output indicates an error occurred and does not provide any calculation or numerical result, completely failing to address the mathematical task.",
+                  "tool_correctness_reason": "0.0 - No calculator tool was used despite the task requiring arithmetic calculation and explicit instruction to use it in the context. This represents complete failure to follow the required tool usage."
+                },
+                "timestamp": "2025-09-08T22:15:02.045701"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:29:22.570458"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The output is an error message indicating system failure to process the request, providing no information about vacation schedules as required by the task.",
+                  "tool_correctness_reason": "0.0 - The assistant failed to call the required get_upcoming_vacations tool at all, resulting in an error message instead of checking vacation schedules as instructed."
+                },
+                "timestamp": "2025-09-08T22:30:14.134083"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:46:29.158902"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:31:25.540275",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.2,
+                  "task_completion_reason": "0.0 - The actual output indicates an error occurred while processing the request, showing no evidence that any part of the task (creating an issue, commenting on it, or closing it) was successfully completed.",
+                  "tool_correctness_reason": "0.2 - The actual output shows only an error message without any evidence of the sequential tool calls being executed correctly (create issue → comment → close issue). While the github_dispatcher was called, there's no indication that all three required actions were attempted or completed in the correct order. This suggests a failed approach to fulfilling the task requirements."
+                },
+                "timestamp": "2025-09-08T22:47:21.849926"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:57:23.479518"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The output is an error message that completely fails to calculate 2^10 or provide any information about binary numbers.",
+                  "tool_correctness_reason": "0.0 - No tools were called at all, resulting in an error message instead of executing the required calculation and web search in sequence as specified."
+                },
+                "timestamp": "2025-09-08T22:58:09.897748"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:07:18.824995"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The output shows an error message instead of providing any information about parental leave policy, completely failing to address the task requirements.",
+                  "tool_correctness_reason": "0.0 - No tools were used at all when the query tool should have been called to search for parental leave policy information as indicated in the context. The assistant failed to take any action and instead returned an error message."
+                },
+                "timestamp": "2025-09-08T23:07:53.260892"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:18:39.989145"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_holiday",
+                    "emoji": "📅",
+                    "timestamp": "2025-09-08T23:09:55.064870",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.9,
+                  "task_completion_reason": "0.0 - The output is an error message that provides no information about upcoming holidays, completely failing to address the task requirements.",
+                  "tool_correctness_reason": "0.9 - The get_upcoming_holiday function was correctly called as expected, though the response indicates an error which might be due to system issues rather than incorrect tool usage."
+                },
+                "timestamp": "2025-09-08T23:19:22.714619"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "github_dispatcher": 1,
+                "get_upcoming_holiday": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                    "expected_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ],
+                    "actual_order": [
+                      "github_dispatcher"
+                    ]
+                  },
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0,
+                  "scores": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.18333333333333335,
+                  "scores": [
+                    0,
+                    0,
+                    0.2,
+                    0,
+                    0,
+                    0.9
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 2,
+              "unique_tools_used": 2,
+              "avg_task_completion_score": 0,
+              "avg_tool_correctness_score": 0.18333333333333335
+            }
+          },
+          "timestamp": "2025-09-08T23:20:41.427311",
+          "success": true
+        },
+        {
+          "model": "llama3.3:latest",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "llama3.3:latest",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:41.427177"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:15:07.080705"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output does not provide any calculation or relevant result, instead, it reports an error and asks to try again.",
+                  "tool_correctness_reason": "0.0 - No tools were called, despite the calculator tool being the expected tool for the given task."
+                },
+                "timestamp": "2025-09-08T22:15:58.478579"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:27:40.061784"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output does not provide any information about who is on vacation next week, instead reporting an error.",
+                  "tool_correctness_reason": "0.0 - No tools were called to retrieve the vacation schedule information, resulting in an error message and failure to complete the task."
+                },
+                "timestamp": "2025-09-08T22:28:25.587457"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:48:46.892427"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:35:12.139702",
+                    "order": 1
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:35:12.557789",
+                    "order": 2
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:35:13.454643",
+                    "order": 3
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The task was not completed at all due to an error encountered by the AI assistant.",
+                  "tool_correctness_reason": "0.0 - The actual output indicates an error occurred without any evidence of successful tool calls in the specified sequence, suggesting completely incorrect usage."
+                },
+                "timestamp": "2025-09-08T22:49:44.219697"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:58:09.898712"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output does not address any part of the task, providing only an error message instead of the calculation result and binary number information.",
+                  "tool_correctness_reason": "0.0 - No tools were called, resulting in completely incorrect tool usage."
+                },
+                "timestamp": "2025-09-08T22:58:54.842515"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:06:30.819691"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output does not provide any information about the parental leave policy, instead reporting an error.",
+                  "tool_correctness_reason": "0.0 - No tools were called, resulting in a failed attempt to retrieve the parental leave policy information, despite the context suggesting a search of the Hypha handbook."
+                },
+                "timestamp": "2025-09-08T23:07:14.639154"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:17:01.879398"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output does not provide any information about the next upcoming holiday, instead reporting an error and suggesting user action, which completely fails to address the task.",
+                  "tool_correctness_reason": "0.0 - No tools were called to retrieve the upcoming holiday information, resulting in an error message instead of providing a helpful response."
+                },
+                "timestamp": "2025-09-08T23:17:52.532273"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "github_dispatcher": 3
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0.5
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0,
+                  "scores": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0,
+                  "scores": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 3,
+              "unique_tools_used": 1,
+              "avg_task_completion_score": 0,
+              "avg_tool_correctness_score": 0
+            }
+          },
+          "timestamp": "2025-09-08T23:20:41.427204",
+          "success": true
+        },
+        {
+          "model": "mistral-large:latest",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "mistral-large:latest",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:41.427009"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:15:58.479675"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.2,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.2 - The output failed to provide the correct calculation or any useful information related to the task, instead reporting an error.",
+                  "tool_correctness_reason": "0.0 - No tools were called despite the context instructing to use the calculator tool."
+                },
+                "timestamp": "2025-09-08T22:17:21.524403"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "\n```yaml\n{\n  \"name\": \"get_upcoming_vacations\",\n  \"arguments\": {}\n}\n```"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.3,
+                  "tool_correctness_score": 0.6,
+                  "task_completion_reason": "0.3 - The output indicates that the AI assistant is initiating an action to get upcoming vacations, but it does not provide the actual list of people on vacation next week as required by the task.",
+                  "tool_correctness_reason": "0.6 - The AI correctly identified the necessary tool (get_upcoming_vacations) and prepared the arguments correctly, but failed to actually call the tool."
+                },
+                "timestamp": "2025-09-08T22:25:47.394265"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:47:21.850735"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:33:27.569199",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.4,
+                  "task_completion_reason": "0.0 - The output indicates that an error occurred while processing the request, meaning none of the tasks (issue creation, commenting, or closing) were completed successfully.",
+                  "tool_correctness_reason": "0.4 - Poor tool usage, only one tool was called instead of the expected three in sequence."
+                },
+                "timestamp": "2025-09-08T22:48:46.891460"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:58:54.844531"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "calc",
+                    "emoji": "🔢",
+                    "timestamp": "2025-09-08T22:51:28.950637",
+                    "order": 1
+                  },
+                  {
+                    "tool_name": "web_search",
+                    "emoji": "🌐",
+                    "timestamp": "2025-09-08T22:51:28.950712",
+                    "order": 2
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.9,
+                  "task_completion_reason": "0.0 - The output indicates an error occurred without providing any information relevant to the task of calculating \\(2^{10}\\) or searching for 'binary numbers'.",
+                  "tool_correctness_reason": "```\n0.9 - Correct tools were used (calc for calculation and web_search), but the final output indicates an error occurred during processing which may imply a partial failure in execution despite correct tool selection and order.\n```"
+                },
+                "timestamp": "2025-09-08T23:00:29.219217"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "\nHypha offers paid parental leave for all full-time employees. The length of the leave depends on the employee's tenure with the company. Employees are eligible after one year of employment [Source: handbook.hypha.coop/parental_leave]."
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.9,
+                  "tool_correctness_score": 0.2,
+                  "task_completion_reason": "0.9 - The actual output provides clear and relevant information about Hypha's parental leave policy, including eligibility criteria and where to find additional details. However, it lacks specifics on the exact length of the leave based on tenure, which would make it perfect.",
+                  "tool_correctness_reason": "0.2 - The assistant did not use any tools to retrieve the parental leave policy information, which was expected to be done through a query tool."
+                },
+                "timestamp": "2025-09-08T23:02:12.426434"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "The next statutory holiday at Hypha is Thanksgiving on October 13, 2025."
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_holiday",
+                    "emoji": "📅",
+                    "timestamp": "2025-09-08T23:09:01.340791",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.9,
+                  "tool_correctness_score": 1,
+                  "task_completion_reason": "0.9 - The response accurately provides information about the next statutory holiday (Thanksgiving on October 13, 2025) and is specific to Hypha.",
+                  "tool_correctness_reason": "```plaintext\n1.0 - Perfect tool usage, correct tools called in correct order.\n```"
+                },
+                "timestamp": "2025-09-08T23:16:58.471047"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "github_dispatcher": 1,
+                "calc": 1,
+                "web_search": 1,
+                "get_upcoming_holiday": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                    "expected_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ],
+                    "actual_order": [
+                      "github_dispatcher"
+                    ]
+                  }
+                ],
+                "ordering_accuracy": 0.5
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.3833333333333333,
+                  "scores": [
+                    0.2,
+                    0.3,
+                    0,
+                    0,
+                    0.9,
+                    0.9
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.5166666666666667,
+                  "scores": [
+                    0,
+                    0.6,
+                    0.4,
+                    0.9,
+                    0.2,
+                    1
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 4,
+              "unique_tools_used": 4,
+              "avg_task_completion_score": 0.3833333333333333,
+              "avg_tool_correctness_score": 0.5166666666666667
+            }
+          },
+          "timestamp": "2025-09-08T23:20:41.427100",
+          "success": true
+        },
+        {
+          "model": "hermes3:70b",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "hermes3:70b",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:42.428454"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:17:21.526153"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output indicates an error occurred and does not attempt to calculate or complete the given math task at all.",
+                  "tool_correctness_reason": "0.0 - The response indicates an error occurred and no tools were actually called to attempt the calculation. Completely incorrect tool usage for this task."
+                },
+                "timestamp": "2025-09-08T22:18:13.370362"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:28:25.588292"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.00 - The actual output indicates an error occurred while processing the request and does not contain any relevant information to address the task of listing who is on vacation next week.",
+                  "tool_correctness_reason": "0.00 - The get_upcoming_vacations tool was not called at all to check the vacation schedule. Instead, an error message was returned without attempting to use any relevant tools."
+                },
+                "timestamp": "2025-09-08T22:29:11.411123"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "\nTest suite failed with the following errors:\n\n1. Issue creation: The issue 'Test Issue' could not be created in the repository 'hyphacoop/RooLLM'. Please check if the repository exists and you have permissions to create issues.\n\n2. Commenting on the issue: The comment 'TESTING' could not be added to the test issue because the issue was not found. It seems the issue creation failed.\n\n3. Closing the issue: The test issue could not be closed because it was not found in the repository. This is likely due to the failure of creating the issue in the first place.\n\nPlease resolve these errors and try running the test suite again."
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:34:57.297644",
+                    "order": 1
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:34:57.779212",
+                    "order": 2
+                  },
+                  {
+                    "tool_name": "github_dispatcher",
+                    "emoji": "💻",
+                    "timestamp": "2025-09-08T22:34:57.988056",
+                    "order": 3
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.6,
+                  "task_completion_reason": "0.0 - The actual output indicates that none of the steps in the task were successfully completed due to errors creating, commenting on, and closing the issue in the specified repository. The task was not addressed at all.",
+                  "tool_correctness_reason": "0.6 - The correct github_dispatcher tool was used for each step, but the issue creation failed which caused the subsequent comment and close actions to also fail since the issue didn't exist. The root cause seems to be missing permissions or the repo not existing."
+                },
+                "timestamp": "2025-09-08T22:35:59.829778"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:56:32.288529"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.05,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.05 - The actual output does not attempt to calculate 2^10 or provide any information about binary numbers. It appears to be an error message rather than a substantive response to the task at hand.",
+                  "tool_correctness_reason": "0.0 - The assistant encountered an error and did not call any of the required tools to complete the task."
+                },
+                "timestamp": "2025-09-08T22:57:16.460643"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:07:53.261745"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The output indicates an error occurred while processing the request and does not contain any information about the parental leave policy, failing to address the task at all.",
+                  "tool_correctness_reason": "0.0 - The query tool was not called at all to search for the parental leave policy information. The response indicates an unrelated error occurred rather than attempting to retrieve the relevant policy details from the knowledge base."
+                },
+                "timestamp": "2025-09-08T23:08:42.509497"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:19:56.097299"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_holiday",
+                    "emoji": "📅",
+                    "timestamp": "2025-09-08T23:11:03.521214",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.6,
+                  "task_completion_reason": "0.00 - The output indicates an error occurred while processing the request, and provides no information about the next upcoming holiday. It completely fails to address the task requirements.",
+                  "tool_correctness_reason": "0.6 - The get_upcoming_holiday tool was used as expected based on the task and context, but it encountered an error which prevented getting the desired output about the next upcoming holiday. The tool usage was partially correct but did not fully address the query due to the unexpected error."
+                },
+                "timestamp": "2025-09-08T23:20:41.426800"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "github_dispatcher": 3,
+                "get_upcoming_holiday": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0.5
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.008333333333333333,
+                  "scores": [
+                    0,
+                    0,
+                    0,
+                    0.05,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.19999999999999998,
+                  "scores": [
+                    0,
+                    0,
+                    0.6,
+                    0,
+                    0,
+                    0.6
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 4,
+              "unique_tools_used": 2,
+              "avg_task_completion_score": 0.008333333333333333,
+              "avg_tool_correctness_score": 0.19999999999999998
+            }
+          },
+          "timestamp": "2025-09-08T23:20:42.428664",
+          "success": true
+        },
+        {
+          "model": "hermes3:latest",
+          "test_case": {
+            "input": "Create a new GitHub issue in the hyphacoop/RooLLM repository titled 'Test Issue', add a comment 'TESTING' to the issue, then close the issue",
+            "expected_output": "Issue created, commented on, and closed successfully",
+            "context": [
+              "Custom test case"
+            ],
+            "expected_tools": [],
+            "description": "Improved GitHub operations sequence with clearer org/repo format"
+          },
+          "results": {
+            "config": {
+              "model_name": "hermes3:latest",
+              "base_url": "https://roo.ai.hypha.coop",
+              "max_iterations": 5,
+              "enable_ordering_analysis": true,
+              "timestamp": "2025-09-08T23:20:41.427125"
+            },
+            "test_cases": [
+              {
+                "input": "Calculate (25 + 30) * 2",
+                "expected_output": "110",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:15:02.046816"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "(25 + 30) * 2"
+                    }
+                  }
+                ],
+                "context": [
+                  "Use the calculator tool"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The AI's output does not contain any calculation of (25 + 30) * 2 or the expected result of 110. Instead, it provides an error message unrelated to the given task. No completion of the arithmetic problem is shown.",
+                  "tool_correctness_reason": "0.0 - No tools were called at all, making it impossible to determine if they would have been used correctly. The output indicates an error occurred, preventing any tool usage evaluation."
+                },
+                "timestamp": "2025-09-08T22:15:07.079703"
+              },
+              {
+                "input": "Who is on vacation next week?",
+                "expected_output": "List of people on vacation",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I checked the upcoming vacations for the next week and found that there are no employees on vacation during that time. If you have any other questions or need further assistance, feel free to ask!"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_vacations",
+                    "emoji": "🌴",
+                    "timestamp": "2025-09-08T22:20:44.817011",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_vacations",
+                    "description": "Expected get_upcoming_vacations tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check vacation schedule"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0.9,
+                  "tool_correctness_score": 0.95,
+                  "task_completion_reason": "0.9 - The AI assistant accurately reported that there are no employees on vacation next week, directly addressing the task at hand. However, the answer could potentially provide some additional details or context about upcoming vacations if needed. Overall, it provides a precise and relevant response to the question.",
+                  "tool_correctness_reason": "0.95 - Correctly identified the appropriate tool to check upcoming vacations and used it appropriately for the given task. The output accurately reflects the results of calling this single relevant function, making it a near perfect usage of available AI capabilities for this scenario."
+                },
+                "timestamp": "2025-09-08T22:30:52.799001"
+              },
+              {
+                "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                "expected_output": "Issue created, commented, and closed",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:46:22.340213"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "create_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "title": "Test Issue",
+                      "body": "Test issue for benchmarking"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "comment",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER",
+                      "body": "TESTING"
+                    }
+                  },
+                  {
+                    "name": "github_dispatcher",
+                    "description": "Expected github_dispatcher tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "action": "close_issue",
+                      "org": "hyphacoop",
+                      "repo": "roollm",
+                      "number": "ISSUE_NUMBER_PLACEHOLDER"
+                    }
+                  }
+                ],
+                "context": [
+                  "GitHub operations in sequence"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output does not complete the requested task at all, as it indicates an error occurred and provides no further information or attempt to carry out the stated actions of creating an issue, commenting on it, and closing the issue in the specified repository and with the given title and comment.",
+                  "tool_correctness_reason": "0.0 - No tools were called at all, making it impossible to perform the requested GitHub operations in sequence. The provided context does not indicate any attempt to use the specified tools correctly."
+                },
+                "timestamp": "2025-09-08T22:46:29.156303"
+              },
+              {
+                "input": "Calculate 2^10, then search for 'binary numbers'",
+                "expected_output": "1024 and binary number information",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T22:57:16.462943"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "calc",
+                    "description": "Expected calc tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "expression": "2^10"
+                    }
+                  },
+                  {
+                    "name": "web_search",
+                    "description": "Expected web_search tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "binary numbers"
+                    }
+                  }
+                ],
+                "context": [
+                  "Calculate first, then search"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The AI system encountered an error and was unable to complete the requested task. The actual output does not contain any information about calculating 2^10 or providing binary number information, making it a failed completion.",
+                  "tool_correctness_reason": "0.0 - No tools were called at all, making it impossible to complete the specified task using the given tools. The output indicates an error occurred during processing, rather than any attempt to use the provided tools."
+                },
+                "timestamp": "2025-09-08T22:57:23.478519"
+              },
+              {
+                "input": "What is our parental leave policy?",
+                "expected_output": "Information about parental leave policy",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:07:14.640571"
+                },
+                "tool_calls": [],
+                "expected_tools": [
+                  {
+                    "name": "query",
+                    "description": "Expected query tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {
+                      "query": "parental leave policy"
+                    }
+                  }
+                ],
+                "context": [
+                  "Search Hypha handbook for policy information"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0,
+                  "task_completion_reason": "0.0 - The actual output is not information about the parental leave policy at all, but rather an error message indicating that no valid information was able to be retrieved or generated in response to the original request. As such, it does not complete the task in any meaningful way.",
+                  "tool_correctness_reason": "0.0 - No tools were called at all, making this an incorrect approach to the task. The system should have queried the handbook for the parental leave policy information rather than returning an error message."
+                },
+                "timestamp": "2025-09-08T23:07:18.824359"
+              },
+              {
+                "input": "When is the next upcoming holiday?",
+                "expected_output": "Information about the next statutory holiday",
+                "actual_output": {
+                  "role": "assistant",
+                  "content": "I encountered an error while processing your request: . Please try again or contact support if the issue persists.",
+                  "timestamp": "2025-09-08T23:16:58.472582"
+                },
+                "tool_calls": [
+                  {
+                    "tool_name": "get_upcoming_holiday",
+                    "emoji": "📅",
+                    "timestamp": "2025-09-08T23:09:42.152256",
+                    "order": 1
+                  }
+                ],
+                "expected_tools": [
+                  {
+                    "name": "get_upcoming_holiday",
+                    "description": "Expected get_upcoming_holiday tool call",
+                    "reasoning": null,
+                    "output": null,
+                    "input_parameters": {}
+                  }
+                ],
+                "context": [
+                  "Check upcoming holidays"
+                ],
+                "success": true,
+                "metrics": {
+                  "task_completion_score": 0,
+                  "tool_correctness_score": 0.5,
+                  "task_completion_reason": "0.0 - The output indicates an error occurred and does not provide any information about the next holiday, thus failing to complete the task.",
+                  "tool_correctness_reason": "0.5 - The get_upcoming_holiday tool was correctly identified as needed for the task. However, there seems to be an error in processing the request with the message 'I encountered an error while processing your request: . Please try again or contact support if the issue persists.', indicating that the tool could not fully complete its intended function."
+                },
+                "timestamp": "2025-09-08T23:17:01.878393"
+              }
+            ],
+            "analysis": {
+              "tool_usage_patterns": {
+                "get_upcoming_vacations": 1,
+                "get_upcoming_holiday": 1
+              },
+              "ordering_analysis": {
+                "total_multi_tool_tests": 2,
+                "ordering_issues": [
+                  {
+                    "input": "Open an issue in hyphacoop/roollm titled 'Test Issue', comment on it with 'TESTING', then close the issue",
+                    "expected_order": [
+                      "github_dispatcher",
+                      "github_dispatcher",
+                      "github_dispatcher"
+                    ],
+                    "actual_order": []
+                  },
+                  {
+                    "input": "Calculate 2^10, then search for 'binary numbers'",
+                    "expected_order": [
+                      "calc",
+                      "web_search"
+                    ],
+                    "actual_order": []
+                  }
+                ],
+                "ordering_accuracy": 0
+              },
+              "success_rates": {
+                "overall": 1,
+                "by_test_type": {}
+              },
+              "common_issues": [],
+              "metric_analysis": {
+                "task_completion": {
+                  "avg_score": 0.15,
+                  "scores": [
+                    0,
+                    0.9,
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "tool_correctness": {
+                  "avg_score": 0.24166666666666667,
+                  "scores": [
+                    0,
+                    0.95,
+                    0,
+                    0,
+                    0,
+                    0.5
+                  ]
+                }
+              }
+            },
+            "summary": {
+              "total_tests": 6,
+              "successful_tests": 6,
+              "total_tool_calls": 2,
+              "unique_tools_used": 2,
+              "avg_task_completion_score": 0.15,
+              "avg_tool_correctness_score": 0.24166666666666667
+            }
+          },
+          "timestamp": "2025-09-08T23:20:41.427157",
+          "success": true
+        }
+      ],
+      "summary": {
+        "average_task_completion": 0.22592592592592595,
+        "average_tool_correctness": 0.3574074074074074,
+        "success_rate": 100,
+        "total_tests": 9,
+        "successful_tests": 9
+      }
+    }
+  ]
+}
