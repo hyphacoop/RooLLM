@@ -1369,7 +1369,7 @@
             renderTestCasesWithRealData(testCasesWithData);
         }
         
-        async function loadRealTestCasesData(successfulResults) {
+        async function loadTestCasesData(successfulResults) {
             // Load all model data in parallel
             const modelPromises = successfulResults.map(async (model) => {
                 try {
@@ -1420,6 +1420,12 @@
                 console.error('Error loading real test case data:', error);
                 return [];
             }
+        }
+
+        async function loadRealTestCasesData(successfulResults) {
+            const testCasesWithData = await loadTestCasesData(successfulResults);
+            renderTestCasesWithRealData(testCasesWithData);
+            return testCasesWithData;
         }
         
         function getTestCaseName(input) {
@@ -1892,7 +1898,7 @@
             const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
             
             // Load real test case data from detailed results
-            const testCasesWithData = await loadRealTestCasesData(successfulResults);
+            const testCasesWithData = await loadTestCasesData(successfulResults);
             
             if (!testCasesWithData || testCasesWithData.length === 0) {
                 console.log('No test case data available for heatmap');
@@ -2125,7 +2131,7 @@
             const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
             
             // Load real test case data to show trends across test cases
-            const testCasesWithData = await loadRealTestCasesData(successfulResults);
+            const testCasesWithData = await loadTestCasesData(successfulResults);
             
             if (!testCasesWithData || testCasesWithData.length === 0) {
                 console.log('No test case data available for trends');
