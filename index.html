@@ -522,7 +522,7 @@
 
             try {
                 benchmarkData = await getLatestResults();
-                renderCurrentView();
+                await renderCurrentView();
                 timestamp.textContent = `Last updated: ${new Date(benchmarkData.timestamp).toLocaleString()}`;
                 
             } catch (error) {
@@ -537,7 +537,7 @@
             }
         }
         
-        function showView(view, event) {
+        async function showView(view, event) {
             currentView = view;
             
             // Update button states
@@ -554,10 +554,10 @@
                 });
             }
             
-            renderCurrentView();
+            await renderCurrentView();
         }
         
-        function renderCurrentView() {
+        async function renderCurrentView() {
             if (!benchmarkData) {
                 return;
             }
@@ -585,7 +585,7 @@
                     renderCategories();
                     break;
                 case 'testcases':
-                    renderTestCases();
+                    await renderTestCases();
                     break;
             }
         }
@@ -1361,11 +1361,12 @@
             });
         }
         
-        function renderTestCases() {
+        async function renderTestCases() {
             const successfulResults = benchmarkData.results.filter(r => r.success_rate !== undefined && r.success_rate > 0);
             
             // Load real test case data from the first model's results
-            loadRealTestCasesData(successfulResults);
+            const testCasesWithData = await loadRealTestCasesData(successfulResults);
+            renderTestCasesWithRealData(testCasesWithData);
         }
         
         async function loadRealTestCasesData(successfulResults) {
@@ -1380,46 +1381,45 @@
                 }
             });
             
-            Promise.all(modelPromises)
-                .then(modelDataArray => {
-                    // Filter out failed loads
-                    const validModelData = modelDataArray.filter(md => md.data !== null);
-                    
-                    if (validModelData.length === 0) {
-                        console.error('No valid model data loaded');
-                        renderTestCasesWithRealData([]);
-                        return;
-                    }
-                    
-                    // Use the first model's test cases as the structure
-                    const firstModelData = validModelData[0].data;
-                    const testCases = firstModelData.test_cases || [];
-                    
-                    const testCasesWithRealData = testCases.map((testCase, index) => ({
-                        id: index + 1,
-                        name: getTestCaseName(testCase.input),
-                        prompt: testCase.input,
-                        category: getTestCaseCategory(testCase.input),
-                        expectedTools: testCase.expected_tools?.map(t => t.name) || [],
-                        description: testCase.description || "",
-                        models: validModelData.map(modelData => {
-                            const testCaseData = modelData.data.test_cases[index];
-                            return {
-                                name: modelData.model,
-                                taskCompletion: testCaseData?.metrics?.task_completion_score || 0,
-                                toolCorrectness: testCaseData?.metrics?.tool_correctness_score || 0,
-                                responseTime: 0, // Not available in current data structure
-                                success: testCaseData?.success || false
-                            };
-                        })
-                    }));
-                    
-                    renderTestCasesWithRealData(testCasesWithRealData);
-                })
-                .catch(error => {
-                    console.error('Error loading real test case data:', error);
-                    renderTestCasesWithRealData([]);
-                });
+            try {
+                const modelDataArray = await Promise.all(modelPromises);
+                
+                // Filter out failed loads
+                const validModelData = modelDataArray.filter(md => md.data !== null);
+                
+                if (validModelData.length === 0) {
+                    console.error('No valid model data loaded');
+                    return [];
+                }
+                
+                // Use the first model's test cases as the structure
+                const firstModelData = validModelData[0].data;
+                const testCases = firstModelData.test_cases || [];
+                
+                const testCasesWithRealData = testCases.map((testCase, index) => ({
+                    id: index + 1,
+                    name: getTestCaseName(testCase.input),
+                    prompt: testCase.input,
+                    category: getTestCaseCategory(testCase.input),
+                    expectedTools: testCase.expected_tools?.map(t => t.name) || [],
+                    description: testCase.description || "",
+                    models: validModelData.map(modelData => {
+                        const testCaseData = modelData.data.test_cases[index];
+                        return {
+                            name: modelData.model,
+                            taskCompletion: testCaseData?.metrics?.task_completion_score || 0,
+                            toolCorrectness: testCaseData?.metrics?.tool_correctness_score || 0,
+                            responseTime: 0, // Not available in current data structure
+                            success: testCaseData?.success || false
+                        };
+                    })
+                }));
+                
+                return testCasesWithRealData;
+            } catch (error) {
+                console.error('Error loading real test case data:', error);
+                return [];
+            }
         }
         
         function getTestCaseName(input) {
