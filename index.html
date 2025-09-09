@@ -438,24 +438,24 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 RooLLM Multi-Model Benchmark</h1>
+            <h1>RooLLM Multi-Model Benchmark</h1>
             <p>Advanced Interactive Results Viewer with Comprehensive Analytics</p>
         </div>
         
         <div class="controls">
-            <button class="btn active" onclick="showView('overview', event)">📊 Overview</button>
-            <button class="btn" onclick="showView('executive', event)">🎯 Executive</button>
-            <button class="btn" onclick="showView('models', event)">🤖 Models</button>
-            <button class="btn" onclick="showView('performance', event)">📈 Performance</button>
-            <button class="btn" onclick="showView('heatmaps', event)">🔥 Heatmaps</button>
-            <button class="btn" onclick="showView('analytics', event)">📊 Analytics</button>
-            <button class="btn" onclick="showView('categories', event)">📋 Categories</button>
-            <button class="btn" onclick="showView('testcases', event)">🧪 Test Cases</button>
+            <button class="btn active" onclick="showView('overview', event)">Overview</button>
+            <button class="btn" onclick="showView('executive', event)">Executive</button>
+            <button class="btn" onclick="showView('models', event)">Models</button>
+            <button class="btn" onclick="showView('performance', event)">Performance</button>
+            <button class="btn" onclick="showView('heatmaps', event)">Heatmaps</button>
+            <button class="btn" onclick="showView('analytics', event)">Analytics</button>
+            <button class="btn" onclick="showView('categories', event)">Categories</button>
+            <button class="btn" onclick="showView('testcases', event)">Test Cases</button>
         </div>
         
         <div id="content">
             <div class="loading">
-                <p>🔄 Loading comprehensive benchmark results...</p>
+                <p>Loading comprehensive benchmark results...</p>
             </div>
         </div>
         
@@ -528,7 +528,7 @@
             } catch (error) {
                 content.innerHTML = `
                     <div class="error">
-                        <h3>❌ No Results Found</h3>
+                        <h3>No Results Found</h3>
                         <p>No benchmark results found. Make sure the benchmark has completed running.</p>
                         <p>Error: ${error.message}</p>
                     </div>
@@ -617,13 +617,13 @@
                 
                 <div class="dashboard">
                     <div class="card">
-                        <h2>📊 Performance Distribution</h2>
+                        <h2>Performance Distribution</h2>
                         <div class="chart-container">
                             <canvas id="performanceChart"></canvas>
                         </div>
                     </div>
                     <div class="card">
-                        <h2>🏆 Top Performers</h2>
+                        <h2>Top Performers</h2>
                         <div id="topPerformers"></div>
                     </div>
                 </div>
@@ -657,7 +657,7 @@
             
             document.getElementById('content').innerHTML = `
                 <div class="performance-chart">
-                    <h2>📈 Detailed Performance Analysis</h2>
+                    <h2>Detailed Performance Analysis</h2>
                     <div class="chart-container">
                         <canvas id="detailedChart"></canvas>
                     </div>
@@ -665,13 +665,13 @@
                 
                 <div class="dashboard">
                     <div class="card">
-                        <h2>🔧 Tool Usage Patterns</h2>
+                        <h2>Tool Usage Patterns</h2>
                         <div class="chart-container">
                             <canvas id="toolUsageChart"></canvas>
                         </div>
                     </div>
                     <div class="card">
-                        <h2>⚡ Response Time Analysis</h2>
+                        <h2>Response Time Analysis</h2>
                         <div class="chart-container">
                             <canvas id="responseTimeChart"></canvas>
                         </div>
@@ -747,7 +747,7 @@
         function renderModelDetails(modelData) {
             return `
                 <div style="margin-bottom: 30px;">
-                    <h3>📊 Model Performance Summary</h3>
+                    <h3>Model Performance Summary</h3>
                     <div class="metrics-grid">
                         <div class="metric-card">
                             <div class="metric-score">${modelData.average_task_completion?.toFixed(2) || 'N/A'}</div>
@@ -761,7 +761,7 @@
                 </div>
                 
                 <div>
-                    <h3>🧪 Individual Test Cases</h3>
+                    <h3>Individual Test Cases</h3>
                     ${modelData.test_cases?.map((testCase, index) => renderTestCase(testCase, index + 1)).join('') || '<p>No test case details available.</p>'}
                 </div>
             `;
@@ -1072,7 +1072,7 @@
             
             document.getElementById('content').innerHTML = `
                 <div class="performance-chart">
-                    <h2>🔥 Performance Heatmap</h2>
+                    <h2>Performance Heatmap</h2>
                     <div class="chart-container">
                         <canvas id="performanceHeatmap"></canvas>
                     </div>
@@ -1080,13 +1080,13 @@
                 
                 <div class="dashboard">
                     <div class="card">
-                        <h2>🧪 Test Case Performance Heatmap</h2>
+                        <h2>Test Case Performance Heatmap</h2>
                         <div class="chart-container">
                             <canvas id="testCaseHeatmap"></canvas>
                         </div>
                     </div>
                     <div class="card">
-                        <h2>🔧 Tool Usage Heatmap</h2>
+                        <h2>Tool Usage Heatmap</h2>
                         <div class="chart-container">
                             <canvas id="toolUsageHeatmap"></canvas>
                         </div>
@@ -1094,7 +1094,7 @@
                 </div>
                 
                 <div class="performance-chart">
-                    <h2>📊 Correlation Matrix</h2>
+                    <h2>Correlation Matrix</h2>
                     <div class="chart-container">
                         <canvas id="correlationMatrix"></canvas>
                     </div>
@@ -1155,20 +1155,20 @@
                 </div>
                 
                 <div class="performance-chart">
-                    <h2>🏆 Top Performers</h2>
+                    <h2>Top Performers</h2>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
                         <div style="background: rgba(48, 209, 88, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #30d158;">
-                            <h3 style="color: #30d158; margin-bottom: 10px;">🥇 Best Overall</h3>
+                            <h3 style="color: #30d158; margin-bottom: 10px;">Best Overall</h3>
                             <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${bestOverall.model}</div>
                             <div style="color: #6e6e73;">Score: ${((bestOverall.average_task_completion + bestOverall.average_tool_correctness) / 2).toFixed(3)}</div>
                         </div>
                         <div style="background: rgba(0, 122, 255, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #007aff;">
-                            <h3 style="color: #007aff; margin-bottom: 10px;">🎯 Best Task Completion</h3>
+                            <h3 style="color: #007aff; margin-bottom: 10px;">Best Task Completion</h3>
                             <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${bestTaskCompletion.model}</div>
                             <div style="color: #6e6e73;">Score: ${bestTaskCompletion.average_task_completion.toFixed(3)}</div>
                         </div>
                         <div style="background: rgba(255, 159, 10, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #ff9f0a;">
-                            <h3 style="color: #ff9f0a; margin-bottom: 10px;">🔧 Best Tool Correctness</h3>
+                            <h3 style="color: #ff9f0a; margin-bottom: 10px;">Best Tool Correctness</h3>
                             <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">${bestToolCorrectness.model}</div>
                             <div style="color: #6e6e73;">Score: ${bestToolCorrectness.average_tool_correctness.toFixed(3)}</div>
                         </div>
@@ -1177,7 +1177,7 @@
                 
                 <div class="dashboard">
                     <div class="card">
-                        <h2>📊 Performance Summary</h2>
+                        <h2>Performance Summary</h2>
                         <div style="margin-top: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                 <span>Task Completion Range:</span>
@@ -1198,16 +1198,16 @@
                         </div>
                     </div>
                     <div class="card">
-                        <h2>💡 Key Insights</h2>
+                        <h2>Key Insights</h2>
                         <div style="margin-top: 20px;">
                             <div style="margin-bottom: 15px; padding: 10px; background: rgba(48, 209, 88, 0.1); border-radius: 8px;">
-                                <strong>🏆 Performance Leaders:</strong> ${bestOverall.model} leads overall performance
+                                <strong>Performance Leaders:</strong> ${bestOverall.model} leads overall performance
                             </div>
                             <div style="margin-bottom: 15px; padding: 10px; background: rgba(0, 122, 255, 0.1); border-radius: 8px;">
-                                <strong>📈 Consistency:</strong> ${taskRange < 0.2 ? 'High' : taskRange < 0.4 ? 'Medium' : 'Low'} performance consistency
+                                <strong>Consistency:</strong> ${taskRange < 0.2 ? 'High' : taskRange < 0.4 ? 'Medium' : 'Low'} performance consistency
                             </div>
                             <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 159, 10, 0.1); border-radius: 8px;">
-                                <strong>🔧 Tool Usage:</strong> ${successfulResults.reduce((sum, r) => sum + r.ordering_issues, 0) === 0 ? 'Perfect' : 'Needs improvement'} tool ordering
+                                <strong>Tool Usage:</strong> ${successfulResults.reduce((sum, r) => sum + r.ordering_issues, 0) === 0 ? 'Perfect' : 'Needs improvement'} tool ordering
                             </div>
                         </div>
                     </div>
@@ -1223,7 +1223,7 @@
             
             document.getElementById('content').innerHTML = `
                 <div class="performance-chart">
-                    <h2>📋 Category Performance Analysis</h2>
+                    <h2>Category Performance Analysis</h2>
                     <div class="chart-container">
                         <canvas id="categoryChart"></canvas>
                     </div>
@@ -1231,7 +1231,7 @@
                 
                 <div class="dashboard">
                     <div class="card">
-                        <h2>📊 Category Breakdown</h2>
+                        <h2>Category Breakdown</h2>
                         <div style="margin-top: 20px;">
                             ${categories.map(category => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 10px; background: rgba(0, 0, 0, 0.05); border-radius: 8px;">
@@ -1248,16 +1248,16 @@
                         </div>
                     </div>
                     <div class="card">
-                        <h2>🎯 Category Insights</h2>
+                        <h2>Category Insights</h2>
                         <div style="margin-top: 20px;">
                             <div style="margin-bottom: 15px; padding: 10px; background: rgba(48, 209, 88, 0.1); border-radius: 8px;">
-                                <strong>🏆 Best Category:</strong> ${categories.reduce((best, current) => current.avgScore > best.avgScore ? current : best).name}
+                                <strong>Best Category:</strong> ${categories.reduce((best, current) => current.avgScore > best.avgScore ? current : best).name}
                             </div>
                             <div style="margin-bottom: 15px; padding: 10px; background: rgba(0, 122, 255, 0.1); border-radius: 8px;">
-                                <strong>📈 Average Score:</strong> ${(categories.reduce((sum, c) => sum + c.avgScore, 0) / categories.length).toFixed(2)}
+                                <strong>Average Score:</strong> ${(categories.reduce((sum, c) => sum + c.avgScore, 0) / categories.length).toFixed(2)}
                             </div>
                             <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 159, 10, 0.1); border-radius: 8px;">
-                                <strong>🔧 Total Tests:</strong> ${categories.reduce((sum, c) => sum + c.tests, 0)} across ${categories.length} categories
+                                <strong>Total Tests:</strong> ${categories.reduce((sum, c) => sum + c.tests, 0)} across ${categories.length} categories
                             </div>
                         </div>
                     </div>
@@ -1274,7 +1274,7 @@
             
             document.getElementById('content').innerHTML = `
                 <div class="performance-chart">
-                    <h2>📈 Performance Trends</h2>
+                    <h2>Performance Trends</h2>
                     <div class="chart-container">
                         <canvas id="trendsChart"></canvas>
                     </div>
@@ -1282,13 +1282,13 @@
                 
                 <div class="dashboard">
                     <div class="card">
-                        <h2>🎯 Performance Distribution</h2>
+                        <h2>Performance Distribution</h2>
                         <div class="chart-container">
                             <canvas id="distributionChart"></canvas>
                         </div>
                     </div>
                     <div class="card">
-                        <h2>⚡ Speed vs Accuracy</h2>
+                        <h2>Speed vs Accuracy</h2>
                         <div class="chart-container">
                             <canvas id="speedAccuracyChart"></canvas>
                         </div>
@@ -1296,7 +1296,7 @@
                 </div>
                 
                 <div class="performance-chart">
-                    <h2>🔍 Detailed Metrics Breakdown</h2>
+                    <h2>Detailed Metrics Breakdown</h2>
                     <div class="chart-container">
                         <canvas id="metricsBreakdown"></canvas>
                     </div>
@@ -1514,7 +1514,7 @@
             
             document.getElementById('content').innerHTML = `
                 <div class="performance-chart">
-                    <h2>🧪 Test Cases Across Models</h2>
+                    <h2>Test Cases Across Models</h2>
                     <div class="chart-container">
                         <canvas id="testCasesChart"></canvas>
                     </div>
@@ -1526,7 +1526,7 @@
                             <h2>${testCase.name}</h2>
                             <div style="margin-bottom: 15px;">
                                 <div style="background: rgba(0, 0, 0, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                                    <div style="font-weight: bold; margin-bottom: 8px;">📝 Prompt:</div>
+                                    <div style="font-weight: bold; margin-bottom: 8px;">Prompt:</div>
                                     <div style="font-style: italic; color: #6e6e73;">"${testCase.prompt}"</div>
                                 </div>
                                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
@@ -1539,7 +1539,7 @@
                                 </div>
                             </div>
                             
-                            <h3 style="margin-bottom: 15px;">📊 Performance Across Models</h3>
+                            <h3 style="margin-bottom: 15px;">Performance Across Models</h3>
                             <div style="overflow-x: auto;">
                                 <table style="width: 100%; border-collapse: collapse;">
                                     <thead>
@@ -1572,7 +1572,7 @@
                                                 </td>
                                                 <td style="padding: 12px; text-align: center;">
                                                     <span style="color: ${model.success ? '#30d158' : '#ff3b30'}; font-weight: bold;">
-                                                        ${model.success ? '✅' : '❌'}
+                                                        ${model.success ? 'Pass' : 'Fail'}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -1583,20 +1583,20 @@
                             
                             <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                                 <div style="background: rgba(0, 122, 255, 0.1); padding: 15px; border-radius: 8px;">
-                                    <div style="font-weight: bold; color: #007aff; margin-bottom: 5px;">🏆 Best Performer</div>
+                                    <div style="font-weight: bold; color: #007aff; margin-bottom: 5px;">Best Performer</div>
                                     <div>${testCase.models.reduce((best, current) => 
                                         (current.taskCompletion + current.toolCorrectness) / 2 > 
                                         (best.taskCompletion + best.toolCorrectness) / 2 ? current : best
                                     ).name}</div>
                                 </div>
                                 <div style="background: rgba(48, 209, 88, 0.1); padding: 15px; border-radius: 8px;">
-                                    <div style="font-weight: bold; color: #30d158; margin-bottom: 5px;">⚡ Fastest</div>
+                                    <div style="font-weight: bold; color: #30d158; margin-bottom: 5px;">Fastest</div>
                                     <div>${testCase.models.reduce((fastest, current) => 
                                         current.responseTime < fastest.responseTime ? current : fastest
                                     ).name}</div>
                                 </div>
                                 <div style="background: rgba(255, 159, 10, 0.1); padding: 15px; border-radius: 8px;">
-                                    <div style="font-weight: bold; color: #ff9f0a; margin-bottom: 5px;">📊 Success Rate</div>
+                                    <div style="font-weight: bold; color: #ff9f0a; margin-bottom: 5px;">Success Rate</div>
                                     <div>${(testCase.models.filter(m => m.success).length / testCase.models.length * 100).toFixed(1)}%</div>
                                 </div>
                             </div>
@@ -1738,12 +1738,12 @@
             
             modalContent.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h2 style="margin: 0; color: #2c3e50;">🧪 Test Case Details</h2>
-                    <button onclick="this.closest('.modal').remove()" style="background: #ff3b30; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">✕ Close</button>
+                    <h2 style="margin: 0; color: #2c3e50;">Test Case Details</h2>
+                    <button onclick="this.closest('.modal').remove()" style="background: #ff3b30; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">Close</button>
                 </div>
                 
                 <div style="margin-bottom: 25px;">
-                    <h3 style="color: #007aff; margin-bottom: 10px;">📝 Original Prompt</h3>
+                    <h3 style="color: #007aff; margin-bottom: 10px;">Original Prompt</h3>
                     <div style="background: rgba(0, 0, 0, 0.05); padding: 15px; border-radius: 8px; font-style: italic;">
                         "${testDetails.input}"
                     </div>
@@ -1758,7 +1758,7 @@
                 </div>
                 
                 <div style="margin-bottom: 25px;">
-                    <h3 style="color: #ff9f0a; margin-bottom: 10px;">🔧 Tool Calls</h3>
+                    <h3 style="color: #ff9f0a; margin-bottom: 10px;">Tool Calls</h3>
                     <div style="background: rgba(255, 159, 10, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #ff9f0a;">
                         ${toolCallsHtml}
                     </div>
@@ -1779,7 +1779,7 @@
                 </div>
                 
                 <div style="margin-bottom: 25px;">
-                    <h3 style="color: #8e44ad; margin-bottom: 10px;">📊 Performance Metrics</h3>
+                    <h3 style="color: #8e44ad; margin-bottom: 10px;">Performance Metrics</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.5rem; font-weight: bold; color: #8e44ad;">${taskCompletion.toFixed(3)}</div>
@@ -1790,7 +1790,7 @@
                             <div style="color: #6e6e73;">Tool Correctness</div>
                         </div>
                         <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.5rem; font-weight: bold; color: ${testDetails.success ? '#30d158' : '#ff3b30'};">${testDetails.success ? '✅' : '❌'}</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: ${testDetails.success ? '#30d158' : '#ff3b30'};">${testDetails.success ? 'Pass' : 'Fail'}</div>
                             <div style="color: #6e6e73;">Success</div>
                         </div>
                         <div style="background: rgba(142, 68, 173, 0.1); padding: 15px; border-radius: 8px; text-align: center;">
