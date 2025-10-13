@@ -1,35 +1,66 @@
 let isThinking = false;
 let sessionId = null;
 
-const emojiToolMap = {
-    "💬": "`comment_github_item`:  \nAdd comments to issues or PRs",
-    "👤": "`assign_github_item`:  \nAssign users to issues or PRs",
-    "🏷️": "`add_labels_to_github_item`:  \nAdd labels to issues or PRs",
-    "🔖": "`search_repo_labels`:  \nGet available labels in a repository",
-    "🔧": "`github_issues_operations`:  \nDispatcher for issue operations",
-    "📝": "`create_github_issue`:  \nCreate new issues",
-    "🔒": "`close_github_issue`:  \nClose an issue",
-    "🔑": "`reopen_github_issue`:  \nReopen a closed issue",
-    "🔍": "`search_github_issues`:  \nSearch for issues by status, number, assignee, etc.",
-    "📋": "`update_github_issue`:  \nUpdate issue title/body",
-    "🛠️": "`github_pull_requests_operations`:  \nDispatcher for PR operations",
-    "🌿": "`create_pull_request`:  \nCreate new PRs",
-    "🔐": "`close_pull_request`:  \nClose a PR without merging",
-    "🔓": "`reopen_pull_request`:  \nReopen a closed PR",
-    "🔀": "`merge_pull_request`:  \nMerge an open PR",
-    "🔎": "`search_pull_requests`:  \nSearch for PRs by status, number, assisgnee, label, etc.",
-    "✏️": "`update_pull_request`:  \nUpdate PR title/body",
-    "📖": "`search_handbook`:  \nSearch Hypha's handbook",
-    "📅": "`get_upcoming_holiday`:  \nFetch upcoming statutory holidays",
-    "🌴": "`get_upcoming_vacations`:  \nGet information about our colleague's upcoming vacations",
-    "🗄️": "`get_archive_categories`:  \nList archivable categories with links",
-    "🔢": "`calc`:  \nPerform calculations",
-    "🧠": "`query`:  \nSearch Hypha's handbook and public drive documents with RAG via minima MCP",
-    "🌐": "`web_search`:  \nSearch the internet for current information using Claude with web search"
-};
+// Tool emoji mapping - loaded from shared constants
+let emojiToolMap = {};
+
+// Load tool constants from shared JSON file
+async function loadToolConstants() {
+    try {
+        const response = await fetch("../tool_constants.json");
+        if (response.ok) {
+            const data = await response.json();
+            const toolMap = data.emojiToolMap;
+            
+            // Convert to frontend format
+            emojiToolMap = {};
+            for (const [emoji, info] of Object.entries(toolMap)) {
+                emojiToolMap[emoji] = `\`${info.tool}\`:  \n${info.description}`;
+            }
+            console.log("Loaded tool constants from shared file");
+        } else {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    } catch (error) {
+        console.warn("Could not load tool constants from shared file:", error);
+        // Fallback to hardcoded mapping
+        emojiToolMap = {
+            "💬": "`comment_github_item`:  \nAdd comments to issues or PRs",
+            "👤": "`assign_github_item`:  \nAssign users to issues or PRs",
+            "🏷️": "`add_labels_to_github_item`:  \nAdd labels to issues or PRs",
+            "🔖": "`search_repo_labels`:  \nGet available labels in a repository",
+            "🔧": "`github_issues_operations`:  \nDispatcher for issue operations",
+            "📝": "`create_github_issue`:  \nCreate new issues",
+            "🔒": "`close_github_issue`:  \nClose an issue",
+            "🔑": "`reopen_github_issue`:  \nReopen a closed issue",
+            "🔍": "`search_github_issues`:  \nSearch for issues by status, number, assignee, etc.",
+            "📋": "`update_github_issue`:  \nUpdate issue title/body",
+            "🛠️": "`github_pull_requests_operations`:  \nDispatcher for PR operations",
+            "🌿": "`create_pull_request`:  \nCreate new PRs",
+            "🔐": "`close_pull_request`:  \nClose a PR without merging",
+            "🔓": "`reopen_pull_request`:  \nReopen a closed PR",
+            "🔀": "`merge_pull_request`:  \nMerge an open PR",
+            "🔎": "`search_pull_requests`:  \nSearch for PRs by status, number, assignee, label, etc.",
+            "✏️": "`update_pull_request`:  \nUpdate PR title/body",
+            "📖": "`search_handbook`:  \nSearch Hypha's handbook",
+            "📅": "`get_upcoming_holiday`:  \nFetch upcoming statutory holidays",
+            "🌴": "`get_upcoming_vacations`:  \nGet information about our colleague's upcoming vacations",
+            "🗄️": "`get_archive_categories`:  \nList archivable categories with links",
+            "🔢": "`calc`:  \nPerform calculations",
+            "🧠": "`query`:  \nSearch Hypha's handbook and public drive documents with RAG via minima MCP",
+            "🌐": "`web_search`:  \nSearch the internet for current information using Claude with web search",
+            "🧭": "`consensus_analyzer`:  \nAnalyzes a conversation to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps.",
+            "🔮": "`analyze_meeting_notes`:  \nAnalyze Co-Creation Labs meeting notes to gather insights and answer questions"
+        };
+        console.log("Using fallback tool constants");
+    }
+}
  
-// Fetch backend PORT from file
+// Load configuration (backend port and tool constants)
 async function loadConfig() {
+    // Load tool constants first
+    await loadToolConstants();
+    
     let backendPort = 8000; // Default fallback port
 
     try {
@@ -309,26 +340,87 @@ function showEmojiPopup(event, emoji) {
      });
  }
  
- function addMessage(text, type) {
-     const chat = document.getElementById("chat");
-     const messageDiv = document.createElement("div");
-     
-     const userCharacter = document.createElement("span")
-     userCharacter.textContent = "> ";
-     userCharacter.classList.add("mr1");
-     messageDiv.appendChild(userCharacter);
- 
- 
-     const message = document.createElement("span");
-     message.innerHTML = marked.parse(text)
-     messageDiv.appendChild(message);
- 
-     messageDiv.classList.add("message", type);
- 
-     chat.appendChild(messageDiv);
-     chat.scrollTop = chat.scrollHeight;
-     return messageDiv;
- }
+function addMessage(text, type) {
+    const chat = document.getElementById("chat");
+    const messageDiv = document.createElement("div");
+    
+    const userCharacter = document.createElement("span")
+    userCharacter.textContent = "> ";
+    userCharacter.classList.add("mr1");
+    messageDiv.appendChild(userCharacter);
+
+    // Handle <think> tags for assistant messages
+    if (type === "assistant") {
+        const { mainContent, thinkingContent } = extractThinkingContent(text);
+        
+        // Add main content (without thinking tags)
+        const message = document.createElement("span");
+        message.innerHTML = marked.parse(mainContent);
+        messageDiv.appendChild(message);
+        
+        // Add thinking section if thinking content exists
+        if (thinkingContent) {
+            const thinkingSection = createThinkingSection(thinkingContent);
+            messageDiv.appendChild(thinkingSection);
+        }
+    } else {
+        // For user messages, render normally
+        const message = document.createElement("span");
+        message.innerHTML = marked.parse(text);
+        messageDiv.appendChild(message);
+    }
+
+    messageDiv.classList.add("message", type);
+
+    chat.appendChild(messageDiv);
+    chat.scrollTop = chat.scrollHeight;
+    return messageDiv;
+}
+
+function extractThinkingContent(text) {
+    // Extract content between <think> and </think> tags
+    const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+    let thinkingContent = '';
+    let mainContent = text;
+    
+    // Find all thinking blocks
+    let match;
+    const thinkingBlocks = [];
+    while ((match = thinkRegex.exec(text)) !== null) {
+        thinkingBlocks.push(match[1].trim());
+    }
+    
+    if (thinkingBlocks.length > 0) {
+        // Remove <think> tags from main content
+        mainContent = text.replace(thinkRegex, '').trim();
+        // Combine all thinking blocks
+        thinkingContent = thinkingBlocks.join('\n\n---\n\n');
+    }
+    
+    return { mainContent, thinkingContent };
+}
+
+function createThinkingSection(thinkingContent) {
+    // Create a details element for native expandable functionality
+    const details = document.createElement("details");
+    details.classList.add("thinking-details");
+    
+    // Create summary element
+    const summary = document.createElement("summary");
+    summary.textContent = "🧠 Thinking process";
+    summary.classList.add("thinking-summary");
+    
+    // Create thinking content div
+    const thinkingContentDiv = document.createElement("div");
+    thinkingContentDiv.classList.add("thinking-content");
+    thinkingContentDiv.innerHTML = marked.parse(thinkingContent);
+    
+    // Assemble the details element
+    details.appendChild(summary);
+    details.appendChild(thinkingContentDiv);
+    
+    return details;
+}
 
 // Add event listeners for the new buttons
 document.getElementById("history-button").addEventListener("click", showSessionHistory);

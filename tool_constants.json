@@ -1,0 +1,108 @@
+{
+  "emojiToolMap": {
+    "💬": {
+      "tool": "comment_github_item",
+      "description": "Add comments to issues or PRs"
+    },
+    "👤": {
+      "tool": "assign_github_item", 
+      "description": "Assign users to issues or PRs"
+    },
+    "🏷️": {
+      "tool": "add_labels_to_github_item",
+      "description": "Add labels to issues or PRs"
+    },
+    "🔖": {
+      "tool": "search_repo_labels",
+      "description": "Get available labels in a repository"
+    },
+    "💻": {
+      "tool": "github_dispatcher",
+      "description": "Dispatcher for GitHub operations"
+    },
+    "📝": {
+      "tool": "create_github_issue",
+      "description": "Create new issues"
+    },
+    "🔒": {
+      "tool": "close_github_issue",
+      "description": "Close an issue"
+    },
+    "🔑": {
+      "tool": "reopen_github_issue",
+      "description": "Reopen a closed issue"
+    },
+    "🔍": {
+      "tool": "search_github_issues",
+      "description": "Search for issues by status, number, assignee, etc."
+    },
+    "📋": {
+      "tool": "update_github_issue",
+      "description": "Update issue title/body"
+    },
+    "🛠️": {
+      "tool": "github_pull_requests_operations",
+      "description": "Dispatcher for PR operations"
+    },
+    "🌿": {
+      "tool": "create_pull_request",
+      "description": "Create new PRs"
+    },
+    "🔐": {
+      "tool": "close_pull_request",
+      "description": "Close a PR without merging"
+    },
+    "🔓": {
+      "tool": "reopen_pull_request",
+      "description": "Reopen a closed PR"
+    },
+    "🔀": {
+      "tool": "merge_pull_request",
+      "description": "Merge an open PR"
+    },
+    "🔎": {
+      "tool": "search_pull_requests",
+      "description": "Search for PRs by status, number, assignee, label, etc."
+    },
+    "✏️": {
+      "tool": "update_pull_request",
+      "description": "Update PR title/body"
+    },
+    "📖": {
+      "tool": "search_handbook",
+      "description": "Search Hypha's handbook"
+    },
+    "📅": {
+      "tool": "get_upcoming_holiday",
+      "description": "Fetch upcoming statutory holidays"
+    },
+    "🌴": {
+      "tool": "get_upcoming_vacations",
+      "description": "Get information about our colleague's upcoming vacations"
+    },
+    "🗄️": {
+      "tool": "get_archive_categories",
+      "description": "List archivable categories with links"
+    },
+    "🔢": {
+      "tool": "calc",
+      "description": "Perform calculations"
+    },
+    "🌐": {
+      "tool": "web_search",
+      "description": "Search the internet for current information using Claude with web search"
+    },
+    "🧠": {
+      "tool": "query",
+      "description": "Search Hypha's handbook and public drive documents with RAG via minima MCP"
+    },
+    "🧭": {
+      "tool": "consensus_analyzer",
+      "description": "Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps."
+    },
+    "🔮": {
+      "tool": "analyze_meeting_notes",
+      "description": "Analyze Co-Creation Labs meeting notes to gather insights and answer questions"
+    }
+  }
+}
