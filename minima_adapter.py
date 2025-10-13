@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For local files, use [Source: ./Hypha_PUBLIC_Drive/path/to/file]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
+                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) including handbook documents and meeting notes. ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For meeting notes, use [Source: https://github.com/hyphacoop/organizing-private/tree/main/meeting-notes/path/to/notes]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
@@ -299,11 +299,17 @@ class MinimaRestAdapter:
                 path_segment = path_segment.replace(".md", "") # Remove .md extension if present
                 citation_text = f"[Source: handbook.hypha.coop/{path_segment}]"
                 logger.debug(f"Formatted as handbook source: {citation_text}")
-            # Hypha Public Drive formatting
-            elif "Hypha_PUBLIC_Drive" in source: # Path components are often case-sensitive
-                path_segment = source.split("Hypha_PUBLIC_Drive/", 1)[-1] if "Hypha_PUBLIC_Drive/" in source else source
-                citation_text = f"[From Hypha's Public Drive: {path_segment}]"
-                logger.debug(f"Formatted from Hypha's Public Drive source: {citation_text}")
+            # Meeting notes formatting with GitHub link
+            elif "meeting-notes" in source_lower or "meeting_notes" in source_lower:
+                # Extracts path relative to 'meeting-notes/'
+                for variant in ["meeting-notes/", "meeting_notes/"]:
+                    if variant in source_lower:
+                        path_segment = source.split(variant, 1)[-1]
+                        break
+                else:
+                    path_segment = source
+                citation_text = f"[Source: https://github.com/hyphacoop/organizing-private/tree/main/meeting-notes/{path_segment}]"
+                logger.debug(f"Formatted as meeting notes source with GitHub link: {citation_text}")
             # Generic formatting for all other sources
             else:
                 citation_text = f"[Source: {source}]" # Simplest form, using the original source string
