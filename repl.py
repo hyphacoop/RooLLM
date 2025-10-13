@@ -42,7 +42,8 @@ emojiToolMap = {
     "🔢": "`calc`: Perform calculations",
     "🌐": "`web_search`: Search the internet for current information using Claude with web search",
     "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
-    "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps."
+    "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps.",
+    "🔮": "`analyze_meeting_notes`: Analyze Co-Creation Labs meeting notes to gather insights and answer questions"
 }
 
 # Exit message constant
