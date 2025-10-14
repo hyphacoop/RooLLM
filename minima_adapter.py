@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) including handbook documents and meeting notes. ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For meeting notes, use [Source: https://github.com/hyphacoop/organizing-private/tree/main/meeting-notes/path/to/notes]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
+                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) including documents, drafts and other notes. ALWAYS cite sources. You can remove the first part of the path until knowledge_base_index/ Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
