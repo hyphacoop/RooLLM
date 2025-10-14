@@ -319,7 +319,7 @@ function showEmojiPopup(event, emoji) {
     
      // Get tool description from map and render as markdown
      const toolDescription = emojiToolMap[emoji] || "Unknown tool";
-     popup.innerHTML = marked.parse(toolDescription);
+     popup.innerHTML = marked.parse(toolDescription, { sanitize: false });
      
      // Position popup near the emoji
      document.body.appendChild(popup);
@@ -353,20 +353,21 @@ function addMessage(text, type) {
     if (type === "assistant") {
         const { mainContent, thinkingContent } = extractThinkingContent(text);
         
-        // Add main content (without thinking tags)
-        const message = document.createElement("span");
-        message.innerHTML = marked.parse(mainContent);
-        messageDiv.appendChild(message);
-        
-        // Add thinking section if thinking content exists
+        // Add thinking section first if thinking content exists
         if (thinkingContent) {
             const thinkingSection = createThinkingSection(thinkingContent);
             messageDiv.appendChild(thinkingSection);
         }
+        
+        // Add main content (without thinking tags)
+        const message = document.createElement("span");
+        // Configure marked to preserve HTML tags
+        message.innerHTML = marked.parse(mainContent, { sanitize: false });
+        messageDiv.appendChild(message);
     } else {
         // For user messages, render normally
         const message = document.createElement("span");
-        message.innerHTML = marked.parse(text);
+        message.innerHTML = marked.parse(text, { sanitize: false });
         messageDiv.appendChild(message);
     }
 
@@ -407,13 +408,13 @@ function createThinkingSection(thinkingContent) {
     
     // Create summary element
     const summary = document.createElement("summary");
-    summary.textContent = "🧠 Thinking process";
+    summary.textContent = "Thinking process";
     summary.classList.add("thinking-summary");
     
     // Create thinking content div
     const thinkingContentDiv = document.createElement("div");
     thinkingContentDiv.classList.add("thinking-content");
-    thinkingContentDiv.innerHTML = marked.parse(thinkingContent);
+    thinkingContentDiv.innerHTML = marked.parse(thinkingContent, { sanitize: false });
     
     // Assemble the details element
     details.appendChild(summary);
