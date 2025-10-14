@@ -6,6 +6,8 @@ import json
 import base64
 import logging
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.markdown import Markdown
 
 # Color constants - using softer, more muted colors
 LIME = "\033[38;5;108m"      # Softer green
@@ -16,34 +18,41 @@ BOLD = "\033[1m"
 CYAN = "\033[38;5;73m"       # Softer cyan
 YELLOW = "\033[38;5;179m"    # Softer yellow
 
-# Tool emoji mapping
-emojiToolMap = {
-    "💬": "`comment_github_item`: Add comments to issues or PRs",
-    "👤": "`assign_github_item`: Assign users to issues or PRs",
-    "🏷️": "`add_labels_to_github_item`: Add labels to issues or PRs",
-    "🔖": "`search_repo_labels`: Get available labels in a repository",
-    "💻": "`github_dispatcher`: Dispatcher for GitHub operations",
-    "📝": "`create_github_issue`: Create new issues",
-    "🔒": "`close_github_issue`: Close an issue",
-    "🔑": "`reopen_github_issue`: Reopen a closed issue",
-    "🔍": "`search_github_issues`: Search for issues by status, number, assignee, etc.",
-    "📋": "`update_github_issue`: Update issue title/body",
-    "🛠️": "`github_pull_requests_operations`: Dispatcher for PR operations",
-    "🌿": "`create_pull_request`: Create new PRs",
-    "🔐": "`close_pull_request`: Close a PR without merging",
-    "🔓": "`reopen_pull_request`: Reopen a closed PR",
-    "🔀": "`merge_pull_request`: Merge an open PR",
-    "🔎": "`search_pull_requests`: Search for PRs by status, number, assignee, label, etc.",
-    "✏️": "`update_pull_request`: Update PR title/body",
-    "📖": "`search_handbook`: Search Hypha's handbook",
-    "📅": "`get_upcoming_holiday`: Fetch upcoming statutory holidays",
-    "🌴": "`get_upcoming_vacations`: Get information about our colleague's upcoming vacations",
-    "🗄️": "`get_archive_categories`: List archivable categories with links",
-    "🔢": "`calc`: Perform calculations",
-    "🌐": "`web_search`: Search the internet for current information using Claude with web search",
-    "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
-    "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps."
-}
+# Tool emoji mapping - loaded from shared constants
+try:
+    from utils.tool_constants import load_tool_constants
+    tool_constants = load_tool_constants()
+    emojiToolMap = tool_constants["python_format"]
+except ImportError:
+    # Fallback to hardcoded mapping if utils module not available
+    emojiToolMap = {
+        "💬": "`comment_github_item`: Add comments to issues or PRs",
+        "👤": "`assign_github_item`: Assign users to issues or PRs",
+        "🏷️": "`add_labels_to_github_item`: Add labels to issues or PRs",
+        "🔖": "`search_repo_labels`: Get available labels in a repository",
+        "💻": "`github_dispatcher`: Dispatcher for GitHub operations",
+        "📝": "`create_github_issue`: Create new issues",
+        "🔒": "`close_github_issue`: Close an issue",
+        "🔑": "`reopen_github_issue`: Reopen a closed issue",
+        "🔍": "`search_github_issues`: Search for issues by status, number, assignee, etc.",
+        "📋": "`update_github_issue`: Update issue title/body",
+        "🛠️": "`github_pull_requests_operations`: Dispatcher for PR operations",
+        "🌿": "`create_pull_request`: Create new PRs",
+        "🔐": "`close_pull_request`: Close a PR without merging",
+        "🔓": "`reopen_pull_request`: Reopen a closed PR",
+        "🔀": "`merge_pull_request`: Merge an open PR",
+        "🔎": "`search_pull_requests`: Search for PRs by status, number, assignee, label, etc.",
+        "✏️": "`update_pull_request`: Update PR title/body",
+        "📖": "`search_handbook`: Search Hypha's handbook",
+        "📅": "`get_upcoming_holiday`: Fetch upcoming statutory holidays",
+        "🌴": "`get_upcoming_vacations`: Get information about our colleague's upcoming vacations",
+        "🗄️": "`get_archive_categories`: List archivable categories with links",
+        "🔢": "`calc`: Perform calculations",
+        "🌐": "`web_search`: Search the internet for current information using Claude with web search",
+        "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
+        "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps.",
+        "🔮": "`analyze_meeting_notes`: Analyze Co-Creation Labs meeting notes to gather insights and answer questions"
+    }
 
 # Exit message constant
 EXIT_MESSAGE = f"\n{BOLD}{YELLOW}Au revoir!{RESET}"
@@ -51,9 +60,21 @@ EXIT_MESSAGE = f"\n{BOLD}{YELLOW}Au revoir!{RESET}"
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Debug mode toggle (can be changed with /debug command)
+DEBUG_MODE = False
+
+# Thinking visibility toggle (can be changed with /thinking command)
+SHOW_THINKING = True
+
+# Markdown rendering toggle (can be changed with /markdown command)
+RENDER_MARKDOWN = True  # Default to True for better readability
+
+# Rich console for markdown rendering
+console = Console()
 
 # Set up UTF-8 encoding for stdin
 sys.stdin.reconfigure(encoding='utf-8', errors='replace')
@@ -62,8 +83,10 @@ sys.stdin.reconfigure(encoding='utf-8', errors='replace')
 
 try:
     from .github_app_auth import GitHubAppAuth, prepare_github_token
+    from .utils.google_credentials import load_all_google_credentials
 except ImportError:
     from github_app_auth import GitHubAppAuth, prepare_github_token
+    from utils.google_credentials import load_all_google_credentials
 
 """
 This script allows local testing of the RooLLM class with GitHub App authentication.
@@ -116,15 +139,8 @@ if github_token:
 else:
     logger.warning("⚠️ GitHub token unavailable")
 
-# Load Google credentials
-ENCODED_GOOGLE_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS")
-if ENCODED_GOOGLE_CREDENTIALS:
-    try:
-        DECODED_GOOGLE_CREDENTIALS = json.loads(base64.b64decode(ENCODED_GOOGLE_CREDENTIALS).decode())
-        config["google_creds"] = DECODED_GOOGLE_CREDENTIALS
-        logger.debug("Successfully loaded Google credentials")
-    except Exception as e:
-        logger.error(f"Error decoding Google credentials: {e}")
+# Load all Google credentials using utility function
+config.update(load_all_google_credentials())
 
 # Load Claude API key
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
@@ -192,17 +208,89 @@ except OSError:
     user = getpass.getuser() or "localTester"
 
 # REPL emoji feedback
-async def print_tool_reaction(emoji):
+async def print_tool_reaction(emoji, tool_name=None, tool_args=None):
     """Print a styled tool call reaction with emoji and description."""
     if emoji in emojiToolMap:
         tool_info = emojiToolMap[emoji]
-        tool_name = tool_info.split(":")[0].strip("`")
+        tool_name_from_map = tool_info.split(":")[0].strip("`")
         tool_desc = tool_info.split(":")[1].strip()
         print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET}")
-        print(f"{BOLD}{YELLOW}{emoji} {tool_name}{RESET}")
+        print(f"{BOLD}{YELLOW}{emoji} {tool_name_from_map}{RESET}")
         print(f"{LIME}└─ {tool_desc}{RESET}")
+        
+        # Enhanced logging in debug mode
+        if DEBUG_MODE:
+            logger.info(f"Tool called: {tool_name or tool_name_from_map}")
+            if tool_args:
+                logger.info(f"Tool arguments: {tool_args}")
     else:
         print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET} {emoji}")
+        if DEBUG_MODE:
+            logger.info(f"Tool called with emoji: {emoji}")
+
+def toggle_debug_mode():
+    """Toggle debug mode on/off."""
+    global DEBUG_MODE
+    DEBUG_MODE = not DEBUG_MODE
+
+    # Update logging level for all loggers
+    if DEBUG_MODE:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        # Also set debug for specific modules we care about
+        logging.getLogger('tools.analyze_meeting_notes').setLevel(logging.DEBUG)
+        logging.getLogger('roollm').setLevel(logging.DEBUG)
+        return True
+    else:
+        logging.getLogger().setLevel(logging.INFO)
+        logger.setLevel(logging.INFO)
+        logging.getLogger('tools.analyze_meeting_notes').setLevel(logging.INFO)
+        logging.getLogger('roollm').setLevel(logging.INFO)
+        return False
+
+def toggle_thinking_mode():
+    """Toggle thinking visibility on/off."""
+    global SHOW_THINKING
+    SHOW_THINKING = not SHOW_THINKING
+    return SHOW_THINKING
+
+def toggle_markdown_mode():
+    """Toggle markdown rendering on/off."""
+    global RENDER_MARKDOWN
+    RENDER_MARKDOWN = not RENDER_MARKDOWN
+    return RENDER_MARKDOWN
+
+def render_output(content: str):
+    """Render output with markdown formatting if enabled."""
+    if RENDER_MARKDOWN:
+        # Extract thinking content and render separately
+        import re
+        thinking_pattern = r'<think>([\s\S]*?)</think>'
+        
+        # Find all thinking blocks
+        thinking_blocks = re.findall(thinking_pattern, content)
+        main_content = re.sub(thinking_pattern, '', content).strip()
+        
+        # Render thinking section if present
+        if thinking_blocks and SHOW_THINKING:
+            print(f"\n{BOLD}{YELLOW}💭 Thinking process:{RESET}")
+            for i, thinking_content in enumerate(thinking_blocks):
+                if i > 0:
+                    print(f"\n{BOLD}{CYAN}---{RESET}")
+                # Render thinking content as plain text with indentation
+                for line in thinking_content.strip().split('\n'):
+                    print(f"{LIME}  {line}{RESET}")
+            print()  # Extra newline after thinking
+        
+        # Render main content with markdown
+        if main_content:
+            md = Markdown(main_content)
+            console.print(f"\n[bold #d7afd7]Roo >[/]")
+            console.print(md)
+            print()  # Extra newline for spacing
+    else:
+        # Plain text output
+        print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
 
 # GitHub token refresh helper
 async def refresh_token_if_needed():
@@ -236,7 +324,8 @@ async def main():
             await refresh_token_if_needed()
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
             content = response['content'].lstrip('\n')
-            print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
+
+            render_output(content)
         except Exception as e:
             logger.error(f"Error during chat: {e}")
             print(f"❌ Error: {str(e)}")
@@ -263,6 +352,9 @@ async def main():
                 print(f"{BOLD}{YELLOW}/models{RESET} - List available Ollama models")
                 print(f"{BOLD}{YELLOW}/model <model_name>{RESET} - Change the current LLM model")
                 print(f"{BOLD}{YELLOW}/current-model{RESET} - Show the current LLM model")
+                print(f"{BOLD}{YELLOW}/debug{RESET} - Toggle debug logging on/off")
+                print(f"{BOLD}{YELLOW}/thinking{RESET} - Toggle visibility of model reasoning")
+                print(f"{BOLD}{YELLOW}/markdown{RESET} - Toggle markdown rendering (rich formatting)")
                 print(f"{BOLD}{YELLOW}/benchmark [dataset]{RESET} - Run benchmark evaluation")
                 print(f"{BOLD}{YELLOW}/analytics [days]{RESET} - Show quality analytics")
                 print(f"{BOLD}{YELLOW}/exit{RESET} or {BOLD}{YELLOW}/quit{RESET} - Exit the chat\n")
@@ -327,6 +419,40 @@ async def main():
                 await handle_current_model_command(roo)
                 continue
 
+            # Handle debug toggle command
+            if query.lower() == '/debug':
+                is_debug = toggle_debug_mode()
+                if is_debug:
+                    print(f"\n{BOLD}{YELLOW}🐛 Debug mode: ENABLED{RESET}")
+                    print(f"{LIME}Logging level: DEBUG{RESET}")
+                    print(f"{LIME}Verbose tool call logging: ON{RESET}\n")
+                else:
+                    print(f"\n{BOLD}{CYAN}Debug mode: DISABLED{RESET}")
+                    print(f"{LIME}Logging level: INFO{RESET}\n")
+                continue
+
+            # Handle thinking visibility toggle command
+            if query.lower() == '/thinking':
+                show_thinking = toggle_thinking_mode()
+                if show_thinking:
+                    print(f"\n{BOLD}{YELLOW}💭 Thinking mode: VISIBLE{RESET}")
+                    print(f"{LIME}Model reasoning will be shown in responses{RESET}\n")
+                else:
+                    print(f"\n{BOLD}{CYAN}Thinking mode: HIDDEN{RESET}")
+                    print(f"{LIME}Model reasoning will be filtered from responses{RESET}\n")
+                continue
+
+            # Handle markdown rendering toggle command
+            if query.lower() == '/markdown':
+                render_md = toggle_markdown_mode()
+                if render_md:
+                    print(f"\n{BOLD}{YELLOW}📝 Markdown rendering: ENABLED{RESET}")
+                    print(f"{LIME}Responses will be rendered with rich formatting{RESET}\n")
+                else:
+                    print(f"\n{BOLD}{CYAN}📝 Markdown rendering: DISABLED{RESET}")
+                    print(f"{LIME}Responses will be shown as plain text{RESET}\n")
+                continue
+
             # Handle benchmark commands
             if query.lower().startswith('/benchmark'):
                 await handle_benchmark_command(query, roo)
@@ -336,12 +462,13 @@ async def main():
             if query.lower().startswith('/analytics'):
                 await handle_analytics_command(query)
                 continue
-                
+
             await refresh_token_if_needed()
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
             content = response['content'].lstrip('\n')
-            print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
-            
+
+            render_output(content)
+
         except KeyboardInterrupt:
             print(EXIT_MESSAGE)
             break
