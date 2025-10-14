@@ -94,7 +94,7 @@
     },
     "🧠": {
       "tool": "query",
-      "description": "Search Hypha's handbook and public drive documents with RAG via minima MCP"
+      "description": "Search the knowledge base using RAG (Retrieval-Augmented Generation) to find information from documents."
     },
     "🧭": {
       "tool": "consensus_analyzer",

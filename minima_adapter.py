@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Semantic search across Hypha's knowledge base (handbook and meeting notes). Returns relevant passages with automatic source citations. Citations format: [Source: https://handbook.hypha.coop/path] or [Source: https://meetings.hypha.coop/YYYY-MM-DD-meeting-name.html].",
+                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) including documents, drafts and other notes. ALWAYS cite sources. You can remove the first part of the path until knowledge_base_index/ Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",

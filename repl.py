@@ -49,7 +49,7 @@ except ImportError:
         "🗄️": "`get_archive_categories`: List archivable categories with links",
         "🔢": "`calc`: Perform calculations",
         "🌐": "`web_search`: Search the internet for current information using Claude with web search",
-        "🧠": "`query`: Search Hypha's handbook and public drive documents with RAG via minima MCP",
+        "🧠": "`query`: Search the knowledge base using RAG (Retrieval-Augmented Generation) to find information from documents",
         "🧭": "`consensus_analyzer`: Analyzes a conversation (list of messages) to identify agreements, disagreements, sentiment, and provide a summary. Conclude with a list of 1-3 suggested next steps.",
         "🔮": "`analyze_meeting_notes`: Analyze Co-Creation Labs meeting notes to gather insights and answer questions"
     }
