@@ -46,3 +46,4 @@ def get_all_tools():
     """Get all available tools."""
     constants = load_tool_constants()
     return constants["raw_data"]
+
