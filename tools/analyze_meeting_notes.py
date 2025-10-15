@@ -427,7 +427,9 @@ def extract_date_variants(text: str) -> List[str]:
             if y:
                 add_variants(int(y), int(month_num), int(d))
             else:
+                # When no year specified, add partial variants AND variants with current year
                 add_partial_variants(int(month_num), int(d))
+                add_variants(datetime.now().year, int(month_num), int(d))
 
     # 2) ISO format (2025-09-02)
     for y, m, d in re.findall(r"\b(\d{4})-(\d{2})-(\d{2})\b", text):
@@ -524,8 +526,8 @@ async def search_and_respond(roo, doc_text: str, question: str) -> str:
     """
     log.debug(f"Search mode: {question[:50]}")
 
-    # Find relevant chunks with larger size for better context
-    chunks = find_relevant_chunks(doc_text, question, max_chunks=2, chunk_size=6000)
+    # Find relevant chunks with optimal size for focused context
+    chunks = find_relevant_chunks(doc_text, question, max_chunks=2, chunk_size=3000)
 
     if not chunks:
         return f"❌ No relevant information found for: {question}\n\n[Source: {MEETING_NOTES_SOURCE_URL}]"
@@ -543,9 +545,11 @@ async def search_and_respond(roo, doc_text: str, question: str) -> str:
 
 **Instructions:**
 - Answer directly and concisely
+- IMPORTANT: The notes contain multiple meetings. You MUST find the meeting that matches the EXACT date mentioned in the question
+- Look for date headers like "Sep 2, 2025 | C-Lab Weekly" or similar patterns
+- Once you find the correct date, look for the check-in question ONLY in that meeting's section
 - For check-in questions, quote them exactly as they appear (e.g., "Check-in question: [exact text]")
-- Look for patterns like "Check-in question:", "Check in question:", or similar
-- If multiple check-in questions exist, find the one that matches the date in the question
+- Look for patterns like "Check-in question:", "Check in question:", "Check in:", or similar
 - If not found, state "No information found for [date/topic]"
 - Keep response under 100 words unless detailed analysis is needed"""
 
