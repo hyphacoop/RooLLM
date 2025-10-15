@@ -6,5 +6,8 @@ MCP_CONFIG = {
                 "MCP_ADAPTER": ".minima_adapter.MinimaRestAdapter"
             }
         }
-    }
+    },
+    "auto_rag_enabled": True, 
+    "react_max_iterations": 10,
+    "enable_react_loop": True
 }
