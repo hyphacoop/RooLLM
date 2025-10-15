@@ -716,7 +716,8 @@ async def tool(roo, arguments: dict, user: str):
         # Get document (cached)
         service = get_google_docs_service(creds=creds, api_key=api_key)
         doc_text, revision = get_cached_document_content(service, MEETING_NOTES_DOC_ID)
-
+        log.debug(f"Getting cached document content")
+        
         if not doc_text:
             return f"❌ Error: Could not read document or document is empty.\n\n[Source: {MEETING_NOTES_SOURCE_URL}]"
 
