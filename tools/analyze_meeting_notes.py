@@ -11,7 +11,8 @@ Features revision-aware caching and intelligent mode detection.
 import os
 import re
 import logging
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
+from datetime import datetime
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -56,14 +57,119 @@ def get_cached_document_content(service, doc_id: str) -> Tuple[str, str]:
 
     cache_key = (doc_id, rev)
     if cache_key in _DOC_CACHE:
-        log.info(f"Cache hit: doc={doc_id[:8]} rev={rev[:8]}")
+        log.debug(f"Cache hit: doc={doc_id[:8]} rev={rev[:8]}")
         return _DOC_CACHE[cache_key], rev
 
     # Extract text from document
     text = read_document_content_from_doc(doc)
+
     _DOC_CACHE[cache_key] = text
-    log.info(f"Cache miss: fetched {len(text)} chars")
+    log.debug(f"Cache miss: fetched {len(text)} chars")
     return text, rev
+
+
+def extract_date_from_calendar_uri(uri: str) -> Optional[str]:
+    """
+    Extract and format date from Google Calendar URI.
+    Example URI: https://www.google.com/calendar/event?eid=...base64...
+    The eid parameter contains base64-encoded data with the date.
+    Returns formatted date like "Sep 2, 2025"
+
+    Note: Calendar times are in UTC, so we convert to local timezone to match what
+    users see in the Google Docs interface. Timezone can be configured via
+    MEETING_NOTES_TIMEZONE environment variable (e.g., "America/Toronto", "Asia/Tokyo").
+    Defaults to system local timezone if not set.
+    """
+    import re
+    import base64
+    from urllib.parse import urlparse, parse_qs
+    from datetime import timezone
+
+    # Get timezone from environment or use system local timezone
+    tz_name = os.getenv("MEETING_NOTES_TIMEZONE")
+
+    try:
+        from zoneinfo import ZoneInfo
+        if tz_name:
+            try:
+                LOCAL_TZ = ZoneInfo(tz_name)
+                log.debug(f"Using timezone from env: {tz_name}")
+            except Exception as e:
+                log.warning(f"Invalid timezone '{tz_name}': {e}, falling back to system local timezone")
+                LOCAL_TZ = None  # Will use system default
+        else:
+            # Use system local timezone
+            LOCAL_TZ = None  # datetime.astimezone() with None uses local timezone
+            log.debug("Using system local timezone")
+    except ImportError:
+        # Fallback for Python < 3.9 or systems without zoneinfo
+        try:
+            import pytz
+            if tz_name:
+                LOCAL_TZ = pytz.timezone(tz_name)
+                log.debug(f"Using timezone from env (pytz): {tz_name}")
+            else:
+                # Default to America/Toronto as a reasonable guess
+                LOCAL_TZ = pytz.timezone("America/Toronto")
+                log.debug("Using default timezone: America/Toronto (pytz)")
+        except ImportError:
+            # Last resort: use a fixed offset (EDT = UTC-4)
+            from datetime import timedelta
+            log.warning("Neither zoneinfo nor pytz available, using fixed UTC-4 offset")
+            LOCAL_TZ = timezone(timedelta(hours=-4))
+
+    try:
+        # Parse the URI and extract the eid parameter
+        parsed = urlparse(uri)
+        params = parse_qs(parsed.query)
+        eid = params.get('eid', [None])[0]
+
+        if eid:
+            # Base64 decode the eid (add padding if needed)
+            padding_needed = (4 - len(eid) % 4) % 4
+            if padding_needed:
+                eid += '=' * padding_needed
+            decoded = base64.b64decode(eid).decode('utf-8', errors='ignore')
+
+            # Look for YYYYMMDDTHHMMSSZ pattern in decoded string
+            match = re.search(r'(\d{8})T(\d{6})Z', decoded)
+            if match:
+                date_str = match.group(1)  # YYYYMMDD
+                time_str = match.group(2)  # HHMMSS
+
+                year = int(date_str[0:4])
+                month = int(date_str[4:6])
+                day = int(date_str[6:8])
+                hour = int(time_str[0:2])
+                minute = int(time_str[2:4])
+                second = int(time_str[4:6])
+
+                # Create datetime in UTC
+                dt_utc = datetime(year, month, day, hour, minute, second, tzinfo=timezone.utc)
+
+                # Convert to local timezone (handles DST automatically)
+                if LOCAL_TZ is None:
+                    # Use system local timezone
+                    dt_local = dt_utc.astimezone()
+                else:
+                    dt_local = dt_utc.astimezone(LOCAL_TZ)
+
+                formatted_date = dt_local.strftime("%b %#d, %Y" if os.name == 'nt' else "%b %-d, %Y")
+                log.debug(f"Calendar date conversion: {dt_utc} UTC -> {dt_local} local -> '{formatted_date}'")
+                return formatted_date
+
+            # Also try to find other date patterns in the decoded string
+            # Sometimes the format might be different
+            alt_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', decoded)
+            if alt_match:
+                year, month, day = map(int, alt_match.groups())
+                dt = datetime(year, month, day)
+                return dt.strftime("%b %#d, %Y" if os.name == 'nt' else "%b %-d, %Y")
+
+    except Exception as e:
+        log.debug(f"Error extracting date from calendar URI: {e}")
+
+    return None
 
 
 def read_document_content_from_doc(document: Dict) -> str:
@@ -76,6 +182,19 @@ def read_document_content_from_doc(document: Dict) -> str:
             for text_run in element['paragraph'].get('elements', []):
                 if 'textRun' in text_run:
                     text_parts.append(text_run['textRun'].get('content', ''))
+                elif 'richLink' in text_run:
+                    # Extract title and potentially date from richLink (e.g., meeting titles)
+                    props = text_run['richLink'].get('richLinkProperties', {})
+                    title = props.get('title', '')
+                    uri = props.get('uri', '')
+
+                    # Try to extract date from calendar URI to replace the date chip (\ue907)
+                    date_str = extract_date_from_calendar_uri(uri) if uri and 'calendar' in uri else None
+
+                    if date_str and title:
+                        text_parts.append(f"{date_str} | {title}")
+                    elif title:
+                        text_parts.append(title)
         elif 'table' in element:
             # Extract tables as pipe-separated values
             table = element['table']
@@ -109,14 +228,13 @@ def get_google_docs_service(creds=None, api_key=None):
 def is_specific_query(question: str) -> bool:
     """
     Detect if user wants a specific lookup vs comprehensive analysis.
-
-    Specific queries: "find", "list", "what did X say", "show me", etc.
-    Analytical queries: "summarize", "analyze", "what patterns", etc.
+    Optimized to prefer search mode for faster responses.
     """
     q_lower = question.lower()
 
-    # Specific lookup keywords
-    specific_keywords = ['find', 'list', 'show', 'give me', 'what are', 'get', 'extract', 'who said']
+    # Specific lookup keywords (expanded list)
+    specific_keywords = ['find', 'list', 'show', 'give me', 'what are', 'get', 'extract', 'who said', 
+                        'what was', 'what is', 'when', 'where', 'which', 'check-in', 'question']
     if any(kw in q_lower for kw in specific_keywords):
         return True
 
@@ -126,13 +244,17 @@ def is_specific_query(question: str) -> bool:
     if re.search(r'\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(items?|examples?|instances?)', q_lower):
         return True
 
-    # Analytical keywords suggest comprehensive mode
-    analytical_keywords = ['summarize', 'analyze', 'what patterns', 'how has', 'why', 'explain']
+    # If the question contains a date-like expression, treat as specific
+    if extract_date_variants(q_lower):
+        return True
+
+    # Only use comprehensive mode for clearly analytical queries
+    analytical_keywords = ['summarize', 'analyze', 'what patterns', 'how has', 'why', 'explain', 'compare', 'trends']
     if any(kw in q_lower for kw in analytical_keywords):
         return False
 
-    # Default to specific for short questions
-    return len(question.split()) < 10
+    # Default to specific (search mode) for most questions - faster!
+    return True
 
 
 # ===== CHUNK HANDLING =====
@@ -143,7 +265,26 @@ def find_relevant_chunks(full_text: str, question: str, max_chunks: int = 3, chu
     Returns the most relevant chunks based on keyword frequency.
     """
     # Extract keywords from question
-    keywords = [word.strip() for word in question.lower().split() if len(word) > 3]
+    q_lower = question.lower()
+
+    # Date variants to prioritize exact meeting occurrences
+    date_variants = extract_date_variants(q_lower)
+
+    # Include domain-specific short tokens and month abbreviations
+    domain_tokens = set()
+    if 'check-in' in q_lower or 'check in' in q_lower:
+        domain_tokens.update(['check-in', 'check in', 'checkin'])
+
+    month_abbr = {'jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec'}
+
+    words = [w.strip(".,!?()[]{}:") for w in q_lower.split()]
+    keywords: List[str] = []
+    for w in words:
+        if len(w) > 3:
+            keywords.append(w)
+        elif w in month_abbr:
+            keywords.append(w)
+    keywords.extend(list(domain_tokens))
 
     # Score chunks by keyword frequency
     chunk_scores = []
@@ -156,14 +297,193 @@ def find_relevant_chunks(full_text: str, question: str, max_chunks: int = 3, chu
 
         # Count keyword occurrences
         chunk_lower = chunk.lower()
-        score = sum(chunk_lower.count(kw) for kw in keywords)
+        score = 0
+
+        # Strongly weight date matches if present
+        if date_variants:
+            date_hits = sum(chunk_lower.count(variant) for variant in date_variants)
+            # Weight dates very high to pull in the exact meeting section
+            score += date_hits * 50
+            # DEBUG: Log date matching
+            if date_hits > 0:
+                log.debug(f"Chunk at pos {start_pos} has {date_hits} date hits, score={score}")
+                # Log which variants matched
+                matched_variants = [v for v in date_variants if v in chunk_lower]
+                log.debug(f"Matched variants: {matched_variants[:3]}")
+
+        # Weight domain tokens like check-in slightly higher
+        for kw in keywords:
+            weight = 2 if kw in domain_tokens else 1
+            score += weight * chunk_lower.count(kw)
 
         if score > 0:
             chunk_scores.append((score, chunk))
 
-    # Return top-k chunks by score
+    # Sort and log top chunks for debugging
     chunk_scores.sort(reverse=True, key=lambda x: x[0])
-    return [chunk for _, chunk in chunk_scores[:max_chunks]]
+    if date_variants:
+        log.debug(f"Date variants being searched: {date_variants[:5]}")
+    top_scores = [score for score, _ in chunk_scores[:max_chunks]]
+    log.debug(f"Top chunk scores (first {max_chunks}): {top_scores}")
+
+    # Return top-k chunks by score
+    top_chunks = chunk_scores[:max_chunks]
+    for idx, (score, chunk) in enumerate(top_chunks):
+        snippet = clean_text(chunk[:200]).replace('\n', ' ')
+        log.debug(f"Chunk #{idx+1} score={score} snippet=\"{snippet[:120]}\"")
+    return [chunk for _, chunk in top_chunks]
+
+
+def extract_date_variants(text: str) -> List[str]:
+    """
+    Extract date-like expressions from text and return a list of
+    normalized variants to match against the document.
+    
+    Also includes timezone-aware variants (day before/after) to handle
+    calendar timezone conversion issues.
+
+    Supports inputs like:
+    - "Sep 2 2025", "Sept 2, 2025", "September 2, 2025"
+    - "Sep 2" (no year)
+    - "2025-09-02", "09/02/2025", "2025/09/02"
+    Returns lowercase variants for matching.
+    """
+    months = {
+        'jan': 1, 'january': 1,
+        'feb': 2, 'february': 2,
+        'mar': 3, 'march': 3,
+        'apr': 4, 'april': 4,
+        'may': 5,
+        'jun': 6, 'june': 6,
+        'jul': 7, 'july': 7,
+        'aug': 8, 'august': 8,
+        'sep': 9, 'sept': 9, 'september': 9,
+        'oct': 10, 'october': 10,
+        'nov': 11, 'november': 11,
+        'dec': 12, 'december': 12,
+    }
+
+    variants: Set[str] = set()
+    partial_variants: Set[str] = set()
+
+    # Helper to add common textual/numeric variants
+    def add_variants(year: int, month: int, day: int):
+        try:
+            dt = datetime(year, month, day)
+        except ValueError:
+            return
+        y = f"{dt.year:04d}"
+        m = f"{dt.month:02d}"
+        d = f"{dt.day:02d}"
+
+        # ISO and slashed
+        variants.update({
+            f"{y}-{m}-{d}",
+            f"{m}/{d}/{y}",
+            f"{y}/{m}/{d}",
+        })
+
+        # Month text variants (with and without comma)
+        month_names = [
+            dt.strftime('%b').lower(),  # Sep
+            (dt.strftime('%b') + 't').lower() if dt.strftime('%b').lower() == 'sep' else dt.strftime('%b').lower(),  # Sept
+            dt.strftime('%B').lower(),  # September
+        ]
+        day_no_suffix = str(dt.day)
+        day_suffix = day_no_suffix + suffix_for_day(dt.day)
+        for mn in month_names:
+            variants.add(f"{mn} {day_no_suffix} {y}")
+            variants.add(f"{mn} {day_no_suffix}, {y}")
+            variants.add(f"{mn} {day_suffix} {y}")
+            variants.add(f"{mn} {day_suffix}, {y}")
+            variants.add(f"{y} {mn} {day_no_suffix}")
+
+    def add_partial_variants(month: int, day: int):
+        """Add month/day variants for queries without a year."""
+        try:
+            dt = datetime(2000, month, day)
+        except ValueError:
+            return
+
+        month_names = [
+            dt.strftime('%b').lower(),
+            (dt.strftime('%b') + 't').lower() if dt.strftime('%b').lower() == 'sep' else dt.strftime('%b').lower(),
+            dt.strftime('%B').lower(),
+        ]
+        day_no_suffix = str(day)
+        day_suffix = day_no_suffix + suffix_for_day(day)
+        for mn in month_names:
+            partial_variants.add(f"{mn} {day_no_suffix}")
+            partial_variants.add(f"{mn} {day_suffix}")
+            partial_variants.add(f"{day_no_suffix} {mn}")
+            partial_variants.add(f"{day_suffix} {mn}")
+            partial_variants.add(f"{mn} {day_no_suffix},")
+
+    # 1) Text month formats (e.g., Sep 2 2025, September 2, 2025, or Sep 2)
+    month_regex = r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+([0-9]{1,2})(?:st|nd|rd|th)?(?:,)?(?:\s+([0-9]{4}))?\b"
+    for m, d, y in re.findall(month_regex, text, flags=re.IGNORECASE):
+        month_num = months.get(m.lower(), None)
+        if month_num:
+            if y:
+                add_variants(int(y), int(month_num), int(d))
+            else:
+                add_partial_variants(int(month_num), int(d))
+
+    # 2) ISO format (2025-09-02)
+    for y, m, d in re.findall(r"\b(\d{4})-(\d{2})-(\d{2})\b", text):
+        add_variants(int(y), int(m), int(d))
+
+    # 3) Slash formats (09/02/2025 or 2025/09/02). Assume MM/DD/YYYY when first is <= 12
+    for a, b, c in re.findall(r"\b(\d{4}|\d{2})/(\d{2})/(\d{4}|\d{2})\b", text):
+        if len(a) == 4:  # YYYY/MM/DD
+            y, m, d = int(a), int(b), int(c)
+        elif len(c) == 4:  # MM/DD/YYYY
+            m, d, y = int(a), int(b), int(c)
+        else:
+            continue
+        add_variants(int(y), int(m), int(d))
+
+    # 4) Slash formats without year (MM/DD)
+    for m, d in re.findall(r"\b(\d{1,2})/(\d{1,2})(?!/\d)", text):
+        add_partial_variants(int(m), int(d))
+
+    all_variants = {v.lower() for v in variants}
+    all_variants.update(v.lower() for v in partial_variants)
+    
+    # Add timezone-aware variants (day before/after) to handle calendar conversion issues
+    timezone_variants = set()
+    
+    # Extract dates from the original text and add adjacent dates
+    month_regex = r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+([0-9]{1,2})(?:st|nd|rd|th)?(?:,)?(?:\s+([0-9]{4}))?\b"
+    for m, d, y in re.findall(month_regex, text, flags=re.IGNORECASE):
+        month_num = months.get(m.lower(), None)
+        if month_num:
+            # Use provided year or assume current year for timezone variants
+            year = int(y) if y else datetime.now().year
+            try:
+                dt = datetime(year, int(month_num), int(d))
+                
+                # Add day before and after
+                from datetime import timedelta
+                day_before = dt - timedelta(days=1)
+                day_after = dt + timedelta(days=1)
+                
+                # Add variants for adjacent days
+                for adj_date in [day_before, day_after]:
+                    timezone_variants.add(adj_date.strftime("%b %-d, %Y").lower())
+                    timezone_variants.add(adj_date.strftime("%b %#d, %Y").lower())  # Windows format
+                    
+            except ValueError:
+                pass
+    
+    all_variants.update(timezone_variants)
+    return list(all_variants)
+
+
+def suffix_for_day(day: int) -> str:
+    if 11 <= day % 100 <= 13:
+        return 'th'
+    return {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
 
 
 def split_large_chunks(text: str, chunk_size: int = 12000) -> List[str]:
@@ -199,13 +519,13 @@ def clean_text(text: str) -> str:
 
 async def search_and_respond(roo, doc_text: str, question: str) -> str:
     """
-    Quick lookup mode: Find relevant chunks and get direct answer.
-    Single LLM call - let it do all the work!
+    Optimized search mode: Smart chunk finding + single LLM call.
+    Uses larger, more relevant chunks to reduce processing time.
     """
-    log.info(f"Search mode: {question[:50]}")
+    log.debug(f"Search mode: {question[:50]}")
 
-    # Find relevant chunks
-    chunks = find_relevant_chunks(doc_text, question, max_chunks=3)
+    # Find relevant chunks with larger size for better context
+    chunks = find_relevant_chunks(doc_text, question, max_chunks=2, chunk_size=6000)
 
     if not chunks:
         return f"❌ No relevant information found for: {question}\n\n[Source: {MEETING_NOTES_SOURCE_URL}]"
@@ -213,20 +533,21 @@ async def search_and_respond(roo, doc_text: str, question: str) -> str:
     # Clean and combine chunks
     context = "\n\n---\n\n".join([clean_text(chunk) for chunk in chunks])
 
-    # Single LLM call with simple, clear prompt
-    prompt = f"""Answer this question about Co-Creation Labs meeting notes:
+    # Single LLM call with optimized prompt
+    prompt = f"""Find the answer to this question in the Co-Creation Labs meeting notes:
 
 **Question:** {question}
 
-**Relevant excerpts from meeting notes:**
-
+**Meeting Notes:**
 {context}
 
 **Instructions:**
-- Provide a clear, direct answer based on the notes above
-- If looking for specific items (questions, topics, etc.), extract them verbatim
-- If the notes don't contain the information, say so
-- Be concise but complete"""
+- Answer directly and concisely
+- For check-in questions, quote them exactly as they appear (e.g., "Check-in question: [exact text]")
+- Look for patterns like "Check-in question:", "Check in question:", or similar
+- If multiple check-in questions exist, find the one that matches the date in the question
+- If not found, state "No information found for [date/topic]"
+- Keep response under 100 words unless detailed analysis is needed"""
 
     messages = [{"role": "user", "content": prompt}]
     response = await roo.inference.invoke(messages=messages, tools=None)
@@ -236,7 +557,7 @@ async def search_and_respond(roo, doc_text: str, question: str) -> str:
         content = response.get("message", {}).get("content") or response.get("content", "")
 
         # Format response
-        result = f"📝 **Search Results**\n\n{content}\n\n"
+        result = f"📝 **{content}**\n\n"
         result += f"[Source: {MEETING_NOTES_SOURCE_URL}]"
         return result
 
@@ -250,7 +571,7 @@ async def read_and_synthesize(roo, doc_text: str, question: str) -> str:
     Comprehensive analysis mode: Read larger chunks and synthesize.
     2-5 LLM calls depending on document size.
     """
-    log.info(f"Synthesize mode: {question[:50]}")
+    log.debug(f"Synthesize mode: {question[:50]}")
 
     # Split into large chunks
     chunks = split_large_chunks(doc_text, chunk_size=12000)
@@ -260,7 +581,7 @@ async def read_and_synthesize(roo, doc_text: str, question: str) -> str:
         return await single_pass_analysis(roo, chunks[0], question)
 
     # Multi-chunk: extract from each, then synthesize
-    log.info(f"Processing {len(chunks)} chunks")
+    log.debug(f"Processing {len(chunks)} chunks")
     findings = []
 
     for i, chunk in enumerate(chunks):
@@ -367,7 +688,7 @@ async def tool(roo, arguments: dict, user: str):
         if not creds_dict:
             return "❌ Error: Google Docs access not configured. Please add GOOGLE_DOCS_API_KEY or GOOGLE_DOCS_CREDENTIALS to your .env file."
 
-        log.info(f"Using service account: {creds_dict.get('client_email', 'UNKNOWN')}")
+        log.debug(f"Using service account: {creds_dict.get('client_email', 'UNKNOWN')}")
 
         scopes = [
             'https://www.googleapis.com/auth/documents.readonly',
@@ -379,7 +700,7 @@ async def tool(roo, arguments: dict, user: str):
         try:
             from google.auth.transport.requests import Request as GoogleRequest
             creds.refresh(GoogleRequest())
-            log.info("Credentials refreshed")
+            log.debug("Credentials refreshed")
         except Exception as e:
             log.warning(f"Could not refresh credentials: {e}")
 
@@ -395,12 +716,12 @@ async def tool(roo, arguments: dict, user: str):
         if not doc_text:
             return f"❌ Error: Could not read document or document is empty.\n\n[Source: {MEETING_NOTES_SOURCE_URL}]"
 
-        log.info(f"Document loaded: {len(doc_text)} chars, rev={revision[:8]}")
+        log.debug(f"Document loaded: {len(doc_text)} chars, rev={revision[:8]}")
 
         # Auto-detect mode if needed
         if mode == "auto":
             mode = "search" if is_specific_query(question) else "full"
-            log.info(f"Auto-detected mode: {mode}")
+            log.debug(f"Auto-detected mode: {mode}")
 
         # Execute appropriate mode
         if mode == "search":
