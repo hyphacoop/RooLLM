@@ -116,6 +116,11 @@ class MCPLLMBridge:
         messages = history + [{"role": "user", "content": f"{user}: {content}"}]
         tools = self.tool_registry.openai_descriptions()
 
+        # Auto-call RAG tool first for every query
+        auto_rag_enabled = self.config.get("auto_rag_enabled", True)
+        if auto_rag_enabled:
+            await self._auto_call_rag_tool(content, messages, react_callback)
+
         # ReAct Loop - Continue until no more tool calls or max iterations reached
         max_iterations = self.config.get("react_max_iterations", 10)  # Configurable max iterations
         enable_react = self.config.get("enable_react_loop", True)  # Option to disable ReAct loop
@@ -201,3 +206,46 @@ class MCPLLMBridge:
         logger.warning(f"ReAct loop reached max iterations ({max_iterations}), getting final response")
         final_response = await self.llm_client.invoke(messages, tools=[])  # No tools to prevent more calls
         return final_response.get("message", {})
+
+    async def _auto_call_rag_tool(self, content: str, messages: List[Dict], react_callback=None):
+        """Automatically call the RAG tool for every query."""
+        try:
+            # Get the query tool from registry
+            query_tool = self.tool_registry.get_tool("query")
+            if not query_tool:
+                logger.debug("Query tool not found in registry, skipping auto-RAG")
+                return
+
+            # Get the minima adapter
+            minima_adapter = self.mcp_clients.get("minima")
+            if not minima_adapter:
+                logger.debug("Minima adapter not found, skipping auto-RAG")
+                return
+
+            # Call the RAG tool with the user's query
+            logger.debug(f"Auto-calling RAG tool with query: '{content}'")
+            
+            # Indicate tool usage if callback provided
+            if react_callback:
+                await react_callback(query_tool.emoji or "🧠")
+
+            # Call the tool
+            rag_result = await minima_adapter.call_tool("query", {"text": content})
+            
+            # Add the RAG result to messages for context
+            messages.append({
+                "role": "assistant", 
+                "content": f"I'll search the knowledge base for information about: {content}"
+            })
+            
+            messages.append({
+                "role": "tool",
+                "tool_call_id": "auto_rag_call",
+                "content": json.dumps(rag_result)
+            })
+            
+            logger.debug(f"Auto-RAG completed, result: {str(rag_result)[:200]}...")
+            
+        except Exception as e:
+            logger.error(f"Error in auto-RAG call: {e}", exc_info=True)
+            # Don't fail the whole process if auto-RAG fails

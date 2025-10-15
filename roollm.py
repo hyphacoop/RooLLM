@@ -132,7 +132,7 @@ You do not need to repeat their name in your replies.
 
 The current date and time is {now}.
 
-You have access to a query tool. Use it proactively to gather information and take actions.
+IMPORTANT: The knowledge base is automatically searched for every query to provide relevant context. You have access to the search results and should use them to provide accurate, well-informed responses.
 
-Provide helpful, accurate responses based on available information. Don't make up or guess information that isn't available to you.
+Provide helpful, accurate responses based on the available information from the knowledge base. Always cite sources when using information from the knowledge base. Don't make up or guess information that isn't available to you.
 """
