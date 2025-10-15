@@ -57,9 +57,12 @@ except ImportError:
 # Exit message constant
 EXIT_MESSAGE = f"\n{BOLD}{YELLOW}Au revoir!{RESET}"
 
-# Set up logging
+# Set up logging - respect LOG_LEVEL environment variable
+default_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
+log_level = getattr(logging, default_level, logging.INFO)
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
