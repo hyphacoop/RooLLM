@@ -170,7 +170,7 @@ async def init_roollm():
         # 1. Init LLM Client
         llm = LLMClient(
             base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
-            model=os.getenv("ROO_LLM_MODEL", "hermes3"),
+            model=os.getenv("ROO_LLM_MODEL", "qwen3:32b"),
             username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
             password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
         )
@@ -204,22 +204,32 @@ except Exception as e:
     print(f"❌ Failed to initialize RooLLM: {str(e)}")
     sys.exit(1)
 
-# 5. Who's asking
-try:
-    user = os.getlogin()
-except OSError:
-    user = getpass.getuser() or "localTester"
+# 5. Who's asking - Use environment variable or default to generic user
+user = os.getenv("ROO_USERNAME", "user")
+
+# Track tool call state for this request
+_tool_call_header_printed = False
+
+def reset_tool_call_state():
+    """Reset the tool call state for a new request."""
+    global _tool_call_header_printed
+    _tool_call_header_printed = False
 
 # REPL emoji feedback
 async def print_tool_reaction(emoji, tool_name=None, tool_args=None):
-    """Print a styled tool call reaction with emoji and description."""
+    """Print a styled tool call reaction with emoji only."""
+    global _tool_call_header_printed
+    
+    # Print "Tool Call" header only once per request
+    if not _tool_call_header_printed:
+        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET}")
+        _tool_call_header_printed = True
+    
+    # Just print the emoji and tool name (no description)
     if emoji in emojiToolMap:
         tool_info = emojiToolMap[emoji]
         tool_name_from_map = tool_info.split(":")[0].strip("`")
-        tool_desc = tool_info.split(":")[1].strip()
-        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET}")
         print(f"{BOLD}{YELLOW}{emoji} {tool_name_from_map}{RESET}")
-        print(f"{LIME}└─ {tool_desc}{RESET}")
         
         # Enhanced logging in debug mode
         if DEBUG_MODE:
@@ -227,7 +237,7 @@ async def print_tool_reaction(emoji, tool_name=None, tool_args=None):
             if tool_args:
                 logger.info(f"Tool arguments: {tool_args}")
     else:
-        print(f"\n{BOLD}{CYAN}🛠️  Tool Call:{RESET} {emoji}")
+        print(f"{BOLD}{YELLOW}{emoji}{RESET}")
         if DEBUG_MODE:
             logger.info(f"Tool called with emoji: {emoji}")
 
@@ -314,16 +324,16 @@ async def main():
     global user
     history = []
     
-    # Get session username
-    try:
-        user = getpass.getuser()
-    except Exception:
-        user = "localTester"
+    # Get session username - Use environment variable or default to generic user
+    user = os.getenv("ROO_USERNAME", "user")
     
     # Handle command line argument if provided
     if len(sys.argv) > 1:
         query = " ".join(sys.argv[1:])
         try:
+            # Reset tool call state for this request
+            reset_tool_call_state()
+            
             await refresh_token_if_needed()
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
             content = response['content'].lstrip('\n')
@@ -466,6 +476,9 @@ async def main():
                 await handle_analytics_command(query)
                 continue
 
+            # Reset tool call state for this new request
+            reset_tool_call_state()
+            
             await refresh_token_if_needed()
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
             content = response['content'].lstrip('\n')
