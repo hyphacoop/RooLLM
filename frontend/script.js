@@ -56,25 +56,27 @@ async function loadToolConstants() {
     }
 }
  
-// Load configuration (backend port and tool constants)
+// Load configuration (backend port, host and tool constants)
 async function loadConfig() {
     // Load tool constants first
     await loadToolConstants();
-    
+
     let backendPort = 8000; // Default fallback port
+    let backendHost = 'localhost'; // Default fallback host
 
     try {
-        // Try to get port from port.json file created by backend
-        const portResponse = await fetch("port.json");
-        if (portResponse.ok) {
-            const portInfo = await portResponse.json();
-            backendPort = portInfo.port;
+        // Try to get port and host from api_config.json file created by backend
+        const configResponse = await fetch("api_config.json");
+        if (configResponse.ok) {
+            const apiConfig = await configResponse.json();
+            backendPort = apiConfig.port;
+            backendHost = apiConfig.host || 'localhost';
         } else {
-            console.warn("Could not read port.json, status:", portResponse.status);
+            console.warn("Could not read api_config.json, status:", configResponse.status);
         }
     } catch (portError) {
         console.warn("Could not get port from file:", portError);
-        
+
         // Try alternate method - check the port-info endpoint
         try {
             // Try with default port first
@@ -82,15 +84,18 @@ async function loadConfig() {
             if (apiResponse.ok) {
                 const portInfo = await apiResponse.json();
                 backendPort = portInfo.port;
+                backendHost = portInfo.host || 'localhost';
                 console.log("Backend port set from API:", backendPort);
+                console.log("Backend host set from API:", backendHost);
             }
         } catch (apiError) {
-            console.warn("Could not get port from API, using default:", backendPort);
+            console.warn("Could not get port from API, using defaults:", backendPort, backendHost);
         }
     }
 
-    // Make backendPort globally available
+    // Make backendPort and backendHost globally available
     window.backendPort = backendPort;
+    window.backendHost = backendHost;
 }
 
 // Initialize configuration
@@ -132,9 +137,10 @@ function generateUUID() {
 
 async function loadChatHistory(sessionId) {
     console.log("Loading chat history for session:", sessionId);
-    console.log("Backend port:", backendPort);
+    console.log("Backend port:", window.backendPort);
+    console.log("Backend host:", window.backendHost);
     try {
-        const response = await fetch(`http://localhost:${backendPort}/chat-history?session_id=${sessionId}`);
+        const response = await fetch(`http://${window.backendHost}:${window.backendPort}/chat-history?session_id=${sessionId}`);
         if (response.ok) {
             
             const result = await response.json();
@@ -220,7 +226,7 @@ async function sendMessage() {
     headers.append('Content-Type', 'application/json');
 
     try {
-        const response = await fetch(`http://localhost:${backendPort}/chat`, {
+        const response = await fetch(`http://${window.backendHost}:${window.backendPort}/chat`, {
             method: "POST",
             headers: headers,
             body: JSON.stringify({
@@ -430,7 +436,7 @@ document.getElementById("new-session-button").addEventListener("click", createNe
 // Function to show session history
 async function showSessionHistory() {
     try {
-        const response = await fetch(`http://localhost:${backendPort}/sessions`);
+        const response = await fetch(`http://${window.backendHost}:${window.backendPort}/sessions`);
         if (response.ok) {
             const data = await response.json();
             const sessions = data.sessions;  // Get the sessions array from the response
@@ -487,7 +493,7 @@ async function createNewSession() {
     let latestSummary = "New session - no messages yet";
     if (window.sessionId) {
         try {
-            const response = await fetch(`http://localhost:${backendPort}/sessions/${window.sessionId}/summary`);
+            const response = await fetch(`http://${window.backendHost}:${window.backendPort}/sessions/${window.sessionId}/summary`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.status === "ok") {
