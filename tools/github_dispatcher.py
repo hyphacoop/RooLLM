@@ -17,7 +17,7 @@ description = """Perform GitHub actions like creating, updating, commenting on i
 
 Available actions:
 - Issues: create_issue, update_issue, close_issue, reopen_issue, comment (on issues)
-- Pull Requests: create_pr, update_pr, close_pr, reopen_pr, merge_pr, comment (on PRs)  
+- Pull Requests: create_pr, update_pr, close_pr, reopen_pr, merge_pr, comment (on PRs), get_pr_diff
 - Search: search_issues, list_issues, search_prs, search_labels
 - Management: add_labels, assign
 
