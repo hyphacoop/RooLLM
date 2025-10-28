@@ -47,6 +47,7 @@ Pull Requests:
 - close_pr: Close a pull request
 - reopen_pr: Reopen a closed pull request  
 - merge_pr: Merge a pull request
+- get_pr_diff: Get the diff of a pull request
 
 Search & Discovery:
 - search_issues: Search for issues (supports query, assignee, state filters)
@@ -141,6 +142,7 @@ ACTION_TO_HANDLER = {
     "comment": f"{BASE_MODULE_PATH}.comment_github_item.tool",
     "create_issue": f"{BASE_MODULE_PATH}.create_github_issue.tool",
     "create_pr": f"{BASE_MODULE_PATH}.create_pull_request.tool",
+    "get_pr_diff": f"{BASE_MODULE_PATH}.get_pr_diff.tool",
     "list_issues": f"{BASE_MODULE_PATH}.search_github_issues.tool",
     "merge_pr": f"{BASE_MODULE_PATH}.merge_pull_request.tool",
     "reopen_issue": f"{BASE_MODULE_PATH}.reopen_github_issue.tool",
@@ -226,13 +228,17 @@ def transform_arguments(action, arguments):
     # Actions that expect 'number' as integer parameter
     elif action in ["create_issue", "update_issue", "close_issue", "reopen_issue", 
                    "close_pr", "reopen_pr", "update_pr", "merge_pr",
-                   "assign", "add_labels", "search_issues", "list_issues", "search_prs"]:
-        # Convert issue_number to number and ensure it's an integer
+                   "assign", "add_labels", "search_issues", "list_issues", "search_prs", "get_pr_diff"]:
+        # Convert number to integer if needed
         if 'number' in transformed and isinstance(transformed['number'], str):
             try:
                 transformed['number'] = int(transformed['number'])
             except (ValueError, TypeError):
                 logger.warning(f"Could not convert number to integer: {transformed.get('number')}")
+        
+        # For get_pr_diff action, map 'number' to 'pull_number' for the underlying tool
+        if action == "get_pr_diff" and 'number' in transformed:
+            transformed['pull_number'] = transformed['number']
     
     logger.debug(f"({__name__}) Argument transformation for action '{action}': {arguments} -> {transformed}")
     return transformed
