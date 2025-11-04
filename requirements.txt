@@ -3,6 +3,7 @@ async_lru
 beautifulsoup4
 deepeval
 fastapi
+google-api-python-client
 gspread
 jwt
 lunr
@@ -12,5 +13,6 @@ oauth2client
 python-dotenv
 pytz
 requests
+rich
 tweepy
 uvicorn

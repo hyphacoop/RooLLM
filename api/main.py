@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 
 # Port configuration
 PORT = int(os.getenv("PORT", "8081"))
+API_HOST = os.getenv("API_HOST", "localhost")
 
 # Add parent directory to path to import roollm
 sys.path.append(str(Path(__file__).parent.parent))
@@ -25,6 +26,7 @@ from roollm import RooLLM
 from llm_client import LLMClient
 from mcp_config import MCP_CONFIG
 from github_app_auth import prepare_github_token
+from utils.google_credentials import load_all_google_credentials
 
 load_dotenv()
 
@@ -45,11 +47,6 @@ gh_config = {
 
 github_token, auth_method, auth_object = prepare_github_token(gh_config)
 
-# Google Setup
-google_creds = None
-if creds := os.getenv("GOOGLE_CREDENTIALS"):
-    google_creds = json.loads(base64.b64decode(creds).decode())
-
 # Claude Setup
 claude_api_key = os.getenv("CLAUDE_API_KEY")
 
@@ -57,9 +54,11 @@ claude_api_key = os.getenv("CLAUDE_API_KEY")
 config = {
     "gh_token": github_token,
     "gh_auth_object": auth_object,
-    "google_creds": google_creds,
     "CLAUDE_API_KEY": claude_api_key
 }
+
+# Load all Google credentials using utility function
+config.update(load_all_google_credentials())
 
 # Update config with MCP settings
 config.update(**MCP_CONFIG)
@@ -339,23 +338,23 @@ def find_available_port(start_port, max_attempts=10):
 
 @app.get("/port-info")
 async def get_port_info():
-    """Get information about the current port"""
+    """Get information about the current port and host"""
     return {
-        "port": os.getenv("PORT", "8000"),
-        "host": os.getenv("HOST", "0.0.0.0")
+        "port": PORT,
+        "host": API_HOST
     }
 
 if __name__ == "__main__":
     import uvicorn
     
-    # Write port to a file for the frontend to read
-    port_file = Path(__file__).parent.parent / "frontend" / "port.json"
-    port_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
-    with open(port_file, "w") as f:
-        json.dump({"port": PORT}, f)
-    
+    # Write API configuration to a file for the frontend to read
+    api_config_file = Path(__file__).parent.parent / "frontend" / "api_config.json"
+    api_config_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+    with open(api_config_file, "w") as f:
+        json.dump({"port": PORT, "host": API_HOST}, f)
+
     logger.debug(f"Server starting on port {PORT}")
-    logger.debug(f"Port info written to {port_file}")
+    logger.debug(f"API config written to {api_config_file}")
     
     # Use workers=1 for better signal handling
     uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
