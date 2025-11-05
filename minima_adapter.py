@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For meeting notes, use [Source: meetings.hypha.coop/YYYY-MM-DD-meeting-name.html]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
+                "description": "Search Hypha's LOCAL indexed documents including meeting-notes/ and handbook/ folders. Use this for queries about: meeting notes, all-hands meetings, handbook policies, internal documentation, or any organizational information stored locally. This searches PDF, CSV, DOCX, MD, and TXT files. ALWAYS cite sources using: [Source: handbook.hypha.coop/path] for handbook docs or [Source: meetings.hypha.coop/YYYY-MM-DD-meeting-name.html] for meeting notes. Do NOT use web_search for internal Hypha documents - always use this tool instead.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
