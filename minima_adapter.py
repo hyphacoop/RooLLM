@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Find information in local files (PDF, CSV, DOCX, MD, TXT) and ALWAYS cite sources. For handbook documents, use [Source: handbook.hypha.coop/path/to/document]. For meeting notes, use [Source: meetings.hypha.coop/YYYY-MM-DD-meeting-name.html]. Failing to cite sources is a critical error. Every response MUST include at least one source citation.",
+                "description": "Semantic search across Hypha's knowledge base (handbook and meeting notes). Returns relevant passages with automatic source citations. Citations format: [Source: https://handbook.hypha.coop/path] or [Source: https://meetings.hypha.coop/YYYY-MM-DD-meeting-name.html].",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
@@ -235,18 +235,25 @@ class MinimaRestAdapter:
                             if "result" in result and "output" in result["result"]:
                                 output = result["result"]["output"]
                                 sources = result["result"].get("links", [])
+                                chunks = result["result"].get("chunks", [])
                             elif "output" in result:
                                 output = result["output"]
                                 sources = result.get("links", [])
+                                chunks = result.get("chunks", [])
                             else:
                                 return {"result": result}
-                            
+
                             # Verify sources
                             verified_sources = [s for s in sources if s and isinstance(s, str)]
                             if len(verified_sources) < len(sources):
                                 logger.warning(f"Some sources could not be verified: {set(sources) - set(verified_sources)}")
-                            
-                            return self._format_result_with_citations(output, verified_sources)
+
+                            # Use chunk-level citations if available
+                            if chunks:
+                                return self._format_result_with_chunk_citations(chunks)
+                            else:
+                                # Fallback to old format
+                                return self._format_result_with_citations(output, verified_sources)
                         
                         return {"result": result}
                         
@@ -259,6 +266,77 @@ class MinimaRestAdapter:
                 return {"error": f"Connection error: {str(e)}"}
                 
         return {"error": "Query request failed after multiple attempts"}
+
+    def _format_result_with_chunk_citations(self, chunks):
+        """
+        Format the result with chunk-level citations where each snippet is paired with its source.
+
+        Args:
+            chunks: List of dicts with 'content' and 'source' keys
+
+        Returns:
+            dict: Formatted result with inline citations
+        """
+        logger.debug(f"Formatting result with {len(chunks)} chunks")
+
+        if not chunks:
+            logger.warning("No chunks provided for result formatting.")
+            return {
+                "result": "⚠️ WARNING: No content was retrieved from the search tool.",
+                "source_paths": []
+            }
+
+        formatted_output = []
+        all_sources = []
+
+        for i, chunk in enumerate(chunks):
+            if not isinstance(chunk, dict) or 'content' not in chunk or 'source' not in chunk:
+                logger.warning(f"Invalid chunk format at index {i}: {chunk}")
+                continue
+
+            content = chunk['content']
+            source = chunk['source']
+
+            if not source or not isinstance(source, str):
+                logger.warning(f"Invalid source in chunk {i}: {source}")
+                continue
+
+            all_sources.append(source)
+            source_lower = source.lower()
+
+            # Format the source citation
+            citation_text = ""
+            if "handbook" in source_lower:
+                path_segment = source.split("handbook/", 1)[-1] if "handbook/" in source_lower else source
+                path_segment = path_segment.replace(".md", "")
+                citation_text = f"[Source: https://handbook.hypha.coop/{path_segment}]"
+            elif "meeting-notes" in source_lower:
+                path_segment = source.split("meeting-notes/", 1)[-1] if "meeting-notes/" in source_lower else source
+                path_segment = path_segment.replace(".md", ".html")
+                citation_text = f"[Source: https://meetings.hypha.coop/{path_segment}]"
+            else:
+                citation_text = f"[Source: {source}]"
+
+            # Add the content followed immediately by its citation
+            formatted_output.append(f"{content} {citation_text}")
+            logger.debug(f"Chunk {i}: paired content with citation {citation_text}")
+
+        if not formatted_output:
+            logger.warning("No valid chunks could be formatted.")
+            return {
+                "result": "⚠️ WARNING: Although chunks were provided, none could be validly formatted.",
+                "source_paths": []
+            }
+
+        # Join all chunks with a separator
+        final_output = "\n\n".join(formatted_output)
+
+        logger.debug(f"Final output length: {len(final_output)} characters")
+
+        return {
+            "result": final_output,
+            "source_paths": all_sources
+        }
 
     def _format_result_with_citations(self, output, sources):
         """
@@ -297,14 +375,14 @@ class MinimaRestAdapter:
                 # Extracts path relative to 'handbook/'
                 path_segment = source.split("handbook/", 1)[-1] if "handbook/" in source_lower else source
                 path_segment = path_segment.replace(".md", "") # Remove .md extension if present
-                citation_text = f"[Source: handbook.hypha.coop/{path_segment}]"
+                citation_text = f"[Source: https://handbook.hypha.coop/{path_segment}]"
                 logger.debug(f"Formatted as handbook source: {citation_text}")
             # Meeting notes formatting
             elif "meeting-notes" in source_lower:
                 # Extracts path relative to 'meeting-notes/'
                 path_segment = source.split("meeting-notes/", 1)[-1] if "meeting-notes/" in source_lower else source
                 path_segment = path_segment.replace(".md", ".html") # Replace .md extension with .html
-                citation_text = f"[Source: meetings.hypha.coop/{path_segment}]"
+                citation_text = f"[Source: https://meetings.hypha.coop/{path_segment}]"
                 logger.debug(f"Formatted as meeting notes source: {citation_text}")
             # Generic formatting for all other sources
             else:
