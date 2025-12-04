@@ -1,5 +1,5 @@
 """
-Meeting notes analyzer for Co-Creation Labs Google Docs.
+Co-Creation Labs archive analyzer for Google Docs.
 
 Automatically detects query type and selects appropriate analysis mode:
 - Search mode: Quick lookups using keyword-based chunking (1 LLM call)
@@ -17,7 +17,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 # Logging
-log = logging.getLogger("meeting-notes")
+log = logging.getLogger("co-creation-lab-archive")
 
 # Global cache (keyed by doc_id + revision)
 _DOC_CACHE: Dict[Tuple[str, str], str] = {}
@@ -27,9 +27,9 @@ MEETING_NOTES_DOC_ID = os.getenv("MEETING_NOTES_DOC_ID", "1CzAluNoyYj9UqofB3LRMN
 MEETING_NOTES_SOURCE_URL = f"https://docs.google.com/document/d/{MEETING_NOTES_DOC_ID}"
 
 # Tool Metadata
-name = 'analyze_meeting_notes'
+name = 'co_creation_lab_archive'
 emoji = '🔮'
-description = f'Analyze Co-Creation Labs meeting notes from Google Docs. Automatically detects query type and uses appropriate analysis mode: "search" for specific lookups (1 LLM call) or "full" for comprehensive analysis (2-5 LLM calls). Source: {MEETING_NOTES_SOURCE_URL}'
+description = f'Search the Co-Creation Lab archive (Google Doc with check-in questions and meeting notes). Automatically detects query type and uses appropriate analysis mode: "search" for specific lookups (1 LLM call) or "full" for comprehensive analysis (2-5 LLM calls). Source: {MEETING_NOTES_SOURCE_URL}'
 parameters = {
     'type': 'object',
     'properties': {

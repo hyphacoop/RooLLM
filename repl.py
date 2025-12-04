@@ -5,6 +5,7 @@ import asyncio
 import json
 import base64
 import logging
+import argparse
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
@@ -313,22 +314,37 @@ async def main():
     """Main REPL loop for the RooLLM chat interface."""
     global user
     history = []
-    
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='RooLLM Chat Interface')
+    parser.add_argument('prompt', nargs='*', help='Direct prompt to send (if provided, runs in non-interactive mode)')
+    parser.add_argument('-o', '--output', type=str, help='Output file to write response to')
+    args = parser.parse_args()
+
     # Get session username
     try:
         user = getpass.getuser()
     except Exception:
         user = "localTester"
-    
+
     # Handle command line argument if provided
-    if len(sys.argv) > 1:
-        query = " ".join(sys.argv[1:])
+    if args.prompt:
+        query = " ".join(args.prompt)
         try:
+            # Reset tool call state for this request
+            reset_tool_call_state()
+
             await refresh_token_if_needed()
             response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
             content = response['content'].lstrip('\n')
 
-            render_output(content)
+            # Write to output file if specified
+            if args.output:
+                with open(args.output, 'w') as f:
+                    f.write(content)
+                print(f"{LIME}✓ Response written to {args.output}{RESET}")
+            else:
+                render_output(content)
         except Exception as e:
             logger.error(f"Error during chat: {e}")
             print(f"❌ Error: {str(e)}")

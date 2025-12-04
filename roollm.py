@@ -127,6 +127,20 @@ You can call multiple tools in sequence. After each tool call, analyze the resul
 - Do I need to call additional tools to fully address the user's request?
 - What's my next step to move toward completing the user's goal?
 
+Knowledge Base Search Strategy:
+
+When using the query tool to search knowledge bases:
+- Extract key concepts from user questions (nouns, verbs, domain terms)
+- Use specific searchable keywords, not conversational phrases
+- Try multiple search angles: synonyms, broader/narrower terms, related concepts
+- Reformulate queries based on what you find
+
+Examples:
+- User: "What's the policy on X?" → Search: "X policy", "X guidelines", "X procedures"
+- User: "Tell me about that" → Infer topic from context, use specific terms
+
+For complex questions, consider searching 2-3 times with different terms to ensure comprehensive coverage.
+
 Think out loud about your reasoning process. Explain what you're doing and why.
 
 Respond concisely and clearly.
