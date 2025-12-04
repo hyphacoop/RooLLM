@@ -208,7 +208,7 @@ class MCPLLMBridge:
         return final_response.get("message", {})
 
     async def _auto_call_rag_tool(self, content: str, messages: List[Dict], react_callback=None):
-        """Automatically call the RAG tool for every query."""
+        """Automatically call the RAG tool once with the user's query. LLM will decide follow-up queries."""
         try:
             # Get the query tool from registry
             query_tool = self.tool_registry.get_tool("query")
@@ -222,30 +222,30 @@ class MCPLLMBridge:
                 logger.debug("Minima adapter not found, skipping auto-RAG")
                 return
 
-            # Call the RAG tool with the user's query
+            # Call the RAG tool with the user's original query
             logger.debug(f"Auto-calling RAG tool with query: '{content}'")
-            
+
             # Indicate tool usage if callback provided
             if react_callback:
                 await react_callback(query_tool.emoji or "🧠")
 
             # Call the tool
             rag_result = await minima_adapter.call_tool("query", {"text": content})
-            
+
             # Add the RAG result to messages for context
             messages.append({
-                "role": "assistant", 
+                "role": "assistant",
                 "content": f"I'll search the knowledge base for information about: {content}"
             })
-            
+
             messages.append({
                 "role": "tool",
                 "tool_call_id": "auto_rag_call",
                 "content": json.dumps(rag_result)
             })
-            
+
             logger.debug(f"Auto-RAG completed, result: {str(rag_result)[:200]}...")
-            
+
         except Exception as e:
             logger.error(f"Error in auto-RAG call: {e}", exc_info=True)
             # Don't fail the whole process if auto-RAG fails

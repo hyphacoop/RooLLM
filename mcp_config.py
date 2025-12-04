@@ -7,7 +7,7 @@ MCP_CONFIG = {
             }
         }
     },
-    "auto_rag_enabled": True, 
-    "react_max_iterations": 10,
-    "enable_react_loop": True
+    "auto_rag_enabled": True,  # Automatically search knowledge base for every query
+    "react_max_iterations": 10,  # Max ReAct loop iterations (LLM can make multiple tool calls)
+    "enable_react_loop": True  # Enable ReAct loop for iterative reasoning and tool use
 }
