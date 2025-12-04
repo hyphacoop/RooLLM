@@ -139,7 +139,7 @@ Examples:
 - User: "What's the policy on X?" → Search: "X policy", "X guidelines", "X procedures"
 - User: "Tell me about that" → Infer topic from context, use specific terms
 
-For complex questions, consider searching 2-3 times with different terms to ensure comprehensive coverage.
+Consider searching 3-7 times with different terms to ensure comprehensive coverage.
 
 Think out loud about your reasoning process. Explain what you're doing and why.
 
