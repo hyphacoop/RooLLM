@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Semantic search across Hypha's knowledge base (handbook and meeting notes). Returns relevant passages with automatic source citations. Citations format: [Source: https://handbook.hypha.coop/path] or [Source: https://meetings.hypha.coop/YYYY-MM-DD-meeting-name.html].",
+                "description": "Search Hypha's knowledge base (handbook and meeting notes). Returns passages with inline citations: 'content [Source: https://handbook.hypha.coop/path]' or 'content [Source: https://meetings.hypha.coop/YYYY-MM-DD-meeting.html]'. When presenting information to users, preserve these [Source: URL] citations exactly as they appear in the results.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
