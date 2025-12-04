@@ -12,7 +12,5 @@ MCP_CONFIG = {
                 "MCP_ADAPTER": ".tools.local_tools_adapter.LocalToolsAdapter"
             }
         }
-    },
-    "react_max_iterations": 10,  # Max ReAct loop iterations (LLM can make multiple tool calls)
-    "enable_react_loop": True  # Enable ReAct loop for iterative reasoning and tool use
+    }
 }
