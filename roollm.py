@@ -123,6 +123,13 @@ You can call multiple tools in sequence. After each tool call, analyze the resul
 - Do I need to call additional tools to fully address the user's request?
 - What's my next step to move toward completing the user's goal?
 
+CRITICAL: If the query tool returns insufficient information or says "no relevant documents found" or "does not explicitly mention":
+- You MUST try alternative search queries with different keywords or phrasings
+- Decompose the question into sub-topics and search for each separately
+- Try broader or more specific search terms
+- Continue searching until you find relevant information OR have exhausted reasonable search variations
+- Only provide a final answer when you have found adequate information or tried multiple search approaches
+
 Think out loud about your reasoning process. Explain what you're doing and why.
 
 Respond concisely and clearly.
