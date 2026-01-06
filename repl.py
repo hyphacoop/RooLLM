@@ -397,25 +397,65 @@ async def main():
 
             # Handle tools command
             if query.lower() == '/tools':
-                print(f"\n{BOLD}{CYAN}Available Tools:{RESET}")
-                for emoji, tool_info in emojiToolMap.items():
-                    tool_name = tool_info.split(":")[0].strip("`")
-                    print(f"{BOLD}{YELLOW}{emoji}\t→ {tool_name}{RESET}")
-                print(f"\n{LIME}Use /details :emoji: to see more information about a specific tool{RESET}\n")
+                print(f"\n{BOLD}{CYAN}Available Tools ({len(roo.bridge.tool_registry.all_tools())} total):{RESET}")
+                
+                # Group tools by adapter
+                tools_by_adapter = {}
+                for tool in roo.bridge.tool_registry.all_tools():
+                    adapter = tool.adapter_name or "unknown"
+                    if adapter not in tools_by_adapter:
+                        tools_by_adapter[adapter] = []
+                    tools_by_adapter[adapter].append(tool)
+                
+                # Display tools grouped by adapter
+                for adapter in sorted(tools_by_adapter.keys()):
+                    tools = tools_by_adapter[adapter]
+                    print(f"\n{BOLD}{LIME}[{adapter}]{RESET} ({len(tools)} tools)")
+                    for tool in sorted(tools, key=lambda t: t.name):
+                        # Get emoji from emojiToolMap if available
+                        emoji = "🔧"
+                        for e, info in emojiToolMap.items():
+                            if tool.name in info:
+                                emoji = e
+                                break
+                        desc = tool.description[:60] + "..." if len(tool.description) > 60 else tool.description
+                        print(f"  {emoji} {YELLOW}{tool.name}{RESET}: {desc}")
+                
+                print(f"\n{LIME}Use /details <tool_name> to see more information about a specific tool{RESET}\n")
                 continue
 
             # Handle details command
             if query.startswith('/details '):
-                emoji = query[9:].strip()
-                if emoji in emojiToolMap:
-                    tool_info = emojiToolMap[emoji]
+                tool_query = query[9:].strip()
+                # First try to find by emoji
+                if tool_query in emojiToolMap:
+                    tool_info = emojiToolMap[tool_query]
                     tool_name = tool_info.split(":")[0].strip("`")
-                    tool_desc = tool_info.split(":")[1].strip()
+                    tool_desc = tool_info.split(":")[1].strip() if ":" in tool_info else ""
                     print(f"\n{BOLD}{CYAN}Tool Details:{RESET}")
-                    print(f"{BOLD}{YELLOW}{emoji} {tool_name}{RESET}")
+                    print(f"{BOLD}{YELLOW}{tool_query} {tool_name}{RESET}")
                     print(f"{LIME}└─ {tool_desc}{RESET}\n")
                 else:
-                    print(f"{YELLOW}Tool with emoji {emoji} not found. Use /tools to see available tools{RESET}\n")
+                    # Try to find by tool name in registry
+                    found_tool = None
+                    for tool in roo.bridge.tool_registry.all_tools():
+                        if tool.name.lower() == tool_query.lower():
+                            found_tool = tool
+                            break
+                    
+                    if found_tool:
+                        print(f"\n{BOLD}{CYAN}Tool Details:{RESET}")
+                        print(f"{BOLD}{YELLOW}{found_tool.name}{RESET} ({found_tool.adapter_name})")
+                        print(f"{LIME}└─ {found_tool.description}{RESET}")
+                        if found_tool.input_schema and found_tool.input_schema.get('properties'):
+                            print(f"\n{BOLD}Parameters:{RESET}")
+                            for param, info in found_tool.input_schema.get('properties', {}).items():
+                                required = param in found_tool.input_schema.get('required', [])
+                                req_marker = "*" if required else ""
+                                print(f"  • {param}{req_marker}: {info.get('description', info.get('type', 'unknown'))[:50]}")
+                        print()
+                    else:
+                        print(f"{YELLOW}Tool '{tool_query}' not found. Use /tools to see available tools{RESET}\n")
                 continue
 
             # Handle models command
