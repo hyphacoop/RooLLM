@@ -19,9 +19,21 @@ class MCPClient:
         self.proc = None
         self.stdin = None
         self.stdout = None
+        self._connected_loop = None  # Track which loop we connected in
+        self._cached_tools = None  # Cache tools list to avoid re-fetching after reconnect
 
     async def connect(self):
         """Connect to the MCP server by spawning it as a subprocess."""
+        # Kill any existing process (without awaiting - it may be on a different loop)
+        if self.proc:
+            try:
+                self.proc.kill()
+            except (ProcessLookupError, OSError):
+                pass  # Process already gone
+            self.proc = None
+            self.stdin = None
+            self.stdout = None
+            
         self.proc = await asyncio.create_subprocess_exec(
             self.command, *self.args,
             stdin=asyncio.subprocess.PIPE,
@@ -31,10 +43,20 @@ class MCPClient:
         )
         self.stdin = self.proc.stdin
         self.stdout = self.proc.stdout
+        self._connected_loop = asyncio.get_running_loop()
 
+    async def _ensure_connection(self):
+        """Ensure we're connected to the correct event loop."""
+        current_loop = asyncio.get_running_loop()
+        if self._connected_loop is not current_loop or self.proc is None:
+            # Reconnect in the current loop
+            await self.connect()
 
     async def _rpc(self, method: str, params: Dict[str, Any]) -> Any:
         """Send a JSON-RPC request and wait for the response."""
+        # Ensure we're connected in the current event loop
+        await self._ensure_connection()
+        
         msg_id = str(uuid.uuid4())
         request = {
             "jsonrpc": "2.0",
@@ -69,7 +91,7 @@ class MCPClient:
     async def list_tools(self) -> List[Tool]:
         """Get the list of available tools from the MCP server."""
         result = await self._rpc("tools/list", {})
-        return [
+        tools = [
             Tool(
                 name=tool_def["name"],
                 description=tool_def.get("description", ""),
@@ -78,19 +100,25 @@ class MCPClient:
             )
             for tool_def in result.get("tools", [])
         ]
+        self._cached_tools = tools
+        return tools
 
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
         """Call a specific tool with the given arguments."""
         return await self._rpc("tools/call", {
-            "tool": tool_name,
+            "name": tool_name,
             "arguments": arguments
         })
 
     async def close(self):
         """Close the connection to the MCP server."""
         if self.proc:
-            self.proc.terminate()
-            await self.proc.wait()
+            try:
+                self.proc.terminate()
+                await self.proc.wait()
+            except ProcessLookupError:
+                pass  # Process already gone
             self.proc = None
             self.stdin = None
             self.stdout = None
+            self._connected_loop = None

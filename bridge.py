@@ -81,12 +81,25 @@ class MCPLLMBridge:
                     # Connect to the adapter
                     await adapter.connect()
                     
-                    # Get and register tools
+            # Get and register tools
                     tools = await adapter.list_tools()
-                    for tool_dict in tools:
-                        # Wrap tool dict into Tool object expected by the registry
-                        tool_obj = Tool.from_dict(tool_dict, adapter_name=name)
+                    for tool_item in tools:
+                        # Handle both Tool objects (from MCPClient) and dict objects (from inline adapters)
+                        if isinstance(tool_item, Tool):
+                            tool_obj = tool_item
+                            # Ensure adapter_name is set
+                            if not tool_obj.adapter_name:
+                                tool_obj.adapter_name = name
+                        else:
+                            # Wrap tool dict into Tool object expected by the registry
+                            tool_obj = Tool.from_dict(tool_item, adapter_name=name)
                         self.tool_registry.register_tool(tool_obj)
+                    
+                    # For subprocess-based adapters (MCPClient), close the connection after
+                    # getting tools. This prevents "event loop is closed" warnings when the
+                    # init loop ends. The client will reconnect lazily when tools are called.
+                    if hasattr(adapter, 'close') and hasattr(adapter, '_connected_loop'):
+                        await adapter.close()
                         
                     # Store the adapter for later use
                     self.mcp_clients[name] = adapter
