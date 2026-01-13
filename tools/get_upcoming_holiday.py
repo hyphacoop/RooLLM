@@ -38,18 +38,32 @@ parameters = {
 
 # Define statutory holidays
 STATUTORY_HOLIDAYS = [
-    {"name": "New Year's Day", "date": datetime.date(2025, 1, 1)},
-    {"name": "Family Day", "date": datetime.date(2025, 2, 17)},
-    {"name": "Good Friday", "date": datetime.date(2025, 4, 18)},
-    {"name": "May Day (International Workers' Day)", "date": datetime.date(2025, 5, 1)},
-    {"name": "Victoria Day", "date": datetime.date(2025, 5, 19)},
-    {"name": "Canada Day", "date": datetime.date(2025, 7, 1)},
-    {"name": "Civic Holiday", "date": datetime.date(2025, 8, 4)},
-    {"name": "Labour Day", "date": datetime.date(2025, 9, 1)},
-    {"name": "Thanksgiving", "date": datetime.date(2025, 10, 13)},
-    {"name": "Remembrance Day", "date": datetime.date(2025, 11, 11)},
-    {"name": "Christmas Day", "date": datetime.date(2025, 12, 25)},
-    {"name": "Boxing Day", "date": datetime.date(2025, 12, 26)},
+    # 2026
+    {"name": "New Year's Day", "date": datetime.date(2026, 1, 1)},
+    {"name": "Family Day", "date": datetime.date(2026, 2, 16)},
+    {"name": "Good Friday", "date": datetime.date(2026, 4, 3)},
+    {"name": "May Day (International Workers' Day)", "date": datetime.date(2026, 5, 1)},
+    {"name": "Victoria Day", "date": datetime.date(2026, 5, 18)},
+    {"name": "Canada Day", "date": datetime.date(2026, 7, 1)},
+    {"name": "Civic Holiday", "date": datetime.date(2026, 8, 3)},
+    {"name": "Labour Day", "date": datetime.date(2026, 9, 7)},
+    {"name": "Thanksgiving", "date": datetime.date(2026, 10, 12)},
+    {"name": "Remembrance Day", "date": datetime.date(2026, 11, 11)},
+    {"name": "Christmas Day", "date": datetime.date(2026, 12, 25)},
+    {"name": "Boxing Day", "date": datetime.date(2026, 12, 28)},  # Observed Monday
+    # 2027
+    {"name": "New Year's Day", "date": datetime.date(2027, 1, 1)},
+    {"name": "Family Day", "date": datetime.date(2027, 2, 15)},
+    {"name": "Good Friday", "date": datetime.date(2027, 3, 29)},
+    {"name": "May Day (International Workers' Day)", "date": datetime.date(2027, 5, 1)},
+    {"name": "Victoria Day", "date": datetime.date(2027, 5, 24)},
+    {"name": "Canada Day", "date": datetime.date(2027, 7, 1)},
+    {"name": "Civic Holiday", "date": datetime.date(2027, 8, 2)},
+    {"name": "Labour Day", "date": datetime.date(2027, 9, 6)},
+    {"name": "Thanksgiving", "date": datetime.date(2027, 10, 11)},
+    {"name": "Remembrance Day", "date": datetime.date(2027, 11, 11)},
+    {"name": "Christmas Day", "date": datetime.date(2027, 12, 27)},  # Observed Monday (25th is Saturday)
+    {"name": "Boxing Day", "date": datetime.date(2027, 12, 28)},
 ]
 
 # Function to find the next holiday
@@ -151,22 +165,22 @@ async def tool(roo, arguments, user):
             {
                 "name": holiday["name"],
                 "date": holiday["date"].strftime("%Y-%m-%d"),
-                "formatted_date": holiday["date"].strftime("%B %d, %Y")
+                "formatted_date": holiday["date"].strftime("%B %d, %Y"),
+                "is_friday": holiday["date"].weekday() == 4  # Friday is weekday 4
             }
             for holiday in upcoming_holidays
         ]
         
-        # If fewer holidays are found than requested, adjust the response
-        message = None
-        if len(upcoming_holidays) < limit and limit > 1:
-            message = f"Found {len(upcoming_holidays)} statutory holidays at Hypha in the given date range."
+        # Check if any holiday falls on a Friday (off-day for 4-day work week)
+        any_friday = any(h["is_friday"] for h in holidays_formatted)
+        friday_note = "\n\nNote: If a public holiday lands on a member's off-day under a four-day work week, the member should take one of the work days off as a make-up holiday." if any_friday else ""
         
         # Format the response based on the number of holidays found
         if len(upcoming_holidays) == 1:
             holiday = holidays_formatted[0]
             return {
                 "holidays": holidays_formatted,
-                "message": f"The next statutory holiday at Hypha is {holiday['name']} on {holiday['formatted_date']}."
+                "message": f"The next statutory holiday at Hypha is {holiday['name']} on {holiday['formatted_date']}.{friday_note}"
             }
         else:
             # Format multiple holidays in a list
@@ -174,7 +188,7 @@ async def tool(roo, arguments, user):
             return {
                 "holidays": holidays_formatted,
                 "count": len(holidays_formatted),
-                "message": f"Here are the upcoming statutory holidays at Hypha:\n{holiday_list}"
+                "message": f"Here are the upcoming statutory holidays at Hypha:\n{holiday_list}{friday_note}"
             }
             
     except Exception as e:
