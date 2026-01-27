@@ -317,7 +317,7 @@ async def list_tools():
 
 async def refresh_token_if_needed():
     """Check if GitHub token needs refresh and update it"""
-    if "gh_auth_object" in config:
+    if config.get("gh_auth_object"):
         auth = config["gh_auth_object"]
         # Get a fresh token (will use cached token if still valid)
         fresh_token = auth.get_token()
