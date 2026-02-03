@@ -229,6 +229,7 @@ summary {
     font-family: "PT Serif";
     cursor: pointer;
     font-size: 18px;
+    text-decoration: none;
 }
 
 #history-button:hover,
