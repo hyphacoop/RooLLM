@@ -432,6 +432,9 @@ function createThinkingSection(thinkingContent) {
 // Add event listeners for the new buttons
 document.getElementById("history-button").addEventListener("click", showSessionHistory);
 document.getElementById("new-session-button").addEventListener("click", createNewSession);
+document.getElementById("browse-files-button").addEventListener("click", () => {
+    window.open("/dufs/", "_blank");
+});
 
 // Function to show session history
 async function showSessionHistory() {

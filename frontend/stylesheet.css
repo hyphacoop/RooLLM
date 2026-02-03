@@ -220,7 +220,8 @@ summary {
 }
 
 #history-button,
-#new-session-button {
+#new-session-button,
+#browse-files-button {
     background: #000;
     color: #eee;
     border: 1px dotted transparent;
@@ -231,13 +232,15 @@ summary {
 }
 
 #history-button:hover,
-#new-session-button:hover {
+#new-session-button:hover,
+#browse-files-button:hover {
     border-style: ridge;
     border-color: #666666;
 }
 
 #history-button:active,
-#new-session-button:active {
+#new-session-button:active,
+#browse-files-button:active {
     border-style: inset;
     border-color: #999999;
 }
