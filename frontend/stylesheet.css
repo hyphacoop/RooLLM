@@ -211,16 +211,31 @@ summary {
     max-width: 69vw;
   }
 }
+#files-container {
+    width: 100%;
+    height: calc(100vh - 100px); /* Adjust based on header/controls height */
+    margin-top: 60px; /* Space for controls */
+    border: 1px solid #333;
+}
+
+#files-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 #session-controls {
     position: fixed;
     top: 20px;
     left: 20px;
     display: flex;
     gap: 10px;
+    z-index: 100; /* Ensure controls are above other content */
 }
 
 #history-button,
-#new-session-button {
+#new-session-button,
+#files-button {
     background: #000;
     color: #eee;
     border: 1px dotted transparent;
