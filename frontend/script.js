@@ -448,7 +448,7 @@ function toggleFileView() {
         // Ensure iframe src is set (if not already acting as a safeguard or if it helps with refreshing)
         const frame = document.getElementById("files-frame");
         if (!frame.src || frame.src === "about:blank") {
-            frame.src = "/dufs";
+            frame.src = "/dufs/";
         }
     } else {
         // Show chat, hide files
