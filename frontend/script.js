@@ -434,79 +434,61 @@ document.getElementById("history-button").addEventListener("click", showSessionH
 document.getElementById("new-session-button").addEventListener("click", createNewSession);
 document.getElementById("files-button").addEventListener("click", toggleFileView);
 
-function ensureChatView() {
-    const filesContainer = document.getElementById("files-container");
-    const chatContainer = document.getElementById("chat-container");
-    const filesButton = document.getElementById("files-button");
-    filesContainer.classList.add("hidden");
-    chatContainer.classList.remove("hidden");
-    filesButton.textContent = "Files";
+function showView(view) {
+    const views = {
+        chat: document.getElementById("chat-container"),
+        files: document.getElementById("files-container"),
+        history: document.getElementById("history-container"),
+    };
+    for (const [name, el] of Object.entries(views)) {
+        el.classList.toggle("hidden", name !== view);
+    }
+    document.getElementById("files-button").textContent =
+        view === "files" ? "Chat" : "Files";
 }
 
 function toggleFileView() {
     const filesContainer = document.getElementById("files-container");
-    const chatContainer = document.getElementById("chat-container");
-    const filesButton = document.getElementById("files-button");
-
     if (filesContainer.classList.contains("hidden")) {
-        // Show files, hide chat
-        filesContainer.classList.remove("hidden");
-        chatContainer.classList.add("hidden");
-        filesButton.textContent = "Chat";
-
-        // Ensure iframe src is set (if not already acting as a safeguard or if it helps with refreshing)
+        showView("files");
         const frame = document.getElementById("files-frame");
         if (!frame.src || frame.src === "about:blank") {
             frame.src = "/dufs/";
         }
     } else {
-        // Show chat, hide files
-        filesContainer.classList.add("hidden");
-        chatContainer.classList.remove("hidden");
-        filesButton.textContent = "Files";
+        showView("chat");
     }
 }
 
 // Function to show session history
 async function showSessionHistory() {
-    ensureChatView();
+    showView("history");
+    const container = document.getElementById("history-container");
+    container.innerHTML = "<p>Loading sessions...</p>";
     try {
         const response = await fetch(`/sessions`);
         if (response.ok) {
             const data = await response.json();
-            const sessions = data.sessions;  // Get the sessions array from the response
+            const sessions = data.sessions;
 
-            // Clear existing chat
-            const chatDiv = document.getElementById("chat");
-            chatDiv.innerHTML = '';
-
-            // Display sessions as messages
-            addMessage("Session History:", "assistant");
+            container.innerHTML = "<h3>Session History</h3>";
             sessions.forEach(session => {
-                const sessionInfo = `Initial prompt: ${session.initial_prompt}\nSession ID: ${session.id}\nCreated: ${new Date(session.created_at).toLocaleString()}`;
-                addMessage(sessionInfo, "assistant");
-            });
-
-            // Add a note about clicking session IDs
-            addMessage("Click a session to load it", "assistant");
-
-            // Make session messages clickable
-            document.querySelectorAll('.assistant').forEach(div => {
-                if (div.textContent.includes('Session ID:')) {
-                    const sessionId = div.textContent.split('Session ID: ')[1].split('\n')[0];
-                    div.style.cursor = 'pointer';
-                    div.addEventListener('click', () => loadSession(sessionId));
-                }
+                const div = document.createElement("div");
+                div.style.cssText = "padding:8px;margin:4px 0;border:1px solid #444;border-radius:4px;cursor:pointer;";
+                div.textContent = `${session.initial_prompt} — ${new Date(session.created_at).toLocaleString()}`;
+                div.addEventListener("click", () => loadSession(session.id));
+                container.appendChild(div);
             });
         }
     } catch (error) {
         console.error("Error fetching session history:", error);
-        addMessage("Error loading session history", "assistant");
+        container.innerHTML = "<p>Error loading session history</p>";
     }
 }
 
 // Function to load a specific session
 async function loadSession(sessionId) {
+    showView("chat");
     window.sessionId = sessionId;
 
     // Update URL with new session ID
@@ -524,7 +506,7 @@ async function loadSession(sessionId) {
 
 // Function to create a new session
 async function createNewSession() {
-    ensureChatView();
+    showView("chat");
     // Get the latest summary from the current session if it exists
     let latestSummary = "New session - no messages yet";
     if (window.sessionId) {

@@ -213,9 +213,16 @@ summary {
 }
 #files-container {
     width: 100%;
-    height: calc(100vh - 100px); /* Adjust based on header/controls height */
-    margin-top: 60px; /* Space for controls */
+    height: calc(100vh - 100px);
+    margin-top: 60px;
     border: 1px solid #333;
+}
+
+#history-container {
+    width: 100%;
+    margin-top: 60px;
+    padding: 20px;
+    color: #eee;
 }
 
 #files-frame {
