@@ -434,6 +434,15 @@ document.getElementById("history-button").addEventListener("click", showSessionH
 document.getElementById("new-session-button").addEventListener("click", createNewSession);
 document.getElementById("files-button").addEventListener("click", toggleFileView);
 
+function ensureChatView() {
+    const filesContainer = document.getElementById("files-container");
+    const chatContainer = document.getElementById("chat-container");
+    const filesButton = document.getElementById("files-button");
+    filesContainer.classList.add("hidden");
+    chatContainer.classList.remove("hidden");
+    filesButton.textContent = "Files";
+}
+
 function toggleFileView() {
     const filesContainer = document.getElementById("files-container");
     const chatContainer = document.getElementById("chat-container");
@@ -460,6 +469,7 @@ function toggleFileView() {
 
 // Function to show session history
 async function showSessionHistory() {
+    ensureChatView();
     try {
         const response = await fetch(`/sessions`);
         if (response.ok) {
@@ -514,6 +524,7 @@ async function loadSession(sessionId) {
 
 // Function to create a new session
 async function createNewSession() {
+    ensureChatView();
     // Get the latest summary from the current session if it exists
     let latestSummary = "New session - no messages yet";
     if (window.sessionId) {
