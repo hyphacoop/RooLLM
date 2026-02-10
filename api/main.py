@@ -144,6 +144,12 @@ class MinimaQueryRequest(BaseModel):
     query: str
     session_id: str
 
+def get_minima_adapter():
+    """Get the minima adapter from the bridge if available."""
+    if not roo.bridge.initialized:
+        return None
+    return roo.bridge.mcp_clients.get("minima")
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     # Create session metadata if it doesn't exist
@@ -201,15 +207,16 @@ async def chat(request: ChatRequest):
 @app.post("/minima/query")
 async def minima_query(request: MinimaQueryRequest):
     logger.debug(f"Received Minima query request: {request.query}")
-    
-    if not roo.is_minima_connected():
+
+    adapter = get_minima_adapter()
+    if not adapter or not adapter.is_connected():
         logger.error("Minima not connected")
         return {"status": "error", "message": "Not connected to Minima server"}
-    
+
     try:
         logger.debug("Calling Minima tool with query")
         start_time = time.time()
-        result = await roo.minima_adapter.call_tool("query", {"text": request.query})
+        result = await adapter.call_tool("query", {"text": request.query})
         end_time = time.time()
         logger.debug(f"Minima query completed in {end_time - start_time:.2f} seconds")
         logger.debug(f"Minima query result: {result}")
@@ -220,17 +227,23 @@ async def minima_query(request: MinimaQueryRequest):
 
 @app.get("/minima/status")
 async def minima_status():
+    adapter = get_minima_adapter()
+    connected = adapter.is_connected() if adapter else False
+    tools = list(adapter.tools.values()) if connected else []
     return {
         "status": "ok",
-        "connected": roo.is_minima_connected(),
-        "tools_count": len(roo.minima_tools) if roo.is_minima_connected() else 0,
-        "tools": [tool["function"]["name"] for tool in roo.minima_tools] if roo.is_minima_connected() else []
+        "connected": connected,
+        "tools_count": len(tools),
+        "tools": [tool.get("name") for tool in tools]
     }
 
 @app.get("/minima/connect")
 async def connect_minima():
+    adapter = get_minima_adapter()
+    if not adapter:
+        return {"status": "error", "message": "Minima adapter not configured"}
     try:
-        if await roo.connect_to_minima():
+        if await adapter.connect(force=True):
             return {"status": "ok", "message": "Connected to Minima server"}
         else:
             return {"status": "error", "message": "Could not connect to Minima server"}
@@ -317,7 +330,7 @@ async def list_tools():
 
 async def refresh_token_if_needed():
     """Check if GitHub token needs refresh and update it"""
-    if "gh_auth_object" in config:
+    if config.get("gh_auth_object"):
         auth = config["gh_auth_object"]
         # Get a fresh token (will use cached token if still valid)
         fresh_token = auth.get_token()

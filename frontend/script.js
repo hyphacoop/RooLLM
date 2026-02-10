@@ -140,7 +140,7 @@ async function loadChatHistory(sessionId) {
     console.log("Backend port:", window.backendPort);
     console.log("Backend host:", window.backendHost);
     try {
-        const response = await fetch(`http://${window.backendHost}:${window.backendPort}/chat-history?session_id=${sessionId}`);
+        const response = await fetch(`/chat-history?session_id=${sessionId}`);
         if (response.ok) {
 
             const result = await response.json();
@@ -226,7 +226,7 @@ async function sendMessage() {
     headers.append('Content-Type', 'application/json');
 
     try {
-        const response = await fetch(`http://${window.backendHost}:${window.backendPort}/chat`, {
+        const response = await fetch(`/chat`, {
             method: "POST",
             headers: headers,
             body: JSON.stringify({
@@ -461,7 +461,7 @@ function toggleFileView() {
 // Function to show session history
 async function showSessionHistory() {
     try {
-        const response = await fetch(`http://${window.backendHost}:${window.backendPort}/sessions`);
+        const response = await fetch(`/sessions`);
         if (response.ok) {
             const data = await response.json();
             const sessions = data.sessions;  // Get the sessions array from the response
@@ -518,7 +518,7 @@ async function createNewSession() {
     let latestSummary = "New session - no messages yet";
     if (window.sessionId) {
         try {
-            const response = await fetch(`http://${window.backendHost}:${window.backendPort}/sessions/${window.sessionId}/summary`);
+            const response = await fetch(`/sessions/${window.sessionId}/summary`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.status === "ok") {

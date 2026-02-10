@@ -243,16 +243,19 @@ summary {
     font-family: "PT Serif";
     cursor: pointer;
     font-size: 18px;
+    text-decoration: none;
 }
 
 #history-button:hover,
-#new-session-button:hover {
+#new-session-button:hover,
+#browse-files-button:hover {
     border-style: ridge;
     border-color: #666666;
 }
 
 #history-button:active,
-#new-session-button:active {
+#new-session-button:active,
+#browse-files-button:active {
     border-style: inset;
     border-color: #999999;
 }
