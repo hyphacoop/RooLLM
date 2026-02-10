@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,11 +9,15 @@
     <script src="marked.js"></script>
 
 </head>
+
 <body>
     <div id="session-controls">
         <button id="history-button">History</button>
         <button id="new-session-button">New Session</button>
-        <a id="browse-files-button" href="/dufs/" target="_blank" rel="noopener noreferrer">Browse Files</a>
+        <button id="files-button">Files</button>
+    </div>
+    <div id="files-container" class="hidden">
+        <iframe id="files-frame" src="/dufs"></iframe>
     </div>
     <div id="chat-container">
         <div id="chat"></div>
@@ -23,4 +28,5 @@
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>

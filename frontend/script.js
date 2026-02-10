@@ -11,7 +11,7 @@ async function loadToolConstants() {
         if (response.ok) {
             const data = await response.json();
             const toolMap = data.emojiToolMap;
-            
+
             // Convert to frontend format
             emojiToolMap = {};
             for (const [emoji, info] of Object.entries(toolMap)) {
@@ -55,7 +55,7 @@ async function loadToolConstants() {
         console.log("Using fallback tool constants");
     }
 }
- 
+
 // Load configuration (backend port, host and tool constants)
 async function loadConfig() {
     // Load tool constants first
@@ -129,7 +129,7 @@ let chatHistory = [];
 
 // Function to generate a UUID
 function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
@@ -142,9 +142,9 @@ async function loadChatHistory(sessionId) {
     try {
         const response = await fetch(`/chat-history?session_id=${sessionId}`);
         if (response.ok) {
-            
+
             const result = await response.json();
-            
+
             console.log("Chat history response:", result);
             if (result.status === "ok" && Array.isArray(result.history)) {
                 chatHistory = result.history; // Update the global chatHistory variable
@@ -165,11 +165,11 @@ async function loadChatHistory(sessionId) {
 }
 
 document.getElementById("submit-button").addEventListener("click", sendMessage);
-document.getElementById("text-input").addEventListener("keypress", function(event) {
+document.getElementById("text-input").addEventListener("keypress", function (event) {
     if (event.key === "Enter") sendMessage();
 });
 
-document.getElementById("text-input").addEventListener("input", function() {
+document.getElementById("text-input").addEventListener("input", function () {
     this.style.height = "auto"; // Reset height
     this.style.height = (this.scrollHeight) + "px"; // Expand to fit content
 });
@@ -265,7 +265,7 @@ async function sendMessage() {
                     if (data.type === "emoji") {
                         const emojiSpan = document.createElement("span");
                         emojiSpan.textContent = data.emoji;
-                        emojiSpan.addEventListener("click", function(event) {
+                        emojiSpan.addEventListener("click", function (event) {
                             showEmojiPopup(event, data.emoji);
                         });
                         emojiDiv.appendChild(emojiSpan);
@@ -282,12 +282,12 @@ async function sendMessage() {
         if (fullReply) {
             // Clear the loading indicator
             loadingDiv.style.display = "none";
-            
+
             addMessage(fullReply, "assistant");
-            
+
             // Stop loading animation
             clearInterval(loadingInterval);
-            
+
             chatHistory.push({ role: "assistant", content: fullReply });
         }
 
@@ -305,51 +305,51 @@ async function sendMessage() {
 // Function to show emoji popup with markdown rendering
 function showEmojiPopup(event, emoji) {
     const clickedEmoji = event.target;
-    
+
     // Check if there's already a popup for this emoji
     const existingPopups = document.querySelectorAll('.emoji-popup');
     existingPopups.forEach(popup => {
         // If clicking the same emoji that has an active popup, remove it (toggle off)
         popup.remove();
     });
-    
+
     // If we just removed a popup for this emoji, don't create a new one
     if (clickedEmoji.dataset.hasPopup === "true") {
         clickedEmoji.dataset.hasPopup = "false";
         return;
     }
-    
+
     // Create popup element
     const popup = document.createElement('div');
     popup.classList.add('emoji-popup');
-    
-     // Get tool description from map and render as markdown
-     const toolDescription = emojiToolMap[emoji] || "Unknown tool";
-     popup.innerHTML = marked.parse(toolDescription, { sanitize: false });
-     
-     // Position popup near the emoji
-     document.body.appendChild(popup);
-     const rect = clickedEmoji.getBoundingClientRect();
-     popup.style.left = `${rect.left}px`;
-     popup.style.top = `${rect.bottom + 5}px`;
-     
-     // Mark this emoji as having a popup
-     clickedEmoji.dataset.hasPopup = "true";
-     
-     // Close popup when clicking elsewhere
-     document.addEventListener('click', function closePopup(e) {
-         if (e.target !== clickedEmoji) {
-             popup.remove();
-             clickedEmoji.dataset.hasPopup = "false";
-             document.removeEventListener('click', closePopup);
-         }
-     });
- }
- 
+
+    // Get tool description from map and render as markdown
+    const toolDescription = emojiToolMap[emoji] || "Unknown tool";
+    popup.innerHTML = marked.parse(toolDescription, { sanitize: false });
+
+    // Position popup near the emoji
+    document.body.appendChild(popup);
+    const rect = clickedEmoji.getBoundingClientRect();
+    popup.style.left = `${rect.left}px`;
+    popup.style.top = `${rect.bottom + 5}px`;
+
+    // Mark this emoji as having a popup
+    clickedEmoji.dataset.hasPopup = "true";
+
+    // Close popup when clicking elsewhere
+    document.addEventListener('click', function closePopup(e) {
+        if (e.target !== clickedEmoji) {
+            popup.remove();
+            clickedEmoji.dataset.hasPopup = "false";
+            document.removeEventListener('click', closePopup);
+        }
+    });
+}
+
 function addMessage(text, type) {
     const chat = document.getElementById("chat");
     const messageDiv = document.createElement("div");
-    
+
     const userCharacter = document.createElement("span")
     userCharacter.textContent = "> ";
     userCharacter.classList.add("mr1");
@@ -358,13 +358,13 @@ function addMessage(text, type) {
     // Handle <think> tags for assistant messages
     if (type === "assistant") {
         const { mainContent, thinkingContent } = extractThinkingContent(text);
-        
+
         // Add thinking section first if thinking content exists
         if (thinkingContent) {
             const thinkingSection = createThinkingSection(thinkingContent);
             messageDiv.appendChild(thinkingSection);
         }
-        
+
         // Add main content (without thinking tags)
         const message = document.createElement("span");
         // Configure marked to preserve HTML tags
@@ -389,21 +389,21 @@ function extractThinkingContent(text) {
     const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
     let thinkingContent = '';
     let mainContent = text;
-    
+
     // Find all thinking blocks
     let match;
     const thinkingBlocks = [];
     while ((match = thinkRegex.exec(text)) !== null) {
         thinkingBlocks.push(match[1].trim());
     }
-    
+
     if (thinkingBlocks.length > 0) {
         // Remove <think> tags from main content
         mainContent = text.replace(thinkRegex, '').trim();
         // Combine all thinking blocks
         thinkingContent = thinkingBlocks.join('\n\n---\n\n');
     }
-    
+
     return { mainContent, thinkingContent };
 }
 
@@ -411,27 +411,52 @@ function createThinkingSection(thinkingContent) {
     // Create a details element for native expandable functionality
     const details = document.createElement("details");
     details.classList.add("thinking-details");
-    
+
     // Create summary element
     const summary = document.createElement("summary");
     summary.textContent = "Thinking process";
     summary.classList.add("thinking-summary");
-    
+
     // Create thinking content div
     const thinkingContentDiv = document.createElement("div");
     thinkingContentDiv.classList.add("thinking-content");
     thinkingContentDiv.innerHTML = marked.parse(thinkingContent, { sanitize: false });
-    
+
     // Assemble the details element
     details.appendChild(summary);
     details.appendChild(thinkingContentDiv);
-    
+
     return details;
 }
 
 // Add event listeners for the new buttons
 document.getElementById("history-button").addEventListener("click", showSessionHistory);
 document.getElementById("new-session-button").addEventListener("click", createNewSession);
+document.getElementById("files-button").addEventListener("click", toggleFileView);
+
+function toggleFileView() {
+    const filesContainer = document.getElementById("files-container");
+    const chatContainer = document.getElementById("chat-container");
+    const filesButton = document.getElementById("files-button");
+
+    if (filesContainer.classList.contains("hidden")) {
+        // Show files, hide chat
+        filesContainer.classList.remove("hidden");
+        chatContainer.classList.add("hidden");
+        filesButton.textContent = "Chat";
+
+        // Ensure iframe src is set (if not already acting as a safeguard or if it helps with refreshing)
+        const frame = document.getElementById("files-frame");
+        if (!frame.src || frame.src === "about:blank") {
+            frame.src = "/dufs/";
+        }
+    } else {
+        // Show chat, hide files
+        filesContainer.classList.add("hidden");
+        chatContainer.classList.remove("hidden");
+        filesButton.textContent = "Files";
+    }
+}
 
 // Function to show session history
 async function showSessionHistory() {
@@ -440,21 +465,21 @@ async function showSessionHistory() {
         if (response.ok) {
             const data = await response.json();
             const sessions = data.sessions;  // Get the sessions array from the response
-            
+
             // Clear existing chat
             const chatDiv = document.getElementById("chat");
             chatDiv.innerHTML = '';
-            
+
             // Display sessions as messages
             addMessage("Session History:", "assistant");
             sessions.forEach(session => {
                 const sessionInfo = `Initial prompt: ${session.initial_prompt}\nSession ID: ${session.id}\nCreated: ${new Date(session.created_at).toLocaleString()}`;
                 addMessage(sessionInfo, "assistant");
             });
-            
+
             // Add a note about clicking session IDs
             addMessage("Click a session to load it", "assistant");
-            
+
             // Make session messages clickable
             document.querySelectorAll('.assistant').forEach(div => {
                 if (div.textContent.includes('Session ID:')) {
@@ -473,16 +498,16 @@ async function showSessionHistory() {
 // Function to load a specific session
 async function loadSession(sessionId) {
     window.sessionId = sessionId;
-    
+
     // Update URL with new session ID
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('session_id', sessionId);
     window.history.pushState(null, '', newUrl);
-    
+
     // Clear existing chat
     const chatDiv = document.getElementById("chat");
     chatDiv.innerHTML = '';
-    
+
     // Load chat history for the session
     await loadChatHistory(sessionId);
 }
@@ -504,21 +529,21 @@ async function createNewSession() {
             console.error("Error fetching latest summary:", error);
         }
     }
-    
+
     // Generate new session ID
     const newSessionId = generateUUID();
     window.sessionId = newSessionId;
-    
+
     // Update URL with new session ID
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('session_id', newSessionId);
     window.history.pushState(null, '', newUrl);
-    
+
     // Clear existing chat and history
     const chatDiv = document.getElementById("chat");
     chatDiv.innerHTML = '';
     chatHistory = [];
-    
+
     // Add a message showing the latest summary
     if (latestSummary !== "New session - no messages yet") {
         addMessage(`Previous session summary: ${latestSummary}`, "assistant");
