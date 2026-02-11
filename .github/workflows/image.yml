@@ -56,9 +56,18 @@ jobs:
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
 
+      - name: Create GitHub App token for roo-multitenant dispatch
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ROOLLM_APP_ID }}
+          private-key: ${{ secrets.ROOLLM_APP_PRIVATE_KEY }}
+          owner: hyphacoop
+          repositories: roo-multitenant
+
       - name: Dispatch dependency bump to roo-multitenant
         env:
-          TOKEN: ${{ secrets.ROO_MULTITENANT_DISPATCH_TOKEN }}
+          TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           curl -fsSL -X POST \
