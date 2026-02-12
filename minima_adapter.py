@@ -50,7 +50,7 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Search Hypha's knowledge base (handbook and meeting notes). Returns passages with inline citations: 'content [Source: https://handbook.hypha.coop/path]' or 'content [Source: https://meetings.hypha.coop/YYYY-MM-DD-meeting.html]'. When presenting information to users, preserve these [Source: URL] citations exactly as they appear in the results.",
+                "description": "Search the knowledge base for relevant documents. Returns passages with inline citations: 'content [Source: path]'. When presenting information to users, preserve these [Source: ...] citations exactly as they appear in the results.",
                 "emoji": "🧠",
                 "parameters": {
                     "type": "object",
@@ -302,20 +302,9 @@ class MinimaRestAdapter:
                 continue
 
             all_sources.append(source)
-            source_lower = source.lower()
 
             # Format the source citation
-            citation_text = ""
-            if "handbook" in source_lower:
-                path_segment = source.split("handbook/", 1)[-1] if "handbook/" in source_lower else source
-                path_segment = path_segment.replace(".md", "")
-                citation_text = f"[Source: https://handbook.hypha.coop/{path_segment}]"
-            elif "meeting-notes" in source_lower:
-                path_segment = source.split("meeting-notes/", 1)[-1] if "meeting-notes/" in source_lower else source
-                path_segment = path_segment.replace(".md", ".html")
-                citation_text = f"[Source: https://meetings.hypha.coop/{path_segment}]"
-            else:
-                citation_text = f"[Source: {source}]"
+            citation_text = f"[Source: {source}]"
 
             # Add the content followed immediately by its citation
             formatted_output.append(f"{content} {citation_text}")
@@ -367,27 +356,8 @@ class MinimaRestAdapter:
                 continue
                 
             logger.debug(f"Processing source for citation: '{source}'")
-            source_lower = source.lower() # For case-insensitive checks on keywords like 'handbook'
-            
-            citation_text = ""
-            # Handbook source formatting
-            if "handbook" in source_lower:
-                # Extracts path relative to 'handbook/'
-                path_segment = source.split("handbook/", 1)[-1] if "handbook/" in source_lower else source
-                path_segment = path_segment.replace(".md", "") # Remove .md extension if present
-                citation_text = f"[Source: https://handbook.hypha.coop/{path_segment}]"
-                logger.debug(f"Formatted as handbook source: {citation_text}")
-            # Meeting notes formatting
-            elif "meeting-notes" in source_lower:
-                # Extracts path relative to 'meeting-notes/'
-                path_segment = source.split("meeting-notes/", 1)[-1] if "meeting-notes/" in source_lower else source
-                path_segment = path_segment.replace(".md", ".html") # Replace .md extension with .html
-                citation_text = f"[Source: https://meetings.hypha.coop/{path_segment}]"
-                logger.debug(f"Formatted as meeting notes source: {citation_text}")
-            # Generic formatting for all other sources
-            else:
-                citation_text = f"[Source: {source}]" # Simplest form, using the original source string
-                logger.debug(f"Formatted as generic source: {citation_text}")
+            citation_text = f"[Source: {source}]"
+            logger.debug(f"Formatted source citation: {citation_text}")
             
             formatted_citations.append(citation_text)
         
