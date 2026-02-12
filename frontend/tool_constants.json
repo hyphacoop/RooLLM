@@ -94,7 +94,7 @@
     },
     "🧠": {
       "tool": "query",
-      "description": "Search Hypha's handbook and public drive documents with RAG via minima MCP"
+      "description": "Search the knowledge base for relevant documents with RAG via minima MCP"
     },
     "🧭": {
       "tool": "consensus_analyzer",
