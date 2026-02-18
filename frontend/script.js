@@ -602,5 +602,6 @@ async function createNewSession() {
         setTimeout(poll, getInterval(data));
     }
 
+    render(null);
     setTimeout(poll, 1000);
 })();

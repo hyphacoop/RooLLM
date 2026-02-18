@@ -337,17 +337,13 @@ summary {
 }
 
 #indexer-status {
-    position: fixed;
-    top: 20px;
-    right: 20px;
     font-family: monospace;
     font-size: 13px;
-    color: #666;
-    z-index: 100;
-    padding: 4px 10px;
+    color: #aaa;
+    padding: 8px 10px;
     transition: color 0.3s ease;
 }
-#indexer-status.status-ready    { color: #555; }
-#indexer-status.status-indexing { color: #b8860b; }
-#indexer-status.status-warning  { color: #cc4444; }
-#indexer-status.status-offline  { color: #cc4444; font-style: italic; }
+#indexer-status.status-ready    { color: #aaa; }
+#indexer-status.status-indexing { color: #f0c040; }
+#indexer-status.status-warning  { color: #ff6666; }
+#indexer-status.status-offline  { color: #ff6666; font-style: italic; }
