@@ -550,15 +550,14 @@ async function createNewSession() {
     function isIndexing(data) {
         if (!data) return false;
         const p = data.phase;
-        return p === "crawling" || p === "initial_indexing"
+        return p === "starting" || p === "crawling" || p === "initial_indexing"
             || (p === "watching" && data.queue_depth > 0);
     }
 
     function getInterval(data) {
         if (!data || data.phase === "offline") return 30000;
-        if (data.phase === "starting") return 5000;
         if (isIndexing(data)) return 3000;
-        return 30000;
+        return 5000;
     }
 
     function render(data) {
@@ -566,11 +565,6 @@ async function createNewSession() {
         if (!data || data.phase === "offline") {
             el.textContent = "indexer offline";
             el.classList.add("status-offline");
-            return;
-        }
-        if (data.phase === "starting") {
-            el.textContent = "indexer starting\u2026";
-            el.classList.add("status-indexing");
             return;
         }
         if (isIndexing(data)) {
