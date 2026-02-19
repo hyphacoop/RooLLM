@@ -48,4 +48,19 @@ const { transformSourceCitations } = require('../frontend/transforms');
     assert.strictEqual(result, input, 'non-/documents/ path should be unchanged');
 }
 
+// HTML in filename is escaped (XSS prevention)
+{
+    const input = '[Source: /documents/<script>alert(1)<\/script>.pdf]';
+    const result = transformSourceCitations(input);
+    assert(!result.includes('<script>'), 'should escape < in filename');
+    assert(result.includes('&lt;script&gt;'), 'should HTML-encode < and > in display name');
+}
+
+// double-quote in path is escaped in title attribute
+{
+    const input = '[Source: /documents/say"hello".pdf]';
+    const result = transformSourceCitations(input);
+    assert(result.includes('title="/documents/say&quot;hello&quot;.pdf"'), 'should escape " in title attribute');
+}
+
 console.log('All tests passed.');
