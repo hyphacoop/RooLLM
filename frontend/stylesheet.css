@@ -347,3 +347,18 @@ summary {
 #indexer-status.status-indexing { color: #f0c040; }
 #indexer-status.status-warning  { color: #ff6666; }
 #indexer-status.status-offline  { color: #ff6666; font-style: italic; }
+
+.source-citation {
+    font-size: 0.75em;
+    color: #88aacc;
+    padding: 1px 4px;
+    border: 1px solid #335;
+    border-radius: 3px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.source-citation:hover {
+    background-color: #88aacc;
+    color: black;
+    border-color: #88aacc;
+}

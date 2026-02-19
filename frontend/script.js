@@ -368,7 +368,7 @@ function addMessage(text, type) {
         // Add main content (without thinking tags)
         const message = document.createElement("span");
         // Configure marked to preserve HTML tags
-        message.innerHTML = marked.parse(mainContent, { sanitize: false });
+        message.innerHTML = transformSourceCitations(marked.parse(mainContent, { sanitize: false }));
         messageDiv.appendChild(message);
     } else {
         // For user messages, render normally
