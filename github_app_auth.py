@@ -1,7 +1,28 @@
 import time
+import json
+import base64
+import logging
 import requests
-import jwt
 from datetime import datetime
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding as asym_padding
+
+log = logging.getLogger(__name__)
+
+
+def _make_jwt(payload, private_key_pem):
+    def b64url(data):
+        if isinstance(data, dict):
+            data = json.dumps(data, separators=(',', ':')).encode()
+        return base64.urlsafe_b64encode(data).rstrip(b'=').decode()
+    header = {"alg": "RS256", "typ": "JWT"}
+    signing_input = f"{b64url(header)}.{b64url(payload)}".encode()
+    key = serialization.load_pem_private_key(
+        private_key_pem.encode() if isinstance(private_key_pem, str) else private_key_pem,
+        password=None
+    )
+    sig = key.sign(signing_input, asym_padding.PKCS1v15(), hashes.SHA256())
+    return f"{signing_input.decode()}.{b64url(sig)}"
 
 class GitHubAppAuth:
     def __init__(self, app_id=None, private_key=None, installation_id=None, pat=None):
@@ -50,10 +71,7 @@ class GitHubAppAuth:
                 'iss': str(self.app_id)
             }
             
-            jwt_token = jwt.encode(payload, self.private_key, algorithm='RS256')
-
-            if isinstance(jwt_token, bytes):
-                jwt_token = jwt_token.decode('utf-8')
+            jwt_token = _make_jwt(payload, self.private_key)
             
             # Get installation token
             url = f"https://api.github.com/app/installations/{self.installation_id}/access_tokens"
@@ -84,6 +102,7 @@ class GitHubAppAuth:
             return self.token
             
         except Exception as e:
+            log.error(f"GitHub App token exchange failed, falling back to PAT: {e}")
             self.auth_method = "pat"
             return self.pat
     
