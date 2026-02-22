@@ -166,7 +166,7 @@ summary {
   color: var(--text-subtle);
 }
 .hidden {
-  display: none;
+  display: none !important;
 }
 .user {
   margin-top: 2rem;
@@ -248,6 +248,7 @@ summary {
 #files-container {
     width: 100%;
     height: calc(100vh - 80px);
+    margin-top: 4rem;
 }
 
 #history-container {

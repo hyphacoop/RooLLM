@@ -440,7 +440,10 @@ function createThinkingSection(thinkingContent) {
 }
 
 // Add event listeners for the new buttons
-document.getElementById("history-button").addEventListener("click", showSessionHistory);
+document.getElementById("history-button").addEventListener("click", () => {
+    const isHistory = !document.getElementById("history-container").classList.contains("hidden");
+    isHistory ? showView("chat") : showSessionHistory();
+});
 document.getElementById("new-session-button").addEventListener("click", createNewSession);
 document.getElementById("files-button").addEventListener("click", toggleFileView);
 
