@@ -328,6 +328,18 @@ async def list_tools():
         logger.error(f"Error listing tools: {e}")
         return {"status": "error", "message": f"Error listing tools: {str(e)}"}
 
+BRANDING_FILE = Path(os.getenv("BRANDING_CONFIG_PATH", "/etc/roollm/branding.json"))
+
+@app.get("/branding")
+async def get_branding():
+    """Return tenant branding configuration."""
+    try:
+        if BRANDING_FILE.exists():
+            return json.loads(BRANDING_FILE.read_text())
+    except Exception as e:
+        logger.error(f"Error reading branding config: {e}")
+    return {}
+
 async def refresh_token_if_needed():
     """Check if GitHub token needs refresh and update it"""
     if config.get("gh_auth_object"):
