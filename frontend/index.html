@@ -12,9 +12,11 @@
 
 <body>
     <div id="session-controls">
-        <button id="history-button">History</button>
-        <button id="new-session-button">New Session</button>
-        <button id="files-button">Files</button>
+        <div>
+            <button id="history-button">History</button>
+            <button id="new-session-button">New Session</button>
+            <button id="files-button">Files</button>
+        </div>
         <div id="indexer-status"></div>
     </div>
     <div id="files-container" class="hidden">
@@ -27,6 +29,13 @@
             <textarea id="text-input" placeholder="Type your message here..." rows="1"></textarea>
             <button id="submit-button">Send</button>
         </div>
+    </div>
+    <div id="file-viewer" class="hidden">
+        <div id="file-viewer-header">
+            <span id="file-viewer-name"></span>
+            <button id="file-viewer-close">×</button>
+        </div>
+        <iframe id="file-viewer-frame"></iframe>
     </div>
     <script src="transforms.js"></script>
     <script src="script.js"></script>

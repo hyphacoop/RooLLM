@@ -327,10 +327,14 @@ function showEmojiPopup(event, emoji) {
     const toolDescription = emojiToolMap[emoji] || "Unknown tool";
     popup.innerHTML = marked.parse(toolDescription, { sanitize: false });
 
-    // Position popup near the emoji
+    // Position popup near the emoji, viewport-aware
     document.body.appendChild(popup);
     const rect = clickedEmoji.getBoundingClientRect();
-    popup.style.left = `${rect.left}px`;
+    const popupWidth = popup.offsetWidth;
+    const left = rect.right + popupWidth > window.innerWidth
+        ? Math.max(0, rect.right - popupWidth)
+        : rect.left;
+    popup.style.left = `${left}px`;
     popup.style.top = `${rect.bottom + 5}px`;
 
     // Mark this emoji as having a popup
@@ -369,6 +373,12 @@ function addMessage(text, type) {
         const message = document.createElement("span");
         // Configure marked to preserve HTML tags
         message.innerHTML = transformSourceCitations(marked.parse(mainContent, { sanitize: false }));
+        message.querySelectorAll('a[href^="/dufs/"]').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                openFileViewer(link.href, link.textContent);
+            });
+        });
         messageDiv.appendChild(message);
     } else {
         // For user messages, render normally
@@ -430,7 +440,10 @@ function createThinkingSection(thinkingContent) {
 }
 
 // Add event listeners for the new buttons
-document.getElementById("history-button").addEventListener("click", showSessionHistory);
+document.getElementById("history-button").addEventListener("click", () => {
+    const isHistory = !document.getElementById("history-container").classList.contains("hidden");
+    isHistory ? showView("chat") : showSessionHistory();
+});
 document.getElementById("new-session-button").addEventListener("click", createNewSession);
 document.getElementById("files-button").addEventListener("click", toggleFileView);
 
@@ -443,6 +456,8 @@ function showView(view) {
     for (const [name, el] of Object.entries(views)) {
         el.classList.toggle("hidden", name !== view);
     }
+    document.getElementById("history-button").textContent =
+        view === "history" ? "Chat" : "History";
     document.getElementById("files-button").textContent =
         view === "files" ? "Chat" : "Files";
 }
@@ -474,8 +489,15 @@ async function showSessionHistory() {
             container.innerHTML = "<h3>Session History</h3>";
             sessions.forEach(session => {
                 const div = document.createElement("div");
-                div.style.cssText = "padding:8px;margin:4px 0;border:1px solid #444;border-radius:4px;cursor:pointer;";
-                div.textContent = `${session.initial_prompt} — ${new Date(session.created_at).toLocaleString()}`;
+                div.classList.add("session-item");
+                const prompt = document.createElement("div");
+                prompt.classList.add("session-prompt");
+                prompt.textContent = session.initial_prompt;
+                const date = document.createElement("div");
+                date.classList.add("session-date");
+                date.textContent = new Date(session.created_at).toLocaleString();
+                div.appendChild(prompt);
+                div.appendChild(date);
                 div.addEventListener("click", () => loadSession(session.id));
                 container.appendChild(div);
             });
@@ -542,6 +564,40 @@ async function createNewSession() {
         addMessage(`Previous session summary: ${latestSummary}`, "assistant");
     }
 }
+
+function injectDufsStyles(frame) {
+    try {
+        const doc = frame.contentDocument;
+        if (!doc || !doc.head) return;
+        const style = doc.createElement('style');
+        style.textContent = `
+            body { background: #000 !important; color: #eee !important; }
+            table, th, td { background: #000 !important; color: #eee !important; border-color: #444 !important; }
+            a { color: #eee !important; }
+            a:hover { background: #eee !important; color: #000 !important; }
+            nav ol li:first-child { display: none !important; }
+            tr:has(a[href*="lost"]) { display: none !important; }
+        `;
+        doc.head.appendChild(style);
+    } catch (e) {
+        console.warn('Could not inject dufs styles:', e);
+    }
+}
+
+document.getElementById('files-frame').addEventListener('load', function () {
+    injectDufsStyles(this);
+});
+
+function openFileViewer(url, name) {
+    document.getElementById('file-viewer-name').textContent = name || url;
+    document.getElementById('file-viewer-frame').src = url;
+    document.getElementById('file-viewer').classList.remove('hidden');
+}
+
+document.getElementById('file-viewer-close').addEventListener('click', () => {
+    document.getElementById('file-viewer').classList.add('hidden');
+    document.getElementById('file-viewer-frame').src = '';
+});
 
 (function initIndexerStatus() {
     const el = document.getElementById("indexer-status");
