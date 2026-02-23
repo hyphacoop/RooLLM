@@ -385,6 +385,7 @@ summary {
     padding: 8px 10px;
     transition: color 0.3s ease;
 }
+#indexer-status.status-loading  { color: var(--text-subtle); font-style: italic; }
 #indexer-status.status-ready    { color: var(--text-subtle); }
 #indexer-status.status-indexing { color: #f0c040; }
 #indexer-status.status-warning  { color: #ff6666; }
