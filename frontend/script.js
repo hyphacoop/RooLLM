@@ -372,7 +372,10 @@ function addMessage(text, type) {
         // Add main content (without thinking tags)
         const message = document.createElement("span");
         // Configure marked to preserve HTML tags
-        message.innerHTML = transformSourceCitations(marked.parse(mainContent, { sanitize: false }));
+        let html = transformSourceCitations(marked.parse(mainContent, { sanitize: false }));
+        // Rewrite file:///documents/ links from LLM to /dufs/ paths
+        html = html.replace(/href="file:\/\/\/documents\//g, 'href="/dufs/');
+        message.innerHTML = html;
         message.querySelectorAll('a[href^="/dufs/"]').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
@@ -577,6 +580,11 @@ function injectDufsStyles(frame) {
             a:hover { background: #eee !important; color: #000 !important; }
             nav ol li:first-child { display: none !important; }
             tr:has(a[href*="lost"]) { display: none !important; }
+            /* markdown rendered content */
+            h1, h2, h3, h4, h5, h6 { color: #eee !important; }
+            p, li, blockquote, pre, code { color: #eee !important; background: #000 !important; }
+            pre, code { background: #1a1a1a !important; }
+            hr { border-color: #444 !important; }
         `;
         doc.head.appendChild(style);
     } catch (e) {
@@ -585,6 +593,10 @@ function injectDufsStyles(frame) {
 }
 
 document.getElementById('files-frame').addEventListener('load', function () {
+    injectDufsStyles(this);
+});
+
+document.getElementById('file-viewer-frame').addEventListener('load', function () {
     injectDufsStyles(this);
 });
 
@@ -618,17 +630,35 @@ document.getElementById('file-viewer-close').addEventListener('click', () => {
 
     function render(data) {
         el.className = "";
+        el.title = "";
         if (!data || data.phase === "offline") {
             el.textContent = "indexer offline";
             el.classList.add("status-offline");
             return;
         }
+        const uptime = data.uptime_seconds != null
+            ? (data.uptime_seconds < 3600
+                ? `${Math.round(data.uptime_seconds / 60)}m`
+                : `${Math.round(data.uptime_seconds / 3600)}h`)
+            : null;
+        const tooltip = [
+            `phase: ${data.phase}`,
+            data.files_discovered != null ? `discovered: ${data.files_discovered}` : null,
+            data.files_indexed != null ? `indexed: ${data.files_indexed}` : null,
+            data.files_skipped > 0 ? `skipped: ${data.files_skipped}` : null,
+            data.files_failed > 0 ? `failed: ${data.files_failed}` : null,
+            data.queue_depth != null ? `queue: ${data.queue_depth}` : null,
+            uptime ? `uptime: ${uptime}` : null,
+            data.last_file_processed
+                ? `last: ${data.last_file_processed.split('/').pop()}` : null,
+        ].filter(Boolean).join('\n');
+        el.title = tooltip;
         if (isIndexing(data)) {
             el.textContent = `Indexing: ${data.files_processed}/${data.files_discovered} files`;
             el.classList.add("status-indexing");
             return;
         }
-        if (!data.file_watcher_alive) {
+        if (data.file_watcher_alive === false) {
             el.textContent = "watcher down";
             el.classList.add("status-warning");
         } else if (data.files_failed > 0) {
@@ -652,6 +682,7 @@ document.getElementById('file-viewer-close').addEventListener('click', () => {
         setTimeout(poll, getInterval(data));
     }
 
-    render(null);
+    el.textContent = "loading...";
+    el.classList.add("status-loading");
     setTimeout(poll, 1000);
 })();
