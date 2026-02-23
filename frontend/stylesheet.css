@@ -175,8 +175,11 @@ summary {
 .user span:first-child {
   color: var(--user-color);
 }
-.assistant span:first-child {
+.assistant .mr1 {
   color: var(--assistant-color);
+}
+.assistant div span p:first-child {
+  margin-top: 0;
 }
 .bot-message {
   align-self: self-start;
