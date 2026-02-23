@@ -363,10 +363,12 @@ function addMessage(text, type) {
     if (type === "assistant") {
         const { mainContent, thinkingContent } = extractThinkingContent(text);
 
+        // Wrap thinking + message in a column div so label stays inline
+        const contentWrapper = document.createElement("div");
+
         // Add thinking section first if thinking content exists
         if (thinkingContent) {
-            const thinkingSection = createThinkingSection(thinkingContent);
-            messageDiv.appendChild(thinkingSection);
+            contentWrapper.appendChild(createThinkingSection(thinkingContent));
         }
 
         // Add main content (without thinking tags)
@@ -382,7 +384,8 @@ function addMessage(text, type) {
                 openFileViewer(link.href, link.textContent);
             });
         });
-        messageDiv.appendChild(message);
+        contentWrapper.appendChild(message);
+        messageDiv.appendChild(contentWrapper);
     } else {
         // For user messages, render normally
         const message = document.createElement("span");
