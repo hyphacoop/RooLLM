@@ -98,9 +98,38 @@ async function loadConfig() {
     window.backendHost = backendHost;
 }
 
+async function loadBranding() {
+    try {
+        const response = await fetch('/branding');
+        if (!response.ok) return;
+        const branding = await response.json();
+        if (branding.colors) {
+            const root = document.documentElement.style;
+            const map = {
+                bg: '--bg', text: '--text',
+                user: '--user-color', assistant: '--assistant-color',
+                summary: '--accent', link: '--link',
+                linkHoverBg: '--link-hover-bg',
+                linkHoverText: '--link-hover-text',
+            };
+            for (const [key, prop] of Object.entries(map)) {
+                if (branding.colors[key]) root.setProperty(prop, branding.colors[key]);
+            }
+        }
+        if (branding.title) document.title = branding.title;
+        if (branding.logoUrl) {
+            const logo = document.getElementById('brand-logo');
+            if (logo) { logo.src = branding.logoUrl; logo.classList.remove('hidden'); }
+        }
+    } catch (e) {
+        console.warn('Could not load branding:', e);
+    }
+}
+
 // Initialize configuration
 (async function initializeApp() {
     await loadConfig(); // Ensure backendPort is set before proceeding
+    await loadBranding();
 
     // Generate or retrieve a session ID
     if (!window.sessionId) {

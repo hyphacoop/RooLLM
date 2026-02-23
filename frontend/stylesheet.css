@@ -51,6 +51,9 @@
   --font-size-sm: 16px;
   --font-size-xs: 14px;
   --font-size-btn: 18px;
+  --link: #fff;
+  --link-hover-bg: #fff;
+  --link-hover-text: #000;
 }
 
 html {
@@ -69,15 +72,15 @@ body {
   padding: 20px;
 }
 a {
-  color: white;
+  color: var(--link);
   font-family: var(--font-mono);
   font-size: 1rem;
   padding: 0.25rem;
   transition: all 0.333s;
 }
 a:hover {
-  background-color: white;
-  color: black;
+  background-color: var(--link-hover-bg);
+  color: var(--link-hover-text);
   text-decoration: none;
 }
 code {
