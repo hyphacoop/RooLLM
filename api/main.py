@@ -12,7 +12,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 # Port configuration
 PORT = int(os.getenv("PORT", "8081"))
@@ -171,38 +171,86 @@ async def chat(request: ChatRequest):
             await queue.put({"type": "emoji", "emoji": emoji})
 
         async def runner():
-            # Format the message with username prefix
             user_message = f"{request.message}"
-            
-            response = await roo.chat(
-                user,
-                request.message,
-                history,
-                react_callback=safe_react_callback
-            )
+            streamed_parts = []
+            saw_delta = False
 
-            # Add to history with proper format
-            history.append({"role": "user", "content": user_message})
-            history.append(response)  # response already has the correct format
-            histories[request.session_id] = history
+            async def safe_stream_callback(delta):
+                nonlocal saw_delta
+                if not isinstance(delta, str) or not delta:
+                    return
+                saw_delta = True
+                streamed_parts.append(delta)
+                await queue.put({"type": "reply_delta", "content": delta})
 
-            # Update initial prompt if this is the first message
-            if len(history) == 2:  # Just added first user and assistant messages
-                sessions[request.session_id]["initial_prompt"] = generate_session_title(history)
-            
-            # Send the response immediately
-            await queue.put({"type": "reply", "content": response["content"]})
-            await queue.put(None)  # End signal
+            try:
+                response = await roo.chat(
+                    user,
+                    request.message,
+                    history,
+                    react_callback=safe_react_callback,
+                    stream_callback=safe_stream_callback,
+                )
+
+                response_content = response.get("content", "")
+                final_content = "".join(streamed_parts) if saw_delta else response_content
+
+                # Ensure final content stays consistent even if fallback paths differ.
+                if response_content and final_content != response_content:
+                    if response_content.startswith(final_content):
+                        tail = response_content[len(final_content):]
+                        if tail:
+                            final_content = response_content
+                            await queue.put({"type": "reply_delta", "content": tail})
+                    else:
+                        final_content = response_content
+                        saw_delta = False
+
+                # Add to history with proper format
+                history.append({"role": "user", "content": user_message})
+                history.append({"role": "assistant", "content": final_content})
+                histories[request.session_id] = history
+
+                # Update initial prompt if this is the first message
+                if len(history) == 2:  # Just added first user and assistant messages
+                    sessions[request.session_id]["initial_prompt"] = generate_session_title(history)
+
+                if saw_delta:
+                    await queue.put({"type": "reply_done", "content": final_content})
+                else:
+                    # Backward-compatible fallback event
+                    await queue.put({"type": "reply", "content": final_content})
+            except Exception as e:
+                logger.error(f"Error in chat stream runner: {e}", exc_info=True)
+                await queue.put({
+                    "type": "error",
+                    "content": "I encountered an error while processing your request.",
+                })
+            finally:
+                await queue.put(None)  # End signal
 
         task = asyncio.create_task(runner())
 
-        while True:
-            item = await queue.get()
-            if item is None:
-                break
-            yield f"data: {json.dumps(item)}\n\n"
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                yield f"data: {json.dumps(item)}\n\n"
+        finally:
+            if not task.done():
+                task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await task
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 @app.post("/minima/query")
 async def minima_query(request: MinimaQueryRequest):

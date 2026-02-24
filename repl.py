@@ -296,6 +296,29 @@ def render_output(content: str):
         # Plain text output
         print(f"\n{ROO_PURPLE}Roo >{RESET} {content}\n")
 
+def create_stream_printer():
+    """
+    Create a stream callback and state for terminal token streaming.
+    The callback prints deltas as they arrive and stores them for consistency checks.
+    """
+    state = {
+        "started": False,
+        "streamed": False,
+        "chunks": [],
+    }
+
+    async def stream_callback(delta: str):
+        if not isinstance(delta, str) or not delta:
+            return
+        state["streamed"] = True
+        state["chunks"].append(delta)
+        if not state["started"]:
+            print(f"\n{ROO_PURPLE}Roo >{RESET} ", end="", flush=True)
+            state["started"] = True
+        print(delta, end="", flush=True)
+
+    return stream_callback, state
+
 # GitHub token refresh helper
 async def refresh_token_if_needed():
     """Check if GitHub token needs refresh and update it"""
@@ -335,7 +358,18 @@ async def main():
             reset_tool_call_state()
 
             await refresh_token_if_needed()
-            response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
+            stream_callback = None
+            stream_state = None
+            if not args.output:
+                stream_callback, stream_state = create_stream_printer()
+
+            response = await roo.chat(
+                user,
+                query,
+                history,
+                react_callback=print_tool_reaction,
+                stream_callback=stream_callback,
+            )
             content = response['content'].lstrip('\n')
 
             # Write to output file if specified
@@ -344,7 +378,10 @@ async def main():
                     f.write(content)
                 print(f"{LIME}✓ Response written to {args.output}{RESET}")
             else:
-                render_output(content)
+                if stream_state and stream_state["streamed"]:
+                    print()  # newline after streamed output
+                else:
+                    render_output(content)
         except Exception as e:
             logger.error(f"Error during chat: {e}")
             print(f"❌ Error: {str(e)}")
@@ -483,10 +520,20 @@ async def main():
                 continue
 
             await refresh_token_if_needed()
-            response = await roo.chat(user, query, history, react_callback=print_tool_reaction)
+            stream_callback, stream_state = create_stream_printer()
+            response = await roo.chat(
+                user,
+                query,
+                history,
+                react_callback=print_tool_reaction,
+                stream_callback=stream_callback,
+            )
             content = response['content'].lstrip('\n')
 
-            render_output(content)
+            if stream_state["streamed"]:
+                print()  # newline after streamed output
+            else:
+                render_output(content)
 
         except KeyboardInterrupt:
             print(EXIT_MESSAGE)
