@@ -108,7 +108,22 @@ class MCPLLMBridge:
             logger.error(f"Error during bridge initialization: {e}", exc_info=True)
             raise
 
-    async def process_message(self, user: str, content: str, history: List[Dict], react_callback=None):
+    async def _emit_stream_chunks(self, content: str, stream_callback, chunk_size: int = 32):
+        """Emit existing text to a stream callback in small chunks."""
+        if not content or not stream_callback:
+            return
+
+        for i in range(0, len(content), chunk_size):
+            await stream_callback(content[i:i + chunk_size])
+
+    async def process_message(
+        self,
+        user: str,
+        content: str,
+        history: List[Dict],
+        react_callback=None,
+        stream_callback=None,
+    ):
         # Ensure bridge is initialized
         if not self.initialized:
             await self.initialize()
@@ -119,27 +134,63 @@ class MCPLLMBridge:
         # ReAct Loop - Continue until no more tool calls or max iterations reached
         max_iterations = self.config.get("react_max_iterations", 10)  # Configurable max iterations
         enable_react = self.config.get("enable_react_loop", True)  # Option to disable ReAct loop
+        max_same_tool_calls = int(self.config.get("max_same_tool_calls_per_turn", 5))
+        max_query_tool_calls = int(self.config.get("max_query_tool_calls_per_turn", 2))
         iteration = 0
+        had_tool_calls = False
+        tool_call_counts = {}
         
         while iteration < max_iterations:
             iteration += 1
             logger.debug(f"ReAct iteration {iteration}")
             
             # Get response from LLM
-            raw_response = await self.llm_client.invoke(messages, tools=tools)
+            use_first_turn_stream = stream_callback is not None and iteration == 1
+            if use_first_turn_stream:
+                try:
+                    raw_response = await self.llm_client.invoke_stream(
+                        messages,
+                        tools=tools,
+                        on_delta=stream_callback,
+                    )
+                except Exception as e:
+                    logger.warning(f"First-turn streaming failed, falling back to non-stream call: {e}")
+                    raw_response = await self.llm_client.invoke(messages, tools=tools, stream=False)
+            else:
+                raw_response = await self.llm_client.invoke(messages, tools=tools, stream=False)
             message = raw_response.get("message", {})
+            tool_calls = message.get("tool_calls")
+            if not isinstance(tool_calls, list):
+                tool_calls = []
 
             # If no tool calls, we're done - return the response
-            if "tool_calls" not in message:
+            if not tool_calls:
                 logger.debug(f"ReAct loop completed after {iteration} iterations - no more tool calls")
+
+                # If we already executed tools, generate a dedicated final response and stream it.
+                if stream_callback and had_tool_calls:
+                    final_response = await self.llm_client.invoke_stream(
+                        messages,
+                        tools=[],
+                        on_delta=stream_callback,
+                    )
+                    return final_response.get("message", {})
+
+                # For direct (no-tool) answers:
+                # - iteration 1 is already streamed above when possible
+                # - fallback to chunked emit for non-stream models
+                if stream_callback and not use_first_turn_stream:
+                    await self._emit_stream_chunks(message.get("content", ""), stream_callback)
                 return message
+
+            had_tool_calls = True
 
             # Add LLM response to messages for context
             messages.append(message)
 
             # Process tool calls sequentially
             tool_outputs = []
-            for call in message["tool_calls"]:
+            for call in tool_calls:
                 func = call.get("function", {})
                 name = func.get("name")
                 args = func.get("arguments", {})
@@ -153,6 +204,26 @@ class MCPLLMBridge:
                         "role": "tool",
                         "tool_call_id": tool_call_id,
                         "content": json.dumps({"error": f"Tool {name} not found"})
+                    })
+                    continue
+
+                # Guardrail against runaway repeated tool calls in a single user turn
+                tool_call_counts[name] = tool_call_counts.get(name, 0) + 1
+                max_for_tool = max_query_tool_calls if name == "query" else max_same_tool_calls
+                if tool_call_counts[name] > max_for_tool:
+                    logger.warning(
+                        f"Skipping repeated tool call: {name} "
+                        f"(count={tool_call_counts[name]}, limit={max_for_tool})"
+                    )
+                    tool_outputs.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "content": json.dumps({
+                            "error": (
+                                f"Tool call limit reached for '{name}' in this turn "
+                                f"(limit={max_for_tool})."
+                            )
+                        })
                     })
                     continue
 
@@ -192,12 +263,26 @@ class MCPLLMBridge:
             # If ReAct is disabled, get final response and break
             if not enable_react:
                 logger.debug("ReAct loop disabled - getting final response after tool execution")
-                final_response = await self.llm_client.invoke(messages, tools=[])
+                if stream_callback:
+                    final_response = await self.llm_client.invoke_stream(
+                        messages,
+                        tools=[],
+                        on_delta=stream_callback,
+                    )
+                else:
+                    final_response = await self.llm_client.invoke(messages, tools=[], stream=False)
                 return final_response.get("message", {})
             
             # Continue loop to allow LLM to reason about results and potentially call more tools
             
         # If we've reached max iterations, get a final response
         logger.warning(f"ReAct loop reached max iterations ({max_iterations}), getting final response")
-        final_response = await self.llm_client.invoke(messages, tools=[])  # No tools to prevent more calls
+        if stream_callback:
+            final_response = await self.llm_client.invoke_stream(
+                messages,
+                tools=[],
+                on_delta=stream_callback,
+            )
+        else:
+            final_response = await self.llm_client.invoke(messages, tools=[], stream=False)  # No tools to prevent more calls
         return final_response.get("message", {})

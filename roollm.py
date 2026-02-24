@@ -53,7 +53,7 @@ class RooLLM:
         await self.bridge.initialize()
         logger.debug("RooLLM initialization complete")
 
-    async def chat(self, user, content, history=[], react_callback=None):
+    async def chat(self, user, content, history=[], react_callback=None, stream_callback=None):
         """
         Process a chat message and return a response.
         
@@ -89,7 +89,8 @@ class RooLLM:
                 user=user,
                 content=content,
                 history=formatted_history,
-                react_callback=react_callback
+                react_callback=react_callback,
+                stream_callback=stream_callback,
             )
             
             return response
@@ -138,6 +139,11 @@ Examples of good query reformulation:
 - User: "Tell me about that" → Infer topic from context, use specific terms
 
 For comprehensive answers, consider searching with different terms to ensure good coverage.
+
+Tool call discipline:
+- Prefer one high-quality tool call over many speculative calls.
+- For the `query` tool, start with a single targeted query.
+- Do not exceed 2 `query` tool calls unless the user explicitly asks for exhaustive research.
 
 Think out loud about your reasoning process. Explain what you're doing and why.
 

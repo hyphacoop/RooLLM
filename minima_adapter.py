@@ -88,7 +88,7 @@ class MinimaRestAdapter:
         self.last_connection_attempt = current_time
         
         try:
-            # Test connection to the server with a simple query
+            # Prefer health check to avoid generating synthetic query traffic
             logger.debug(f"Attempting to connect to Minima at {self.server_url}")
             test_payload = {"query": "test"}
             
@@ -109,28 +109,40 @@ class MinimaRestAdapter:
                 try:
                     async with aiohttp.ClientSession() as session:
                         try:
+                            # First try /health
+                            async with session.get(
+                                f"{server_url}/health",
+                                timeout=connection_timeout
+                            ) as health_response:
+                                if health_response.status == 200:
+                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /health")
+                                    self.server_url = server_url
+                                    self.connected = True
+                                    return True
+
+                            # Fallback to /query for backwards compatibility
                             async with session.post(
-                                f"{server_url}/query", 
+                                f"{server_url}/query",
                                 json=test_payload,
                                 timeout=connection_timeout
                             ) as response:
                                 if response.status == 200:
-                                    logger.debug(f"Successfully connected to Minima indexer at {server_url}")
-                                    
+                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /query")
+
                                     # Update the server URL if it was corrected
                                     self.server_url = server_url
                                     self.connected = True
                                     return True
-                                else:
-                                    error_text = await response.text()
-                                    logger.error(f"Failed to connect to Minima indexer: {response.status}")
-                                    logger.error(f"Error response: {error_text}")
-                                    self.connected = False
-                                    if attempt < max_retries - 1:
-                                        logger.info(f"Retrying connection in {retry_delay} seconds...")
-                                        await asyncio.sleep(retry_delay)
-                                        continue
-                                    return False
+
+                                error_text = await response.text()
+                                logger.error(f"Failed to connect to Minima indexer: {response.status}")
+                                logger.error(f"Error response: {error_text}")
+                                self.connected = False
+                                if attempt < max_retries - 1:
+                                    logger.info(f"Retrying connection in {retry_delay} seconds...")
+                                    await asyncio.sleep(retry_delay)
+                                    continue
+                                return False
                         except aiohttp.ClientConnectorError as e:
                             logger.error(f"Could not connect to Minima server: {e}")
                             self.connected = False

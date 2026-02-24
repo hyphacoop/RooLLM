@@ -236,11 +236,13 @@ async function sendMessage() {
         });
 
         if (!response.body) {
+            clearInterval(loadingInterval);
             responseContentDiv.textContent = "Error: No response stream";
             return;
         }
 
         if (!response.ok) {
+            clearInterval(loadingInterval);
             console.error(`Error: ${response.status} ${response.statusText}`);
             responseContentDiv.textContent = `Error: ${response.status} ${response.statusText}`;
             return;
@@ -250,48 +252,102 @@ async function sendMessage() {
         const decoder = new TextDecoder("utf-8");
 
         let fullReply = "";
+        let sseBuffer = "";
+        let sawReply = false;
+        let streamError = null;
+
+        function processSseEvent(eventText) {
+            const dataLines = eventText
+                .split("\n")
+                .filter(line => line.startsWith("data:"));
+            if (!dataLines.length) return;
+
+            const payload = dataLines
+                .map(line => line.replace(/^data:\s?/, ""))
+                .join("\n");
+
+            let data;
+            try {
+                data = JSON.parse(payload);
+            } catch (err) {
+                console.error("Error parsing SSE payload:", err);
+                return;
+            }
+
+            if (data.type === "emoji") {
+                const emojiSpan = document.createElement("span");
+                emojiSpan.textContent = data.emoji;
+                emojiSpan.addEventListener("click", function (event) {
+                    showEmojiPopup(event, data.emoji);
+                });
+                emojiDiv.appendChild(emojiSpan);
+                return;
+            }
+
+            if (data.type === "reply_delta") {
+                const delta = typeof data.content === "string" ? data.content : "";
+                if (!delta) return;
+
+                sawReply = true;
+                fullReply += delta;
+                loadingDiv.style.display = "none";
+                clearInterval(loadingInterval);
+                responseContentDiv.textContent = fullReply;
+                return;
+            }
+
+            if (data.type === "reply_done") {
+                fullReply = typeof data.content === "string" ? data.content : fullReply;
+                sawReply = sawReply || !!fullReply;
+                return;
+            }
+
+            if (data.type === "reply") {
+                fullReply = typeof data.content === "string" ? data.content : "";
+                sawReply = sawReply || !!fullReply;
+                return;
+            }
+
+            if (data.type === "error") {
+                streamError = typeof data.content === "string"
+                    ? data.content
+                    : "Error: Unable to reach AI server";
+            }
+        }
 
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n").filter(line => line.startsWith("data:"));
-            for (const line of lines) {
-                try {
-                    const jsonString = line.replace("data: ", "");
-                    const data = JSON.parse(jsonString);
+            sseBuffer += decoder.decode(value, { stream: true });
+            const events = sseBuffer.split("\n\n");
+            sseBuffer = events.pop() || "";
 
-                    if (data.type === "emoji") {
-                        const emojiSpan = document.createElement("span");
-                        emojiSpan.textContent = data.emoji;
-                        emojiSpan.addEventListener("click", function (event) {
-                            showEmojiPopup(event, data.emoji);
-                        });
-                        emojiDiv.appendChild(emojiSpan);
-                    } else if (data.type === "reply") {
-                        fullReply = data.content;
-                    }
-                } catch (err) {
-                    console.error("Error parsing chunk:", err);
-                }
+            for (const eventText of events) {
+                processSseEvent(eventText);
             }
         }
 
-        // Render final reply
-        if (fullReply) {
-            // Clear the loading indicator
-            loadingDiv.style.display = "none";
+        // Process any trailing buffered SSE payload
+        if (sseBuffer.trim()) {
+            processSseEvent(sseBuffer);
+        }
 
+        clearInterval(loadingInterval);
+
+        if (streamError) {
+            responseContentDiv.textContent = streamError;
+        } else if (sawReply && fullReply) {
+            // Replace temporary stream container with standard assistant message rendering
+            botMessageDiv.remove();
             addMessage(fullReply, "assistant");
-
-            // Stop loading animation
-            clearInterval(loadingInterval);
-
             chatHistory.push({ role: "assistant", content: fullReply });
+        } else {
+            responseContentDiv.textContent = "Error: Empty response from AI server";
         }
 
     } catch (error) {
+        clearInterval(loadingInterval);
         responseContentDiv.textContent = "Error: Unable to reach AI server";
         console.error(error);
     }
