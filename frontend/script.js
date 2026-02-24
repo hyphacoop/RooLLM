@@ -194,11 +194,10 @@ async function loadBranding() {
         if (branding.logoHeight !== undefined && branding.logoHeight !== null) {
             const rawLogoHeight = String(branding.logoHeight).trim();
             if (rawLogoHeight) {
-                const normalizedLogoHeight = /^\d+(?:\.\d+)?
-.test(rawLogoHeight)
-                    ? rawLogoHeight + "px"
+                const normalizedLogoHeight = Number.isFinite(Number(rawLogoHeight))
+                    ? rawLogoHeight + 'px'
                     : rawLogoHeight;
-                root.setProperty("--brand-logo-height", normalizedLogoHeight);
+                root.setProperty('--brand-logo-height', normalizedLogoHeight);
             }
         }
         if (branding.title) document.title = branding.title;
