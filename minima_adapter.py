@@ -109,23 +109,7 @@ class MinimaRestAdapter:
                 try:
                     async with aiohttp.ClientSession() as session:
                         try:
-                            # 1) Health endpoint (if available)
-                            async with session.get(f"{server_url}/health", timeout=connection_timeout) as health_response:
-                                if health_response.status == 200:
-                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /health")
-                                    self.server_url = server_url
-                                    self.connected = True
-                                    return True
-
-                            # 2) Status endpoint (newer indexer variants)
-                            async with session.get(f"{server_url}/status", timeout=connection_timeout) as status_response:
-                                if status_response.status == 200:
-                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /status")
-                                    self.server_url = server_url
-                                    self.connected = True
-                                    return True
-
-                            # 3) OpenAPI endpoint used by current minima indexer deployment
+                            # 1) OpenAPI endpoint used by current minima indexer deployment
                             async with session.get(
                                 f"{server_url}/indexer/openapi.json",
                                 timeout=connection_timeout
@@ -146,7 +130,7 @@ class MinimaRestAdapter:
                                         # Keep probing other known shapes.
                                         pass
 
-                            # 4) Generic OpenAPI fallback
+                            # 2) Generic OpenAPI fallback
                             async with session.get(f"{server_url}/openapi.json", timeout=connection_timeout) as openapi_response:
                                 if openapi_response.status == 200:
                                     try:
@@ -162,6 +146,22 @@ class MinimaRestAdapter:
                                             return True
                                     except Exception:
                                         pass
+
+                            # 3) Health endpoint (if available)
+                            async with session.get(f"{server_url}/health", timeout=connection_timeout) as health_response:
+                                if health_response.status == 200:
+                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /health")
+                                    self.server_url = server_url
+                                    self.connected = True
+                                    return True
+
+                            # 4) Status endpoint (newer indexer variants)
+                            async with session.get(f"{server_url}/status", timeout=connection_timeout) as status_response:
+                                if status_response.status == 200:
+                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /status")
+                                    self.server_url = server_url
+                                    self.connected = True
+                                    return True
 
                             # 5) Last resort: POST /query for backward compatibility
                             async with session.post(
