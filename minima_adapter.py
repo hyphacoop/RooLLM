@@ -88,7 +88,7 @@ class MinimaRestAdapter:
         self.last_connection_attempt = current_time
         
         try:
-            # Prefer health check to avoid generating synthetic query traffic
+            # Prefer non-query probes to avoid generating synthetic query traffic
             logger.debug(f"Attempting to connect to Minima at {self.server_url}")
             test_payload = {"query": "test"}
             
@@ -109,18 +109,61 @@ class MinimaRestAdapter:
                 try:
                     async with aiohttp.ClientSession() as session:
                         try:
-                            # First try /health
-                            async with session.get(
-                                f"{server_url}/health",
-                                timeout=connection_timeout
-                            ) as health_response:
+                            # 1) Health endpoint (if available)
+                            async with session.get(f"{server_url}/health", timeout=connection_timeout) as health_response:
                                 if health_response.status == 200:
                                     logger.debug(f"Successfully connected to Minima indexer at {server_url} via /health")
                                     self.server_url = server_url
                                     self.connected = True
                                     return True
 
-                            # Fallback to /query for backwards compatibility
+                            # 2) Status endpoint (newer indexer variants)
+                            async with session.get(f"{server_url}/status", timeout=connection_timeout) as status_response:
+                                if status_response.status == 200:
+                                    logger.debug(f"Successfully connected to Minima indexer at {server_url} via /status")
+                                    self.server_url = server_url
+                                    self.connected = True
+                                    return True
+
+                            # 3) OpenAPI endpoint used by current minima indexer deployment
+                            async with session.get(
+                                f"{server_url}/indexer/openapi.json",
+                                timeout=connection_timeout
+                            ) as openapi_response:
+                                if openapi_response.status == 200:
+                                    try:
+                                        openapi = await openapi_response.json()
+                                        paths = openapi.get("paths", {}) if isinstance(openapi, dict) else {}
+                                        if "/query" in paths:
+                                            logger.debug(
+                                                f"Successfully connected to Minima indexer at {server_url} "
+                                                f"via /indexer/openapi.json"
+                                            )
+                                            self.server_url = server_url
+                                            self.connected = True
+                                            return True
+                                    except Exception:
+                                        # Keep probing other known shapes.
+                                        pass
+
+                            # 4) Generic OpenAPI fallback
+                            async with session.get(f"{server_url}/openapi.json", timeout=connection_timeout) as openapi_response:
+                                if openapi_response.status == 200:
+                                    try:
+                                        openapi = await openapi_response.json()
+                                        paths = openapi.get("paths", {}) if isinstance(openapi, dict) else {}
+                                        if "/query" in paths:
+                                            logger.debug(
+                                                f"Successfully connected to Minima indexer at {server_url} "
+                                                f"via /openapi.json"
+                                            )
+                                            self.server_url = server_url
+                                            self.connected = True
+                                            return True
+                                    except Exception:
+                                        pass
+
+                            # 5) Last resort: POST /query for backward compatibility
                             async with session.post(
                                 f"{server_url}/query",
                                 json=test_payload,
