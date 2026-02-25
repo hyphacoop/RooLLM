@@ -68,7 +68,8 @@ llm = LLMClient(
     base_url=os.getenv("ROO_LLM_URL", "http://localhost:11434"),
     model=os.getenv("ROO_LLM_MODEL", "hermes3"),
     username=os.getenv("ROO_LLM_AUTH_USERNAME", ""),
-    password=os.getenv("ROO_LLM_AUTH_PASSWORD", "")
+    password=os.getenv("ROO_LLM_AUTH_PASSWORD", ""),
+    think=os.getenv("ROO_LLM_THINK", "true").lower() not in ("0", "false", "no"),
 )
 
 # Initialize RooLLM with bridge

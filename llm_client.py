@@ -7,11 +7,12 @@ from typing import Optional, Callable, Dict, Any
 logger = logging.getLogger(__name__)
 
 class LLMClient:
-    def __init__(self, base_url: str, model: str, username: str = "", password: str = "", stream: bool = False):
+    def __init__(self, base_url: str, model: str, username: str = "", password: str = "", stream: bool = False, think: bool = False):
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.auth = aiohttp.BasicAuth(username, password) if username and password else None
         self.stream = stream
+        self.think = think
 
     def _build_payload(
         self,
@@ -25,6 +26,9 @@ class LLMClient:
             "messages": messages,
             "stream": self.stream if stream is None else stream,
         }
+
+        if self.think:
+            payload["think"] = True
 
         if tools:
             payload["tools"] = tools
@@ -79,7 +83,14 @@ class LLMClient:
             async with session.post(url, json=payload) as response:
                 body = await response.text()
                 if response.status == 200:
-                    return self._parse_json_or_ndjson(body)
+                    result = self._parse_json_or_ndjson(body)
+                    # Wrap Ollama think:true reasoning into <think> tags in content
+                    msg = result.get("message", {})
+                    thinking = msg.get("thinking")
+                    if isinstance(thinking, str) and thinking:
+                        msg["content"] = f"<think>{thinking}</think>{msg.get('content', '')}"
+                        result["message"] = msg
+                    return result
                 raise Exception(f"LLMClient Error: {response.status} - {body}")
 
     async def invoke_stream(
@@ -103,9 +114,11 @@ class LLMClient:
                 streamed_content: list[str] = []
                 streamed_role: Optional[str] = None
                 streamed_tool_calls: Optional[list] = None
+                streamed_thinking: list[str] = []
+                _in_think_block = False
 
                 async def handle_line(line: str):
-                    nonlocal final_obj, streamed_role, streamed_tool_calls
+                    nonlocal final_obj, streamed_role, streamed_tool_calls, _in_think_block
 
                     line = line.strip()
                     if not line:
@@ -132,8 +145,29 @@ class LLMClient:
                     if "tool_calls" in message and isinstance(message["tool_calls"], list):
                         streamed_tool_calls = message["tool_calls"]
 
+                    # Handle thinking deltas (Ollama think:true puts reasoning in message.thinking)
+                    think_delta = message.get("thinking")
+                    if isinstance(think_delta, str) and think_delta:
+                        streamed_thinking.append(think_delta)
+                        if on_delta:
+                            if not _in_think_block:
+                                _in_think_block = True
+                                result = on_delta("<think>")
+                                if inspect.isawaitable(result):
+                                    await result
+                            result = on_delta(think_delta)
+                            if inspect.isawaitable(result):
+                                await result
+
                     delta = message.get("content")
                     if isinstance(delta, str) and delta:
+                        # Close the think block before the first content delta
+                        if _in_think_block:
+                            _in_think_block = False
+                            if on_delta:
+                                result = on_delta("</think>")
+                                if inspect.isawaitable(result):
+                                    await result
                         streamed_content.append(delta)
                         if on_delta:
                             result = on_delta(delta)
@@ -157,10 +191,12 @@ class LLMClient:
                     final_message = {}
 
                 # Reconstruct content from deltas (works for NDJSON streaming payloads).
+                # Prepend think block if reasoning was streamed.
+                think_prefix = f"<think>{''.join(streamed_thinking)}</think>" if streamed_thinking else ""
                 if streamed_content:
-                    final_message["content"] = "".join(streamed_content)
+                    final_message["content"] = think_prefix + "".join(streamed_content)
                 elif "content" not in final_message:
-                    final_message["content"] = ""
+                    final_message["content"] = think_prefix
 
                 if "role" not in final_message:
                     final_message["role"] = streamed_role or "assistant"
