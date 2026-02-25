@@ -895,7 +895,6 @@ function injectDufsStyles(frame) {
                 --text-subtle: ${v('--text-subtle')};
                 --text-dim: ${v('--text-dim')};
                 --border-dim: ${v('--border-dim')};
-                --surface-raised: ${v('--surface-raised')};
                 --link-hover-bg: ${v('--link-hover-bg')};
                 --link-hover-text: ${v('--link-hover-text')};
             }
@@ -905,10 +904,14 @@ function injectDufsStyles(frame) {
             a:hover { background: var(--link-hover-bg) !important; color: var(--link-hover-text) !important; }
             nav ol li:first-child { display: none !important; }
             tr:has(a[href*="lost"]) { display: none !important; }
+            /* dufs chrome */
+            .head { background: var(--bg) !important; }
+            .searchbar { background: var(--bg) !important; border-color: var(--border-dim) !important; color: var(--text) !important; }
+            svg, .path svg, .breadcrumb svg { fill: var(--text) !important; }
             /* markdown rendered content */
             h1, h2, h3, h4, h5, h6 { color: var(--text) !important; }
             p, li, blockquote, pre, code { color: var(--text) !important; background: var(--bg) !important; }
-            pre, code { background: var(--surface-raised) !important; }
+            pre, code { background: var(--bg) !important; }
             hr { border-color: var(--border-dim) !important; }
         `;
         doc.head.appendChild(style);

@@ -452,7 +452,7 @@ summary {
     border-bottom: 1px solid var(--border-dim);
     font-family: var(--font-mono); font-size: var(--font-size-sm);
 }
-#file-viewer-name { color: var(--text-dim); }
+#file-viewer-name { color: var(--text); }
 #file-viewer-close {
     background: none; border: none; color: var(--text); cursor: pointer;
     font-size: var(--font-size-base);
