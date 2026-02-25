@@ -2,6 +2,11 @@ let isThinking = false;
 let sessionId = null;
 const DEBUG_LOGS = false;
 
+// --- RAF state for coalesced streaming renders ---
+let _streamRafPending = false;
+let _streamRafContainer = null;
+let _streamRafText = null;
+
 // Tool emoji mapping - loaded from shared constants
 let emojiToolMap = {};
 
@@ -346,12 +351,18 @@ async function sendMessage() {
         });
 
         if (!response.body) {
+            _streamRafPending = false;
+            _streamRafContainer = null;
+            _streamRafText = null;
             clearInterval(loadingInterval);
             responseContentDiv.textContent = "Error: No response stream";
             return;
         }
 
         if (!response.ok) {
+            _streamRafPending = false;
+            _streamRafContainer = null;
+            _streamRafText = null;
             clearInterval(loadingInterval);
             console.error(`Error: ${response.status} ${response.statusText}`);
             responseContentDiv.textContent = `Error: ${response.status} ${response.statusText}`;
@@ -402,7 +413,7 @@ async function sendMessage() {
                 fullReply += delta;
                 loadingDiv.style.display = "none";
                 clearInterval(loadingInterval);
-                responseContentDiv.textContent = fullReply;
+                renderStreamingContent(responseContentDiv, fullReply);
                 return;
             }
 
@@ -443,6 +454,9 @@ async function sendMessage() {
             processSseEvent(sseBuffer);
         }
 
+        _streamRafPending = false;
+        _streamRafContainer = null;
+        _streamRafText = null;
         clearInterval(loadingInterval);
 
         if (streamError) {
@@ -457,6 +471,9 @@ async function sendMessage() {
         }
 
     } catch (error) {
+        _streamRafPending = false;
+        _streamRafContainer = null;
+        _streamRafText = null;
         clearInterval(loadingInterval);
         responseContentDiv.textContent = "Error: Unable to reach AI server";
         console.error(error);
@@ -514,6 +531,109 @@ function showEmojiPopup(event, emoji) {
             document.removeEventListener('click', closePopup);
         }
     });
+}
+
+function renderStreamingContent(container, text) {
+    _streamRafContainer = container;
+    _streamRafText = text;
+    if (_streamRafPending) return;
+    _streamRafPending = true;
+    requestAnimationFrame(() => {
+        _streamRafPending = false;
+        _doRenderStreamingContent(_streamRafContainer, _streamRafText);
+    });
+}
+
+function _doRenderStreamingContent(container, text) {
+    const openThinkIdx  = text.indexOf("<think>");
+    const closeThinkIdx = text.indexOf("</think>");
+
+    // Still inside a think block — show indicator + live thinking content
+    if (openThinkIdx !== -1 && closeThinkIdx === -1) {
+        const thinkContent = text.slice(openThinkIdx + 7); // strip "<think>"
+
+        let indicator = container.querySelector(".streaming-thinking-indicator");
+        let thinkDiv  = container.querySelector(".streaming-thinking-content");
+
+        if (!indicator) {
+            container.innerHTML = "";
+            indicator = document.createElement("div");
+            indicator.className = "streaming-thinking-indicator";
+            indicator.textContent = "Thinking";
+            container.appendChild(indicator);
+        }
+        if (!thinkDiv) {
+            thinkDiv = document.createElement("div");
+            thinkDiv.className = "streaming-thinking-content";
+            container.appendChild(thinkDiv);
+        }
+
+        thinkDiv.textContent = thinkContent;
+        thinkDiv.scrollTop = thinkDiv.scrollHeight;
+        return;
+    }
+
+    // Extract main content (strips <think>...</think>)
+    const { mainContent } = extractThinkingContent(text);
+
+    const splitIdx = findSafeSplitPoint(mainContent);
+    const committed = mainContent.slice(0, splitIdx);
+    const pending   = mainContent.slice(splitIdx);
+
+    // Reuse elements to avoid scroll jumps
+    let committedDiv = container.querySelector(".streaming-committed");
+    let pendingSpan  = container.querySelector(".streaming-pending");
+    let cursorSpan   = container.querySelector(".streaming-cursor");
+
+    if (!committedDiv) {
+        committedDiv = document.createElement("div");
+        committedDiv.className = "streaming-committed";
+        container.appendChild(committedDiv);
+    }
+    if (!pendingSpan) {
+        pendingSpan = document.createElement("span");
+        pendingSpan.className = "streaming-pending";
+        container.appendChild(pendingSpan);
+    }
+    if (!cursorSpan) {
+        cursorSpan = document.createElement("span");
+        cursorSpan.className = "streaming-cursor";
+        cursorSpan.setAttribute("aria-hidden", "true");
+        container.appendChild(cursorSpan);
+    }
+
+    // Only replace committed HTML when content changed (prevents reflow)
+    const newHtml = committed ? marked.parse(committed, { sanitize: false }) : "";
+    if (committedDiv.innerHTML !== newHtml) {
+        committedDiv.innerHTML = newHtml;
+    }
+    pendingSpan.textContent = pending;
+}
+
+function findSafeSplitPoint(text) {
+    const fenceMatches = text.match(/```/g);
+    const fenceCount = fenceMatches ? fenceMatches.length : 0;
+
+    if (fenceCount % 2 !== 0) {
+        // Inside an open code fence — back up to before its opening
+        let lastOpenPos = -1;
+        let depth = 0;
+        const re = /```/g;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+            depth++;
+            if (depth % 2 === 1) lastOpenPos = m.index;
+        }
+        if (lastOpenPos > 0) {
+            const prefix = text.slice(0, lastOpenPos);
+            const para = prefix.lastIndexOf("\n\n");
+            return para >= 0 ? para + 2 : 0;
+        }
+        return 0;
+    }
+
+    const lastPara = text.lastIndexOf("\n\n");
+    return lastPara >= 0 ? lastPara + 2 : 0;
 }
 
 function addMessage(text, type) {
@@ -663,14 +783,27 @@ async function showSessionHistory() {
             sessions.forEach(session => {
                 const div = document.createElement("div");
                 div.classList.add("session-item");
+                const info = document.createElement("div");
+                info.classList.add("session-info");
                 const prompt = document.createElement("div");
                 prompt.classList.add("session-prompt");
                 prompt.textContent = session.initial_prompt;
                 const date = document.createElement("div");
                 date.classList.add("session-date");
                 date.textContent = new Date(session.created_at).toLocaleString();
-                div.appendChild(prompt);
-                div.appendChild(date);
+                info.appendChild(prompt);
+                info.appendChild(date);
+                const deleteBtn = document.createElement("button");
+                deleteBtn.classList.add("session-delete-btn");
+                deleteBtn.innerHTML = "&#x1F5D1;";
+                deleteBtn.title = "Delete session";
+                deleteBtn.addEventListener("click", async (e) => {
+                    e.stopPropagation();
+                    await fetch(apiUrl(`/sessions/${session.id}`), { method: "DELETE" });
+                    div.remove();
+                });
+                div.appendChild(info);
+                div.appendChild(deleteBtn);
                 div.addEventListener("click", () => loadSession(session.id));
                 container.appendChild(div);
             });
