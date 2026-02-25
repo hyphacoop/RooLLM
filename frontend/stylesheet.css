@@ -266,6 +266,8 @@ summary {
     width: 100%;
     height: 100%;
     border: none;
+    background: var(--bg);
+    color: var(--text);
 }
 
 #session-controls {
@@ -313,6 +315,7 @@ summary {
 }
 .session-item:hover { background: var(--surface-raised); }
 .session-prompt { color: var(--text); }
+.session-item:hover .session-prompt { color: var(--bg); }
 .session-date { color: var(--text-subtle); font-size: var(--font-size-xs); }
 
 .thinking-summary {

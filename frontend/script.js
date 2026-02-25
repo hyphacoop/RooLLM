@@ -175,7 +175,7 @@ async function loadConfig() {
 
 async function loadBranding() {
     try {
-        const response = await fetch('/branding');
+        const response = await fetch(apiUrl('/branding'));
         if (!response.ok) return;
         const branding = await response.json();
         const root = document.documentElement.style;
@@ -214,6 +214,7 @@ async function loadBranding() {
 (async function initializeApp() {
     await loadConfig(); // Ensure backendPort is set before proceeding
     await loadBranding();
+    initIndexerStatus();
 
     // Generate or retrieve a session ID
     if (!window.sessionId) {
@@ -741,19 +742,21 @@ function injectDufsStyles(frame) {
     try {
         const doc = frame.contentDocument;
         if (!doc || !doc.head) return;
+        const cs = getComputedStyle(document.documentElement);
+        const v = (name) => cs.getPropertyValue(name).trim();
         const style = doc.createElement('style');
         style.textContent = `
-            body { background: #000 !important; color: #eee !important; }
-            table, th, td { background: #000 !important; color: #eee !important; border-color: #444 !important; }
-            a { color: #eee !important; }
-            a:hover { background: #eee !important; color: #000 !important; }
+            body { background: ${v('--bg')} !important; color: ${v('--text')} !important; }
+            table, th, td { background: ${v('--bg')} !important; color: ${v('--text')} !important; border-color: ${v('--border-dim')} !important; }
+            a { color: ${v('--text')} !important; }
+            a:hover { background: ${v('--link-hover-bg')} !important; color: ${v('--link-hover-text')} !important; }
             nav ol li:first-child { display: none !important; }
             tr:has(a[href*="lost"]) { display: none !important; }
             /* markdown rendered content */
-            h1, h2, h3, h4, h5, h6 { color: #eee !important; }
-            p, li, blockquote, pre, code { color: #eee !important; background: #000 !important; }
-            pre, code { background: #1a1a1a !important; }
-            hr { border-color: #444 !important; }
+            h1, h2, h3, h4, h5, h6 { color: ${v('--text')} !important; }
+            p, li, blockquote, pre, code { color: ${v('--text')} !important; background: ${v('--bg')} !important; }
+            pre, code { background: ${v('--surface-raised')} !important; }
+            hr { border-color: ${v('--border-dim')} !important; }
         `;
         doc.head.appendChild(style);
     } catch (e) {
@@ -780,7 +783,7 @@ document.getElementById('file-viewer-close').addEventListener('click', () => {
     document.getElementById('file-viewer-frame').src = '';
 });
 
-(function initIndexerStatus() {
+function initIndexerStatus() {
     const el = document.getElementById("indexer-status");
     if (!el) return;
 
@@ -854,4 +857,4 @@ document.getElementById('file-viewer-close').addEventListener('click', () => {
     el.textContent = "loading...";
     el.classList.add("status-loading");
     setTimeout(poll, 1000);
-})();
+}
