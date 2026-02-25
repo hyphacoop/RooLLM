@@ -889,17 +889,27 @@ function injectDufsStyles(frame) {
         const v = (name) => cs.getPropertyValue(name).trim();
         const style = doc.createElement('style');
         style.textContent = `
-            body { background: ${v('--bg')} !important; color: ${v('--text')} !important; }
-            table, th, td { background: ${v('--bg')} !important; color: ${v('--text')} !important; border-color: ${v('--border-dim')} !important; }
-            a { color: ${v('--text')} !important; }
-            a:hover { background: ${v('--link-hover-bg')} !important; color: ${v('--link-hover-text')} !important; }
+            :root {
+                --bg: ${v('--bg')};
+                --text: ${v('--text')};
+                --text-subtle: ${v('--text-subtle')};
+                --text-dim: ${v('--text-dim')};
+                --border-dim: ${v('--border-dim')};
+                --surface-raised: ${v('--surface-raised')};
+                --link-hover-bg: ${v('--link-hover-bg')};
+                --link-hover-text: ${v('--link-hover-text')};
+            }
+            body { background: var(--bg) !important; color: var(--text) !important; }
+            table, th, td { background: var(--bg) !important; color: var(--text) !important; border-color: var(--border-dim) !important; }
+            a { color: var(--text) !important; }
+            a:hover { background: var(--link-hover-bg) !important; color: var(--link-hover-text) !important; }
             nav ol li:first-child { display: none !important; }
             tr:has(a[href*="lost"]) { display: none !important; }
             /* markdown rendered content */
-            h1, h2, h3, h4, h5, h6 { color: ${v('--text')} !important; }
-            p, li, blockquote, pre, code { color: ${v('--text')} !important; background: ${v('--bg')} !important; }
-            pre, code { background: ${v('--surface-raised')} !important; }
-            hr { border-color: ${v('--border-dim')} !important; }
+            h1, h2, h3, h4, h5, h6 { color: var(--text) !important; }
+            p, li, blockquote, pre, code { color: var(--text) !important; background: var(--bg) !important; }
+            pre, code { background: var(--surface-raised) !important; }
+            hr { border-color: var(--border-dim) !important; }
         `;
         doc.head.appendChild(style);
     } catch (e) {
