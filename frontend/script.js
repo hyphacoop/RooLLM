@@ -179,46 +179,56 @@ async function loadConfig() {
 }
 
 async function loadBranding() {
+    function revealBody() {
+        const loader = document.getElementById('branding-loader');
+        if (!loader) return;
+        loader.classList.add('done');
+        loader.addEventListener('transitionend', function() { loader.remove(); }, { once: true });
+    }
     try {
-        const response = await fetch(apiUrl('/branding'));
-        if (!response.ok) return;
-        const branding = await response.json();
-        const root = document.documentElement.style;
-        if (branding.colors) {
-            const map = {
-                bg: '--bg', text: '--text',
-                user: '--user-color', assistant: '--assistant-color',
-                summary: '--accent', link: '--link',
-                linkHoverBg: '--link-hover-bg',
-                linkHoverText: '--link-hover-text',
-            };
-            for (const [key, prop] of Object.entries(map)) {
-                if (branding.colors[key]) root.setProperty(prop, branding.colors[key]);
+        const brandingFetch = window.__brandingPromise
+            || fetch('/branding').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+        const timeout = new Promise(function(resolve) { setTimeout(resolve, 1000, null); });
+        const branding = await Promise.race([brandingFetch, timeout]);
+        if (branding) {
+            const root = document.documentElement.style;
+            if (branding.colors) {
+                const map = {
+                    bg: '--bg', text: '--text',
+                    user: '--user-color', assistant: '--assistant-color',
+                    summary: '--accent', link: '--link',
+                    linkHoverBg: '--link-hover-bg',
+                    linkHoverText: '--link-hover-text',
+                };
+                for (const [key, prop] of Object.entries(map)) {
+                    if (branding.colors[key]) root.setProperty(prop, branding.colors[key]);
+                }
             }
-        }
-        if (branding.logoHeight !== undefined && branding.logoHeight !== null) {
-            const rawLogoHeight = String(branding.logoHeight).trim();
-            if (rawLogoHeight) {
-                const normalizedLogoHeight = Number.isFinite(Number(rawLogoHeight))
-                    ? rawLogoHeight + 'px'
-                    : rawLogoHeight;
-                root.setProperty('--brand-logo-height', normalizedLogoHeight);
+            if (branding.logoHeight !== undefined && branding.logoHeight !== null) {
+                const rawLogoHeight = String(branding.logoHeight).trim();
+                if (rawLogoHeight) {
+                    const normalizedLogoHeight = Number.isFinite(Number(rawLogoHeight))
+                        ? rawLogoHeight + 'px'
+                        : rawLogoHeight;
+                    root.setProperty('--brand-logo-height', normalizedLogoHeight);
+                }
             }
-        }
-        if (branding.title) document.title = branding.title;
-        if (branding.logoUrl) {
-            const logo = document.getElementById('brand-logo');
-            if (logo) { logo.src = branding.logoUrl; logo.classList.remove('hidden'); }
+            if (branding.title) document.title = branding.title;
+            if (branding.logoUrl) {
+                const logo = document.getElementById('brand-logo');
+                if (logo) { logo.src = branding.logoUrl; logo.classList.remove('hidden'); }
+            }
         }
     } catch (e) {
         console.warn('Could not load branding:', e);
+    } finally {
+        revealBody();
     }
 }
 
 // Initialize configuration
 (async function initializeApp() {
-    await loadConfig(); // Ensure backendPort is set before proceeding
-    await loadBranding();
+    await Promise.all([loadConfig(), loadBranding()]);
     initIndexerStatus();
 
     // Generate or retrieve a session ID

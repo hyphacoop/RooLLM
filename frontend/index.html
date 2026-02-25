@@ -8,9 +8,47 @@
     <link href="stylesheet.css" rel="stylesheet">
     <script src="marked.js"></script>
 
+    <!-- FOUC prevention: overlay + progress sweep while branding loads -->
+    <style>
+        #branding-loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.35s ease;
+            pointer-events: all;
+        }
+        #branding-loader.done {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #branding-loader::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -35%;
+            width: 35%;
+            height: 2px;
+            background: #00ff00;
+            animation: branding-sweep 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes branding-sweep {
+            0%   { left: -35%; }
+            100% { left: 100%; }
+        }
+    </style>
+    <script>
+        window.__brandingPromise = fetch('/branding')
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .catch(function() { return null; });
+    </script>
+    <noscript><style>#branding-loader { display: none; }</style></noscript>
+
 </head>
 
 <body>
+    <div id="branding-loader"></div>
     <div id="session-controls">
         <img id="brand-logo" class="hidden" alt="" style="height:var(--brand-logo-height,50px);">
         <div>
