@@ -69,7 +69,7 @@ body {
   justify-content: center;
   align-items: center;
   margin: 0;
-  padding: 20px;
+  padding: calc(20px + var(--brand-logo-height, 50px) + 20px) 20px 20px;
 }
 a {
   color: var(--link);
@@ -318,7 +318,7 @@ summary {
 .session-item:hover { background: var(--surface-raised); }
 .session-info { flex: 1; min-width: 0; }
 .session-prompt { color: var(--text); }
-.session-item:hover .session-prompt { color: var(--text); }
+.session-item:hover .session-prompt { color: var(--bg); }
 .session-date { color: var(--text-subtle); font-size: var(--font-size-xs); }
 .session-delete-btn {
     flex-shrink: 0;
