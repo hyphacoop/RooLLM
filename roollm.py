@@ -53,12 +53,11 @@ class RooLLM:
         await self.bridge.initialize()
         logger.debug("RooLLM initialization complete")
 
-    async def chat(self, user, content, history=[], react_callback=None, stream_callback=None):
+    async def chat(self, content, history=None, react_callback=None, stream_callback=None):
         """
         Process a chat message and return a response.
         
         Args:
-            user: User identifier
             content: Message content
             history: Conversation history
             react_callback: Callback for tool reactions
@@ -70,6 +69,7 @@ class RooLLM:
         
         # Format history with proper system message if not already present
         formatted_history = []
+        history = history or []
         if history and len(history) > 0:
             # Check if first message is a system message
             if history[0].get("role") == ROLE_SYSTEM:
@@ -86,7 +86,6 @@ class RooLLM:
         # Process the message
         try:
             response = await self.bridge.process_message(
-                user=user,
                 content=content,
                 history=formatted_history,
                 react_callback=react_callback,
@@ -149,9 +148,6 @@ Think out loud about your reasoning process. Explain what you're doing and why.
 
 Respond concisely and clearly.
 Use emoji sparingly, only at the end of your messages to add tone. Never use the 🎉 emoji.
-Messages from users begin with their name followed by a colon.
-You do not need to repeat their name in your replies.
-
 The current date and time is {now}.
 
 You have access to tools. Use them proactively to gather information and take actions.

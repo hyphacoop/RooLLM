@@ -364,9 +364,8 @@ async def main():
                 stream_callback, stream_state = create_stream_printer()
 
             response = await roo.chat(
-                user,
-                query,
-                history,
+                content=query,
+                history=history,
                 react_callback=print_tool_reaction,
                 stream_callback=stream_callback,
             )
@@ -522,9 +521,8 @@ async def main():
             await refresh_token_if_needed()
             stream_callback, stream_state = create_stream_printer()
             response = await roo.chat(
-                user,
-                query,
-                history,
+                content=query,
+                history=history,
                 react_callback=print_tool_reaction,
                 stream_callback=stream_callback,
             )

@@ -118,7 +118,6 @@ class MCPLLMBridge:
 
     async def process_message(
         self,
-        user: str,
         content: str,
         history: List[Dict],
         react_callback=None,
@@ -128,7 +127,7 @@ class MCPLLMBridge:
         if not self.initialized:
             await self.initialize()
             
-        messages = history + [{"role": "user", "content": f"{user}: {content}"}]
+        messages = history + [{"role": "user", "content": content}]
         tools = self.tool_registry.openai_descriptions()
 
         # ReAct Loop - Continue until no more tool calls or max iterations reached
