@@ -113,7 +113,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-user = os.getenv("ROO_LLM_AUTH_USERNAME", "frontendUser")
 histories = {}  # store per-session history
 sessions = {}  # store session metadata
 
@@ -186,9 +185,8 @@ async def chat(request: ChatRequest):
 
             try:
                 response = await roo.chat(
-                    user,
-                    request.message,
-                    history,
+                    content=request.message,
+                    history=history,
                     react_callback=safe_react_callback,
                     stream_callback=safe_stream_callback,
                 )
