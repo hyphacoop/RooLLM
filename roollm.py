@@ -53,7 +53,7 @@ class RooLLM:
         await self.bridge.initialize()
         logger.debug("RooLLM initialization complete")
 
-    async def chat(self, content, history=None, react_callback=None, stream_callback=None):
+    async def chat(self, content, history=None, react_callback=None, stream_callback=None, allowed_tools=None, think=None):
         """
         Process a chat message and return a response.
         
@@ -90,6 +90,8 @@ class RooLLM:
                 history=formatted_history,
                 react_callback=react_callback,
                 stream_callback=stream_callback,
+                allowed_tools=allowed_tools,
+                think=think,
             )
             
             return response

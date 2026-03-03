@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager, suppress
@@ -139,6 +140,8 @@ def generate_session_title(history):
 class ChatRequest(BaseModel):
     message: str
     session_id: str  # allows tracking sessions from frontend
+    allowed_tools: Optional[list[str]] = None  # None = all tools, [] = no tools
+    think: Optional[bool] = None  # None = server default, False = disable thinking
 
 class MinimaQueryRequest(BaseModel):
     query: str
@@ -189,6 +192,8 @@ async def chat(request: ChatRequest):
                     history=history,
                     react_callback=safe_react_callback,
                     stream_callback=safe_stream_callback,
+                    allowed_tools=request.allowed_tools,
+                    think=request.think,
                 )
 
                 response_content = response.get("content", "")
