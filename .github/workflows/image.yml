@@ -41,15 +41,6 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.OWNER }}/roollm-api:${{ github.ref_name }}
 
-      - name: Build and push roollm-frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/frontend.Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.OWNER }}/roollm-frontend:${{ github.ref_name }}
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
