@@ -122,13 +122,23 @@ class MCPLLMBridge:
         history: List[Dict],
         react_callback=None,
         stream_callback=None,
+        allowed_tools=None,
+        think=None,
     ):
         # Ensure bridge is initialized
         if not self.initialized:
             await self.initialize()
-            
+
+        extra_options = {"think": False} if think is False else None
         messages = history + [{"role": "user", "content": content}]
-        tools = self.tool_registry.openai_descriptions()
+        all_tools = self.tool_registry.openai_descriptions()
+        if allowed_tools is None:
+            tools = all_tools
+        elif len(allowed_tools) == 0:
+            tools = []
+        else:
+            allowed_set = {t["function"]["name"] for t in all_tools if t["function"]["name"] in allowed_tools}
+            tools = [t for t in all_tools if t["function"]["name"] in allowed_set]
 
         # ReAct Loop - Continue until no more tool calls or max iterations reached
         max_iterations = self.config.get("react_max_iterations", 10)  # Configurable max iterations
@@ -151,12 +161,13 @@ class MCPLLMBridge:
                         messages,
                         tools=tools,
                         on_delta=stream_callback,
+                        extra_options=extra_options,
                     )
                 except Exception as e:
                     logger.warning(f"First-turn streaming failed, falling back to non-stream call: {e}")
-                    raw_response = await self.llm_client.invoke(messages, tools=tools, stream=False)
+                    raw_response = await self.llm_client.invoke(messages, tools=tools, stream=False, extra_options=extra_options)
             else:
-                raw_response = await self.llm_client.invoke(messages, tools=tools, stream=False)
+                raw_response = await self.llm_client.invoke(messages, tools=tools, stream=False, extra_options=extra_options)
             message = raw_response.get("message", {})
             tool_calls = message.get("tool_calls")
             if not isinstance(tool_calls, list):
@@ -172,6 +183,7 @@ class MCPLLMBridge:
                         messages,
                         tools=[],
                         on_delta=stream_callback,
+                        extra_options=extra_options,
                     )
                     return final_response.get("message", {})
 
@@ -267,9 +279,10 @@ class MCPLLMBridge:
                         messages,
                         tools=[],
                         on_delta=stream_callback,
+                        extra_options=extra_options,
                     )
                 else:
-                    final_response = await self.llm_client.invoke(messages, tools=[], stream=False)
+                    final_response = await self.llm_client.invoke(messages, tools=[], stream=False, extra_options=extra_options)
                 return final_response.get("message", {})
             
             # Continue loop to allow LLM to reason about results and potentially call more tools
@@ -281,7 +294,8 @@ class MCPLLMBridge:
                 messages,
                 tools=[],
                 on_delta=stream_callback,
+                extra_options=extra_options,
             )
         else:
-            final_response = await self.llm_client.invoke(messages, tools=[], stream=False)  # No tools to prevent more calls
+            final_response = await self.llm_client.invoke(messages, tools=[], stream=False, extra_options=extra_options)
         return final_response.get("message", {})
