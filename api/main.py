@@ -142,6 +142,7 @@ class ChatRequest(BaseModel):
     session_id: str  # allows tracking sessions from frontend
     allowed_tools: Optional[list[str]] = None  # None = all tools, [] = no tools
     think: Optional[bool] = None  # None = server default, False = disable thinking
+    save_to_history: bool = True
 
 class MinimaQueryRequest(BaseModel):
     query: str
@@ -210,14 +211,13 @@ async def chat(request: ChatRequest):
                         final_content = response_content
                         saw_delta = False
 
-                # Add to history with proper format
-                history.append({"role": "user", "content": user_message})
-                history.append({"role": "assistant", "content": final_content})
-                histories[request.session_id] = history
+                if request.save_to_history:
+                    history.append({"role": "user", "content": user_message})
+                    history.append({"role": "assistant", "content": final_content})
+                    histories[request.session_id] = history
 
-                # Update initial prompt if this is the first message
-                if len(history) == 2:  # Just added first user and assistant messages
-                    sessions[request.session_id]["initial_prompt"] = generate_session_title(history)
+                    if len(history) == 2:
+                        sessions[request.session_id]["initial_prompt"] = generate_session_title(history)
 
                 if saw_delta:
                     await queue.put({"type": "reply_done", "content": final_content})
