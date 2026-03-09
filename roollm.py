@@ -111,7 +111,14 @@ class RooLLM:
     def make_system(self):
         """Create the system prompt for the LLM."""
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        tenant_system_prompt = self.config.get("tenant_system_prompt", "")
+        tenant_context = ""
+        if isinstance(tenant_system_prompt, str):
+            tenant_system_prompt = tenant_system_prompt.strip()
+            if tenant_system_prompt:
+                tenant_context = f"\nTenant-specific context:\n{tenant_system_prompt}\n"
         return f"""
+{tenant_context}
 CITATION REQUIREMENT: The query tool returns content with [Source: URL] citations embedded in the text. You must include these citations in your responses. Do not remove them when summarizing or synthesizing information.
 
 IMPORTANT: You operate in a ReAct (Reasoning and Acting) loop. When faced with complex tasks:
