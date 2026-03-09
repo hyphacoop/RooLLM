@@ -116,7 +116,7 @@ class RooLLM:
         if isinstance(tenant_system_prompt, str):
             tenant_system_prompt = tenant_system_prompt.strip()
             if tenant_system_prompt:
-                tenant_context = f"\nTenant-specific context:\n{tenant_system_prompt}\n"
+                tenant_context = f"\n{tenant_system_prompt}\n"
         return f"""
 {tenant_context}
 CITATION REQUIREMENT: The query tool returns content with [Source: URL] citations embedded in the text. You must include these citations in your responses. Do not remove them when summarizing or synthesizing information.
