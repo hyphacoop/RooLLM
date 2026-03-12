@@ -142,7 +142,8 @@ class LLMClient:
                     if isinstance(role, str):
                         streamed_role = role
 
-                    if "tool_calls" in message and isinstance(message["tool_calls"], list):
+                    tool_calls_present = "tool_calls" in message and isinstance(message["tool_calls"], list)
+                    if tool_calls_present:
                         streamed_tool_calls = message["tool_calls"]
 
                     # Handle thinking deltas (Ollama think:true puts reasoning in message.thinking)
@@ -174,6 +175,15 @@ class LLMClient:
                             if inspect.isawaitable(result):
                                 await result
 
+                    # Tool-selection turns can stream reasoning without any content.
+                    # Close the visible think block before handing off to tool execution.
+                    if tool_calls_present and _in_think_block:
+                        _in_think_block = False
+                        if on_delta:
+                            result = on_delta("</think>")
+                            if inspect.isawaitable(result):
+                                await result
+
                 async for chunk in response.content.iter_any():
                     buffer += chunk.decode("utf-8", errors="replace")
                     while "\n" in buffer:
@@ -182,6 +192,13 @@ class LLMClient:
 
                 if buffer.strip():
                     await handle_line(buffer)
+
+                if _in_think_block:
+                    _in_think_block = False
+                    if on_delta:
+                        result = on_delta("</think>")
+                        if inspect.isawaitable(result):
+                            await result
 
                 if final_obj is None:
                     raise Exception("LLMClient Error: Empty streaming response")
