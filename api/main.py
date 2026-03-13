@@ -27,6 +27,7 @@ from roollm import RooLLM
 from llm_client import LLMClient
 from mcp_config import MCP_CONFIG
 from github_app_auth import prepare_github_token
+from api.privacy import is_session_listing_enabled
 from utils.google_credentials import load_all_google_credentials
 
 load_dotenv()
@@ -324,6 +325,9 @@ async def get_sessions():
     """
     Retrieve all available sessions with their metadata.
     """
+    if not is_session_listing_enabled(load_branding_config()):
+        return {"sessions": []}
+
     # Create session entries for any histories that don't have metadata
     for session_id in histories:
         if session_id not in sessions:
