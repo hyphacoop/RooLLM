@@ -220,16 +220,13 @@ async def chat(request: ChatRequest):
                 response_content = response.get("content", "")
                 final_content = "".join(streamed_parts) if saw_delta else response_content
 
-                # Ensure final content stays consistent even if fallback paths differ.
-                if response_content and final_content != response_content:
-                    if response_content.startswith(final_content):
-                        tail = response_content[len(final_content):]
-                        if tail:
-                            final_content = response_content
-                            await queue.put({"type": "reply_delta", "content": tail})
-                    else:
+                # For streamed requests, prefer the exact content the user saw.
+                # Only append a trailing suffix if the returned response extends it.
+                if saw_delta and response_content and response_content.startswith(final_content):
+                    tail = response_content[len(final_content):]
+                    if tail:
                         final_content = response_content
-                        saw_delta = False
+                        await queue.put({"type": "reply_delta", "content": tail})
 
                 if request.save_to_history:
                     history.append({"role": "user", "content": user_message})
