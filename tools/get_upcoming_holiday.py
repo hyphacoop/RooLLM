@@ -173,7 +173,7 @@ async def tool(roo, arguments, user):
         
         # Check if any holiday falls on a Friday (off-day for 4-day work week)
         any_friday = any(h["is_friday"] for h in holidays_formatted)
-        friday_note = "\n\nNote: If a public holiday lands on a member's off-day under a four-day work week, the member should take one of the work days off as a make-up holiday." if any_friday else ""
+        friday_note = "\n\nNote: If a public holiday lands on a member's off-day under a four-day work week, the member should take one of the work days off as a make-up holiday. Source: [handbook](https://handbook.hypha.coop/How-we-work/holidays.html#public-and-additional-holidays--winter-closure)" if any_friday else ""
         
         # Format the response based on the number of holidays found
         if len(upcoming_holidays) == 1:
