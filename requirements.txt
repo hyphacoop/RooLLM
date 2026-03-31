@@ -1,6 +1,7 @@
 aiohttp
 async_lru
 beautifulsoup4
+dotenv
 fastapi
 google-api-python-client
 gspread
