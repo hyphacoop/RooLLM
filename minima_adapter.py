@@ -50,8 +50,8 @@ class MinimaRestAdapter:
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Search the knowledge base for relevant documents. Returns passages with inline citations: 'content [Source: path]'. When presenting information to users, preserve these [Source: ...] citations exactly as they appear in the results.",
-                "emoji": "🧠",
+                "description": "Primary tool for searching the knowledge base. Use this first for questions about documents, topics, file contents, or anything that may be answered from indexed files. Results include content plus source metadata such as filename, description, and tags. Preserves inline [Source: path] citations.",
+                "emoji": "🗃️",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -61,6 +61,60 @@ class MinimaRestAdapter:
                         }
                     },
                     "required": ["text"]
+                }
+            },
+            "get_file_metadata": {
+                "name": "get_file_metadata",
+                "description": "Use only when the user explicitly asks for description/tags/metadata for a specific file, or after query has identified a relevant file and the user asks about that file's metadata. Use path when known, or filename when only the basename is known.",
+                "emoji": "🧾",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Optional file path, such as /documents/foo.pdf or a path under the Minima file root"
+                        },
+                        "filename": {
+                            "type": "string",
+                            "description": "Optional file basename, such as foo.pdf, when the full path is unknown"
+                        }
+                    }
+                }
+            },
+            "update_file_metadata": {
+                "name": "update_file_metadata",
+                "description": "Use only when the user explicitly asks to change a file's description or tags. Use path when known, or filename when only the basename is known.",
+                "emoji": "🖊️",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Optional file path, such as /documents/foo.pdf or a path under the Minima file root"
+                        },
+                        "filename": {
+                            "type": "string",
+                            "description": "Optional file basename, such as foo.pdf, when the full path is unknown"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Human-readable file description"
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "File tags"
+                        }
+                    }
+                }
+            },
+            "list_file_metadata": {
+                "name": "list_file_metadata",
+                "description": "Use only when the user asks to list or browse files or metadata records. Returns all files known to Minima with description, tags, filename, relative path, and path.",
+                "emoji": "🗂️",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
                 }
             }
         }
@@ -232,7 +286,31 @@ class MinimaRestAdapter:
         
         if name not in self.tools:
             return {"error": f"Tool {name} not found"}
-            
+
+        if name == "get_file_metadata":
+            arguments = arguments if isinstance(arguments, dict) else {}
+            path = arguments.get("path")
+            filename = arguments.get("filename")
+            if not path and not filename:
+                return {"error": "path or filename is required"}
+            return await self.get_metadata(path=path, filename=filename)
+
+        if name == "update_file_metadata":
+            arguments = arguments if isinstance(arguments, dict) else {}
+            path = arguments.get("path")
+            filename = arguments.get("filename")
+            if not path and not filename:
+                return {"error": "path or filename is required"}
+            return await self.put_metadata(
+                path=path,
+                filename=filename,
+                description=arguments.get("description", ""),
+                tags=arguments.get("tags", []),
+            )
+
+        if name == "list_file_metadata":
+            return await self.list_metadata()
+
         if name != "query":
             return {"error": "Unsupported tool"}
             
@@ -321,6 +399,63 @@ class MinimaRestAdapter:
                 return {"error": f"Connection error: {str(e)}"}
                 
         return {"error": "Query request failed after multiple attempts"}
+
+    async def get_metadata(self, path=None, filename=None):
+        if not self.connected and not await self.connect():
+            return {"error": "Could not connect to Minima indexer"}
+
+        endpoint = "metadata/by-filename" if filename and not path else "metadata"
+        params = {"filename": filename} if endpoint.endswith("by-filename") else {"path": path}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"{self.server_url}/{endpoint}",
+                params=params,
+                timeout=30,
+            ) as response:
+                try:
+                    payload = await response.json()
+                except json.JSONDecodeError:
+                    payload = {"error": await response.text()}
+                if response.status != 200:
+                    return {"error": payload.get("detail") or payload.get("error") or "Metadata request failed"}
+                return payload
+
+    async def put_metadata(self, path=None, description="", tags=None, filename=None):
+        if not self.connected and not await self.connect():
+            return {"error": "Could not connect to Minima indexer"}
+
+        payload = {"description": description, "tags": tags or []}
+        if path:
+            payload["path"] = path
+        if filename:
+            payload["filename"] = filename
+        async with aiohttp.ClientSession() as session:
+            async with session.put(
+                f"{self.server_url}/metadata",
+                json=payload,
+                timeout=30,
+            ) as response:
+                try:
+                    payload = await response.json()
+                except json.JSONDecodeError:
+                    payload = {"error": await response.text()}
+                if response.status != 200:
+                    return {"error": payload.get("detail") or payload.get("error") or "Metadata update failed"}
+                return payload
+
+    async def list_metadata(self):
+        if not self.connected and not await self.connect():
+            return {"error": "Could not connect to Minima indexer"}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.server_url}/metadata/list", timeout=30) as response:
+                try:
+                    payload = await response.json()
+                except json.JSONDecodeError:
+                    payload = {"error": await response.text()}
+                if response.status != 200:
+                    return {"error": payload.get("detail") or payload.get("error") or "Metadata list request failed"}
+                return payload
 
     def _format_result_with_chunk_citations(self, chunks):
         """
