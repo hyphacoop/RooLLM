@@ -7,7 +7,7 @@ import sys
 import socket
 import time
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -84,6 +84,7 @@ if isinstance(tenant_system_prompt, str):
     tenant_system_prompt = tenant_system_prompt.strip()
     if tenant_system_prompt:
         config["tenant_system_prompt"] = tenant_system_prompt
+config["USE_MINIMA_METADATA"] = branding_config.get("metadata", False)
 
 # Initialize LLM Client
 llm = LLMClient(
@@ -168,6 +169,12 @@ class ChatRequest(BaseModel):
 class MinimaQueryRequest(BaseModel):
     query: str
     session_id: str
+
+class MinimaMetadataRequest(BaseModel):
+    path: Optional[str] = None
+    filename: Optional[str] = None
+    description: str = ""
+    tags: list[str] = []
 
 def get_minima_adapter():
     """Get the minima adapter from the bridge if available."""
@@ -306,6 +313,63 @@ async def minima_status():
         "tools_count": len(tools),
         "tools": [tool.get("name") for tool in tools]
     }
+
+@app.get("/minima/metadata")
+async def minima_metadata(path: Optional[str] = Query(None), filename: Optional[str] = Query(None)):
+    if not config.get("USE_MINIMA_METADATA"):
+        return {"status": "error", "message": "Metadata feature is not enabled for this tenant"}
+    adapter = get_minima_adapter()
+    if not adapter or not adapter.is_connected():
+        return {"status": "error", "message": "Not connected to Minima server"}
+    if not path and not filename:
+        return {"status": "error", "message": "path or filename is required"}
+    try:
+        result = await adapter.get_metadata(path=path, filename=filename)
+        if isinstance(result, dict) and result.get("error"):
+            return {"status": "error", "message": result["error"]}
+        return {"status": "ok", "metadata": result}
+    except Exception as e:
+        logger.error(f"Error fetching Minima metadata: {str(e)}")
+        return {"status": "error", "message": f"Error fetching metadata: {str(e)}"}
+
+@app.put("/minima/metadata")
+async def put_minima_metadata(request: MinimaMetadataRequest):
+    if not config.get("USE_MINIMA_METADATA"):
+        return {"status": "error", "message": "Metadata feature is not enabled for this tenant"}
+    adapter = get_minima_adapter()
+    if not adapter or not adapter.is_connected():
+        return {"status": "error", "message": "Not connected to Minima server"}
+    if not request.path and not request.filename:
+        return {"status": "error", "message": "path or filename is required"}
+    try:
+        result = await adapter.put_metadata(
+            path=request.path,
+            filename=request.filename,
+            description=request.description,
+            tags=request.tags,
+        )
+        if isinstance(result, dict) and result.get("error"):
+            return {"status": "error", "message": result["error"]}
+        return {"status": "ok", "metadata": result}
+    except Exception as e:
+        logger.error(f"Error updating Minima metadata: {str(e)}")
+        return {"status": "error", "message": f"Error updating metadata: {str(e)}"}
+
+@app.get("/minima/files")
+async def minima_files():
+    if not config.get("USE_MINIMA_METADATA"):
+        return {"status": "error", "message": "Metadata feature is not enabled for this tenant"}
+    adapter = get_minima_adapter()
+    if not adapter or not adapter.is_connected():
+        return {"status": "error", "message": "Not connected to Minima server"}
+    try:
+        result = await adapter.list_metadata()
+        if isinstance(result, dict) and result.get("error"):
+            return {"status": "error", "message": result["error"]}
+        return {"status": "ok", "files": result.get("files", []) if isinstance(result, dict) else []}
+    except Exception as e:
+        logger.error(f"Error listing Minima files: {str(e)}")
+        return {"status": "error", "message": f"Error listing files: {str(e)}"}
 
 @app.get("/minima/connect")
 async def connect_minima():

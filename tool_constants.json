@@ -70,7 +70,7 @@
     },
     "📖": {
       "tool": "search_handbook",
-      "description": "Search Hypha's handbook"
+      "description": "Search the knowledge base"
     },
     "📅": {
       "tool": "get_upcoming_holiday",
@@ -92,9 +92,21 @@
       "tool": "web_search",
       "description": "Search the internet for current information using Claude with web search"
     },
-    "🧠": {
+    "🗃️": {
       "tool": "query",
-      "description": "Search the knowledge base for relevant documents with RAG via minima MCP"
+      "description": "Search files in the knowledge base"
+    },
+    "🧾": {
+      "tool": "get_file_metadata",
+      "description": "Get description and tags for a file in Minima"
+    },
+    "🖊️": {
+      "tool": "update_file_metadata",
+      "description": "Update description and tags for a file in Minima"
+    },
+    "🗂️": {
+      "tool": "list_file_metadata",
+      "description": "List files known to Minima with their description, tags, filename, relative path, and path"
     },
     "🧭": {
       "tool": "consensus_analyzer",
