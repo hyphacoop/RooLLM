@@ -51,10 +51,22 @@ class MinimaRestAdapter:
         self.connection_retry_interval = 10  # seconds
         
         # Define available tools
+        query_description = (
+            "Primary tool for searching the knowledge base. Use this first for questions about "
+            "documents, topics, file contents, or anything that may be answered from indexed files. "
+            "Results include content and source filename."
+        )
+        if self.metadata_enabled:
+            query_description = (
+                "Primary tool for searching the knowledge base. Use this first for questions about "
+                "documents, topics, file contents, or anything that may be answered from indexed files. "
+                "Results include content plus source metadata such as filename, description, and tags. "
+                "Preserves inline [Source: path] citations."
+            )
         self.tools = {
             "query": {
                 "name": "query",
-                "description": "Primary tool for searching the knowledge base. Use this first for questions about documents, topics, file contents, or anything that may be answered from indexed files. Results include content plus source metadata such as filename, description, and tags. Preserves inline [Source: path] citations.",
+                "description": query_description,
                 "emoji": "🗃️",
                 "parameters": {
                     "type": "object",
@@ -501,8 +513,16 @@ class MinimaRestAdapter:
 
             all_sources.append(source)
 
-            # Format the source citation
+            # Format the source citation, appending description/tags when metadata is enabled
             citation_text = f"[Source: {source}]"
+            if self.metadata_enabled:
+                chunk_metadata = chunk.get('metadata', {})
+                if isinstance(chunk_metadata, dict):
+                    desc = chunk_metadata.get('description', '').strip()
+                    tags = ", ".join(t for t in chunk_metadata.get('tags', []) if t)
+                    if desc or tags:
+                        parts = [p for p in [desc, f"tags: {tags}" if tags else ""] if p]
+                        citation_text += f" ({'; '.join(parts)})"
 
             # Add the content followed immediately by its citation
             formatted_output.append(f"{content} {citation_text}")
