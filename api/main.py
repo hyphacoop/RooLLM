@@ -84,6 +84,7 @@ if isinstance(tenant_system_prompt, str):
     tenant_system_prompt = tenant_system_prompt.strip()
     if tenant_system_prompt:
         config["tenant_system_prompt"] = tenant_system_prompt
+config["USE_MINIMA_METADATA"] = branding_config.get("metadata", False)
 
 # Initialize LLM Client
 llm = LLMClient(
