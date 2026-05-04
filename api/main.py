@@ -316,6 +316,8 @@ async def minima_status():
 
 @app.get("/minima/metadata")
 async def minima_metadata(path: Optional[str] = Query(None), filename: Optional[str] = Query(None)):
+    if not config.get("USE_MINIMA_METADATA"):
+        return {"status": "error", "message": "Metadata feature is not enabled for this tenant"}
     adapter = get_minima_adapter()
     if not adapter or not adapter.is_connected():
         return {"status": "error", "message": "Not connected to Minima server"}
@@ -332,6 +334,8 @@ async def minima_metadata(path: Optional[str] = Query(None), filename: Optional[
 
 @app.put("/minima/metadata")
 async def put_minima_metadata(request: MinimaMetadataRequest):
+    if not config.get("USE_MINIMA_METADATA"):
+        return {"status": "error", "message": "Metadata feature is not enabled for this tenant"}
     adapter = get_minima_adapter()
     if not adapter or not adapter.is_connected():
         return {"status": "error", "message": "Not connected to Minima server"}
@@ -353,6 +357,8 @@ async def put_minima_metadata(request: MinimaMetadataRequest):
 
 @app.get("/minima/files")
 async def minima_files():
+    if not config.get("USE_MINIMA_METADATA"):
+        return {"status": "error", "message": "Metadata feature is not enabled for this tenant"}
     adapter = get_minima_adapter()
     if not adapter or not adapter.is_connected():
         return {"status": "error", "message": "Not connected to Minima server"}
